@@ -73,9 +73,20 @@ json mas_to_cias(const json& peas, const PEAS::Fidelity& fidelity, const std::st
     {
         const json& drj = peas.at("inputs").at("designRequirements");
         if (drj.contains("turnsRatios"))
-            for (const auto& tr : drj.at("turnsRatios"))
-                turnsRatios.push_back(tr.is_object() && tr.contains("nominal")
-                                      ? tr.at("nominal").get<double>() : tr.get<double>());
+            for (const auto& tr : drj.at("turnsRatios")) {
+                // Resolve a dimensionWithTolerance entry (number or {nominal/minimum/maximum}).
+                // Duty-ceiling turns ratios are emitted as {maximum}-only (no nominal), so the raw
+                // .at("nominal")/.get<double>() path crashed on push-pull and any ceiling-marked ratio.
+                if (tr.is_number()) { turnsRatios.push_back(tr.get<double>()); continue; }
+                if (!tr.is_object()) continue;
+                auto num = [&](const char* k) -> const json* {
+                    return (tr.contains(k) && tr.at(k).is_number()) ? &tr.at(k) : nullptr; };
+                if (const json* n = num("nominal")) turnsRatios.push_back(n->get<double>());
+                else if (num("minimum") && num("maximum"))
+                    turnsRatios.push_back((num("minimum")->get<double>() + num("maximum")->get<double>()) / 2.0);
+                else if (const json* hi = num("maximum")) turnsRatios.push_back(hi->get<double>());
+                else if (const json* lo = num("minimum")) turnsRatios.push_back(lo->get<double>());
+            }
     }
 
     // Ports + connections: primary (w0) plus one winding per turns ratio.
