@@ -37,7 +37,7 @@ json make_magnetic_atom(double lp, const std::vector<double>& turnsRatios, doubl
 // in series with another inductor (every bridge/resonant topology), so even a near-zero specified
 // leakage is clamped to 0.9999. (Real designed magnetics use the MKF_MODEL subcircuit instead, whose
 // coupling comes from the actual leakage — this path is the pre-sourcing ideal seed only.)
-double compute_coupling(const MagneticDesignRequirements& dr, double lp) {
+double compute_coupling(const DesignRequirements& dr, double lp) {
     double k = 0.9999;
     auto llkOpt = dr.get_leakage_inductance();
     if (llkOpt && !llkOpt->empty() && lp > 0) {
@@ -128,7 +128,7 @@ json mas_to_cias(const json& peas, const PEAS::Fidelity& fidelity, const std::st
             peas.at("magnetic").at("modelOutputs").at("spiceSubcircuit");
         atomData["inputs"]["designRequirements"]["turnsRatios"] = ratios;
     } else {
-        auto dr = peas.at("inputs").at("designRequirements").get<MagneticDesignRequirements>();
+        auto dr = peas.at("inputs").at("designRequirements").get<DesignRequirements>();
         const double lp = PEAS::resolve_dimensional_values(dr.get_magnetizing_inductance());
         atomData = make_magnetic_atom(lp, turnsRatios, compute_coupling(dr, lp));
     }

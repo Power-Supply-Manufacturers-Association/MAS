@@ -26,17 +26,30 @@ set(MAS_HPP "${CMAKE_CURRENT_BINARY_DIR}/MAS.hpp")
 set(PEAS_SCHEMAS "${MAS_ROOT}/../PEAS/schemas")
 add_custom_command(
     OUTPUT "${MAS_HPP}"
+    # Root at inputs.json so MAS.hpp carries BOTH DesignRequirements and the full OperatingPoint graph
+    # (OperatingPointExcitation / SignalDescriptor / Waveform / Processed / Harmonics) — the latter is
+    # what the ported analytical converter solver returns. (quicktype names the design-requirements type
+    # DesignRequirements when reached via inputs.json's $ref, vs MagneticDesignRequirements when rooted
+    # directly — MasConverter.cpp uses the new name.)
     COMMAND "${QUICKTYPE}" -l c++ -s schema
-            "${MAS_ROOT}/schemas/inputs/designRequirements.json"
+            "${MAS_ROOT}/schemas/inputs.json"
+            -S "${MAS_ROOT}/schemas/inputs/designRequirements.json"
+            -S "${MAS_ROOT}/schemas/inputs/operatingPoint.json"
+            -S "${MAS_ROOT}/schemas/inputs/operatingPointExcitation.json"
+            -S "${MAS_ROOT}/schemas/inputs/operatingConditions.json"
             -S "${MAS_ROOT}/schemas/utils.json"
             -S "${PEAS_SCHEMAS}/utils.json"
-            -t MagneticDesignRequirements
+            -S "${PEAS_SCHEMAS}/inputs/operatingPointExcitation.json"
+            -t Inputs
             -o "${MAS_HPP}"
             --namespace MAS --source-style single-source --type-style pascal-case
             --member-style underscore-case --enumerator-style upper-underscore-case --no-boost
-    DEPENDS "${MAS_ROOT}/schemas/inputs/designRequirements.json"
+    DEPENDS "${MAS_ROOT}/schemas/inputs.json"
+            "${MAS_ROOT}/schemas/inputs/designRequirements.json"
+            "${MAS_ROOT}/schemas/inputs/operatingPoint.json"
+            "${MAS_ROOT}/schemas/inputs/operatingPointExcitation.json"
             "${MAS_ROOT}/schemas/utils.json"
-    COMMENT "Generating MAS.hpp (magnetic designRequirements) via quicktype"
+    COMMENT "Generating MAS.hpp (designRequirements + operatingPoint graph) via quicktype"
     VERBATIM)
 add_custom_target(mas_generated_header DEPENDS "${MAS_HPP}")
 
