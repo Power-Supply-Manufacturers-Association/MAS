@@ -34,9 +34,14 @@ add_custom_command(
             -o "${MAS_HPP}"
             --namespace MAS --source-style single-source --type-style pascal-case
             --member-style underscore-case --enumerator-style upper-underscore-case --no-boost
+    # Topology is PEAS-owned: strip the quicktype-emitted MAS::Topology enum and repoint MAS.hpp's
+    # struct at the single ::PEAS::Topology (deps/PEAS/src/PeasTopology.hpp). No MAS::Topology type.
+    COMMAND python3 "${CMAKE_SOURCE_DIR}/scripts/maslift_topology.py" "${MAS_HPP}"
     DEPENDS "${MAS_ROOT}/schemas/inputs/designRequirements.json"
             "${MAS_ROOT}/schemas/utils.json"
-    COMMENT "Generating MAS.hpp (magnetic designRequirements) via quicktype"
+            "${CMAKE_SOURCE_DIR}/scripts/maslift_topology.py"
+            "${MAS_ROOT}/../PEAS/src/PeasTopology.hpp"
+    COMMENT "Generating MAS.hpp (designRequirements) via quicktype + lifting Topology to PEAS::Topology"
     VERBATIM)
 add_custom_target(mas_generated_header DEPENDS "${MAS_HPP}")
 
