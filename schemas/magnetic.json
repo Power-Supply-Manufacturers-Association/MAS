@@ -6,6 +6,10 @@
     "description": "The description of a magnetic",
     "type": "object",
     "properties": {
+        "name": {
+            "type": "string",
+            "description": "Human-readable name/reference of this magnetic component (e.g. the design or part label)."
+        },
         "core": {
             "description": "Data describing the magnetic core.",
             "$ref": "./magnetic/core.json"

@@ -6,27 +6,6 @@
     "description": "All the data structure used in the Magnetic Agnostic Structure",
     "type": "object",
     "properties": {
-        "masVersion": {
-            "description": "SemVer version of the MAS specification this document conforms to (MAJOR.MINOR.PATCH). Optional in 0.x; will become required in 1.0.",
-            "title": "MAS Version",
-            "type": "string",
-            "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?$",
-            "examples": [
-                "0.1.0",
-                "1.0.0",
-                "1.2.3-rc.1"
-            ]
-        },
-        "masConformance": {
-            "description": "Optional declaration of which MAS conformance class this document targets. Class A — Inductor Basic. Class B — Transformer (multi-winding, insulation, isolated topologies). Class C — Full (all schemas, all topologies). See docs/conformance.md and schemas/conformance/.",
-            "title": "MAS Conformance",
-            "type": "string",
-            "enum": [
-                "A",
-                "B",
-                "C"
-            ]
-        },
         "inputs": {
             "description": "The description of the inputs that can be used to design a Magnetic",
             "title": "Inputs",

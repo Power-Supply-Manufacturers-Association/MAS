@@ -7,6 +7,10 @@
     "description": "The description of a solid rectangular magnet wire",
     "type": "object",
     "properties": {
+        "type": {
+            "const": "rectangular",
+            "$comment": "Discriminator pin: this file matches ONLY its own wire type (the union is a real oneOf)."
+        },
         "conductingWidth": {
             "description": "The conducting width of the wire, in m",
             "$ref": "../../utils.json#/$defs/dimensionWithTolerance"
@@ -29,6 +33,7 @@
         }
     },
     "required": [
+        "type",
         "conductingWidth",
         "conductingHeight"
     ],

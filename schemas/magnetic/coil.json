@@ -5,6 +5,7 @@
     "title": "coil",
     "description": "The description of a magnetic coil",
     "type": "object",
+    "additionalProperties": false,
     "properties": {
         "bobbin": {
             "title": "BobbinDataOrNameUnion",

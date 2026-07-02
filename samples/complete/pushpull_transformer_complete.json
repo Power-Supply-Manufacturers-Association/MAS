@@ -1,5 +1,4 @@
 {
-    "masVersion": "1.0.0",
     "inputs": {
         "designRequirements": {
             "name": "Push-Pull Transformer 48V to 12V 10A",

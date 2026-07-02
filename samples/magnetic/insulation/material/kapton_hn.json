@@ -1,8 +1,9 @@
 {
-    "masVersion": "1.0.0",
     "composition": "polyimide",
     "name": "Kapton HN",
-    "manufacturer": "DuPont",
+    "manufacturerInfo": {
+        "name": "DuPont"
+    },
     "thermalConductivity": 0.2,
     "dielectricStrength": [
         {

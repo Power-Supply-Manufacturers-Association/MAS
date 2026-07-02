@@ -1,5 +1,4 @@
 {
-    "masVersion": "1.0.0",
     "composition": "bakelite",
     "name": "bakelite",
     "thermalConductivity": 0.19,

@@ -3,7 +3,7 @@
     "$id": "https://psma.com/mas/magnetic/wire.json",
     "$comment": "SPDX-License-Identifier: Apache-2.0",
     "description": "The description of a magnet wire",
-    "anyOf": [
+    "oneOf": [
         {
             "$ref": "./wire/round.json"
         },

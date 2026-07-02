@@ -388,6 +388,10 @@
                     "description": "magnetic flux density peak for the field value, in T",
                     "type": "number"
                 },
+                "magneticFieldPeak": {
+                    "description": "Peak magnetic field strength H of the measurement, in A/m. The H-side counterpart of magneticFluxDensityPeak: some manufacturers (e.g. Samwha) specify amplitude-permeability curves by peak H instead of peak B.",
+                    "type": "number"
+                },
                 "magneticFieldDcBias": {
                     "description": "DC bias in the magnetic field, in A/m",
                     "type": "number"

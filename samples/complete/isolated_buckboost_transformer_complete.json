@@ -1,5 +1,4 @@
 {
-    "masVersion": "1.0.0",
     "inputs": {
         "designRequirements": {
             "name": "Isolated Buck-Boost Transformer 24V-48V Bidirectional 3A",

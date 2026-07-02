@@ -5,6 +5,7 @@
     "title": "bobbin",
     "description": "Description of a bobbin (the insulating former on which one or more windings are arranged). The term is industry-conventional; an IEV entry is being proposed by PSMA. See docs/normative-references.md.",
     "type": "object",
+    "additionalProperties": false,
     "properties": {
         "name": {
             "description": "Name of the bobbin.",

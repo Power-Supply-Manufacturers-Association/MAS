@@ -5,6 +5,7 @@
     "title": "insulation/wireCoating",
     "description": "A coating for a wire",
     "type": "object",
+    "additionalProperties": false,
     "properties": {
         "type": {
             "description": "The type of the coating",

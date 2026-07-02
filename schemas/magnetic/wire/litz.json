@@ -7,6 +7,10 @@
     "description": "The description of a stranded litz magnet wire",
     "type": "object",
     "properties": {
+        "type": {
+            "const": "litz",
+            "$comment": "Discriminator pin: this file matches ONLY its own wire type (the union is a real oneOf)."
+        },
         "strand": {
             "description": "The wire used as strands",
             "oneOf": [
@@ -30,6 +34,7 @@
         }
     },
     "required": [
+        "type",
         "strand",
         "outerDiameter"
     ],

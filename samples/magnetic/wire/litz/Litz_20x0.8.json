@@ -1,5 +1,4 @@
 {
-    "masVersion": "1.0.0",
     "type": "litz",
     "numberConductors": 20,
     "manufacturerInfo": {
@@ -31,6 +30,6 @@
     },
     "coating": {
         "type": "served",
-        "serving": "single"
+        "numberLayers": 1
     }
 }

@@ -1,5 +1,4 @@
 {
-    "masVersion": "1.0.0",
     "type": "round",
     "material": "copper",
     "numberConductors": 1,
@@ -14,18 +13,17 @@
         "material": {
             "composition": "teflon",
             "name": "Tefzel ETFE",
-            "manufacturer": "Dupont",
-            "manufacturerPartNumber": "D29A01TXX-1.5",
             "dielectricStrength": [
                 {
                     "value": 1800,
                     "thickness": 0.003175
                 }
             ],
-            "rating": {
-                "temperature": 180,
-                "voltage": 600
-            }
+            "manufacturerInfo": {
+                "name": "Dupont",
+                "reference": "D29A01TXX-1.5"
+            },
+            "temperatureClass": 180
         },
         "numberLayers": 2,
         "thicknessLayers": 3.81e-05,

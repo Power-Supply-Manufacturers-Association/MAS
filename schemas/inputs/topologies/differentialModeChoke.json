@@ -5,6 +5,7 @@
     "title": "differentialModeChoke",
     "description": "The description of a Differential Mode Choke (DMC) for EMI filtering. Differential mode chokes use an inductor to attenuate differential mode noise (noise between line and neutral or between lines). Unlike CMCs, DMCs present impedance to differential signals and are typically used in combination with capacitors to form LC filters.",
     "type": "object",
+    "additionalProperties": false,
     "properties": {
         "inputVoltage": {
             "description": "The input voltage of the filter stage",

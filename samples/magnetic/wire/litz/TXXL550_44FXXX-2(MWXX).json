@@ -1,5 +1,4 @@
 {
-    "masVersion": "1.0.0",
     "type": "litz",
     "numberConductors": 550,
     "manufacturerInfo": {
@@ -33,7 +32,6 @@
         "material": {
             "composition": "teflon",
             "name": "FEP",
-            "manufacturer": "Rubadue",
             "dielectricStrength": [
                 {
                     "value": 260000000.0,
@@ -44,10 +42,10 @@
                     "thickness": 0.005
                 }
             ],
-            "rating": {
-                "temperature": 155,
-                "voltage": 1000
-            }
+            "manufacturerInfo": {
+                "name": "Rubadue"
+            },
+            "temperatureClass": 155
         },
         "numberLayers": 3,
         "thicknessLayers": 7.62e-05

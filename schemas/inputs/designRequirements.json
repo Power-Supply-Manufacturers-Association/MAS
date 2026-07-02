@@ -75,13 +75,7 @@
                         },
                         "pollutionDegree": {
                             "description": "Required pollution for the magnetic to work under",
-                            "type": "string",
-                            "enum": [
-                                "PD1",
-                                "PD2",
-                                "PD3",
-                                "PD4"
-                            ]
+                            "$ref": "https://psma.com/peas/utils.json#/$defs/pollutionDegree"
                         },
                         "overvoltageCategory": {
                             "description": "Required overvoltage category",

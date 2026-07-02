@@ -7,6 +7,10 @@
     "description": "The description of a solid round magnet wire",
     "type": "object",
     "properties": {
+        "type": {
+            "const": "round",
+            "$comment": "Discriminator pin: this file matches ONLY its own wire type (the union is a real oneOf)."
+        },
         "material": {
             "title": "WireMaterialDataOrNameUnion",
             "oneOf": [
@@ -29,6 +33,7 @@
         }
     },
     "required": [
+        "type",
         "conductingDiameter"
     ],
     "$defs": {},

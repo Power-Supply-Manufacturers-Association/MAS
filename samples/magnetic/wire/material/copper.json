@@ -1,5 +1,4 @@
 {
-    "masVersion": "1.0.0",
     "name": "copper",
     "permeability": 0.999994,
     "resistivity": {

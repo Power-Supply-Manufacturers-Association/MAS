@@ -229,6 +229,7 @@
             "type": "array",
             "items": {
                 "type": "object",
+                "additionalProperties": false,
                 "properties": {
                     "origin": {
                         "description": "Origin of the value of the result",
