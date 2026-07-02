@@ -25,7 +25,7 @@ before any schema or code lands.
 |---|-------|--------|--------|
 | [0001](0001-units.md) | Normative SI units table | Draft | 0.2.0 |
 | [0001 v1](0001-quantity-units.v1.md) | `Quantity` type wrapper (original) | Superseded | — |
-| [0002](0002-conformance-classes.md) | Conformance classes (A / B / C) | **Implemented** (initial) | 0.2.0 |
+| [0002](0002-conformance-classes.md) | Conformance classes (A / B / C) | Withdrawn (masConformance retired when the PEAS root was closed, 2026-07-02) | — |
 | [0003](0003-irdi-identifiers.md) | IRDI identifiers via IEC CDD | **Implemented** | 0.2.0 |
 | [0004](0004-temperature-kelvin.md) | Temperature in Kelvin everywhere | Withdrawn (MAS already uses Celsius consistently) | — |
 | [0005](0005-permeability-variants.md) | Permeability variants (incremental, reversible) | **Implemented** | 0.2.0 |

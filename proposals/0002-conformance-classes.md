@@ -1,6 +1,6 @@
 # MAS-RFC 0002 — Conformance classes
 
-- **Status:** Implemented (initial bundles + masConformance field landed; per-class test vectors deferred)
+- **Status:** Withdrawn (2026-07-02). The `masConformance` field and the conformance-class bundles (`schemas/conformance/`, `scripts/validate-conformance.py`, `tests/conformance/`) were removed when the PEAS root object was closed: rather than carve MAS-specific keys into the shared PEAS container, `masConformance` was retired. This RFC is kept as a historical record; a future conformance mechanism would need a fresh proposal that does not add a top-level discriminator to the PEAS-shared document root.
 - **Type:** Additive (target: 0.2.0); enforcement breaking at 1.0.0
 - **Author:** _to be assigned_
 - **Created:** 2026-04-26

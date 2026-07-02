@@ -237,5 +237,6 @@ came from. Optional and closed, so records without it remain valid. Each entry:
 
 It is a **list**: a record may combine sources (e.g. specs from the datasheet, a rated
 voltage from a distributor, a missing field back-filled by librarian enrichment). The
-canonical definition lives in `PEAS/schemas/utils.json#/$defs/provenance` (mirrored in
-`MAS/schemas/utils.json`, which is self-contained).
+canonical definition lives in `PEAS/schemas/utils.json#/$defs/provenance` (aliased by
+`MAS/schemas/utils.json` via `$ref`, as are the other shared definitions such as
+`dimensionWithTolerance`).

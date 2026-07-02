@@ -17,6 +17,23 @@ A change to the bundled component database (`data/*.ndjson`) follows the same
 rules: adding a material/shape/wire is MINOR, removing or renaming one is
 MAJOR.
 
+## [Unreleased]
+
+### Breaking
+
+- **Removed `masVersion` and `masConformance` top-level fields.** MAS documents
+  are the polymorphic payload of the shared PEAS container, and the PEAS root
+  object was closed (`additionalProperties: false`) to reject junk keys. Rather
+  than carve MAS-specific metadata into the shared root, both fields were removed.
+- **Retired the conformance-classes feature (RFC 0002).** With `masConformance`
+  gone, the Class A/B/C bundles (`schemas/conformance/`), their validator
+  (`scripts/validate-conformance.py`), the test vectors (`tests/conformance/`)
+  and `docs/conformance.md` were removed. RFC 0002 is marked Withdrawn.
+- **Removed `inputs.converterInformation`** (unused; the topology seed files
+  under `inputs/topologies/` remain for future use).
+
+Note: `scripts/migrate-to-1.0.py` still writes `masVersion` and is now obsolete.
+
 ## [1.0.0] - 2026-04-27
 
 The breaking-changes release. Verified end-to-end against MKF

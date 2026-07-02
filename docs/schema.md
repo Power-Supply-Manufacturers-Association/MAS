@@ -66,7 +66,9 @@ MAS.json (root)
     "name": "string",                  // Optional
     "operatingTemperature": { ... },   // Optional
     "insulation": { ... },             // Optional
-    "maximumDimensions": [x, y, z],    // Optional
+    "maximumDimensions": {             // Optional: {width, height, depth} object, in m
+      "width": number, "height": number, "depth": number
+    },
     "maximumWeight": number,           // Optional
     "market": "string",                // Optional
     "terminalType": [ ... ]            // Optional
@@ -83,23 +85,23 @@ MAS.json (root)
 }
 ```
 
-### Magnetic (required: core, coil)
+### Magnetic (no required fields — a bare magnetic is valid, seed-friendly)
 ```json
 {
   "name": "string",                    // Optional
-  "core": {
+  "core": {                            // Optional
     "name": "string",                  // Optional
-    "functionalDescription": {         // Required
-      "type": "string",                // Required: "two-piece set", "toroidal", etc.
+    "functionalDescription": {         // Required within core
+      "type": "string",                // Required: "twoPieceSet", "toroidal", etc.
       "material": "string",            // Required: material name
       "shape": "string",               // Required: shape name
       "gapping": [ ... ],              // Required: array (empty for ungapped)
       "numberStacks": number           // Optional, default 1
     }
   },
-  "coil": {
+  "coil": {                            // Optional
     "bobbin": "string",                // Optional
-    "functionalDescription": [         // Required, one object per winding
+    "functionalDescription": [         // One object per winding
       {
         "name": "string",              // Optional
         "numberTurns": number,         // Required
@@ -115,23 +117,24 @@ MAS.json (root)
 ## Enumeration Values
 
 ### Core Types
-- `"two-piece set"` - E, ETD, PQ, RM cores
+- `"twoPieceSet"` - E, ETD, PQ, RM cores
 - `"toroidal"` - Ring/toroid cores
-- `"closed shape"` - Pot cores
-- `"piece and plate"` - Core with flat plate
+- `"closedShape"` - Pot cores
+- `"pieceAndPlate"` - Core with flat plate
 
 ### Gapping Types
 - `"subtractive"` - Ground gap (reduces core height)
 - `"additive"` - Spacer gap (increases core height)
 - `"residual"` - Unavoidable gap at mating surfaces
-- `"distributed"` - Air gap distributed in magnetic path
 
 ### Waveform Labels
-- `"triangular"` - Triangular wave (inductor current)
-- `"rectangular"` - Rectangular/square wave
+- `"triangular"`, `"triangularWithDeadtime"` - Triangular wave (inductor current)
+- `"rectangular"`, `"rectangularWithDeadtime"`, `"rectangularDCM"` - Rectangular/square wave variants
+- `"unipolarRectangular"`, `"unipolarTriangular"` - Unipolar (single-polarity) variants
+- `"bipolarRectangular"`, `"bipolarTriangular"` - Bipolar (symmetric) variants
 - `"sinusoidal"` - Sine wave
-- `"flybackPrimary"` - Flyback primary current shape
-- `"flybackSecondary"` - Flyback secondary current shape
+- `"flybackPrimary"`, `"flybackSecondary"`, `"flybackSecondaryWithDeadtime"` - Flyback current shapes
+- `"secondaryRectangular"`, `"secondaryRectangularWithDeadtime"` - Secondary-side rectangular shapes
 - `"custom"` - User-defined with data points
 
 ### Insulation Types (IEC 60664-1 §4.1)
@@ -160,16 +163,17 @@ MAS.json (root)
 - `"groupIIIB"` - 100 ≤ CTI < 175
 
 ### Markets
-- `"commercial"`, `"industrial"`, `"medical"`, `"military"`, `"space"`
+- `"commercial"`, `"industrial"`, `"medical"`, `"automotive"`, `"military"`, `"space"`
 
 ### Topologies
-- `"buckConverter"`, `"boostConverter"`, `"invertingBuckBoostConverter"`
+- `"buckConverter"`, `"boostConverter"`, `"sepicConverter"`, `"cukConverter"`, `"zetaConverter"`, `"fourSwitchBuckBoostConverter"`
 - `"flybackConverter"`, `"activeClampForwardConverter"`, `"singleSwitchForwardConverter"`, `"twoSwitchForwardConverter"`
-- `"pushPullConverter"`, `"halfBridgeConverter"`, `"fullBridgeConverter"`
+- `"pushPullConverter"`, `"weinbergConverter"`, `"asymmetricHalfBridgeConverter"`
 - `"phaseShiftedFullBridgeConverter"`, `"phaseShiftedHalfBridgeConverter"`
-- `"llcResonantConverter"`, `"cllcResonantConverter"`, `"dualActiveBridgeConverter"`
+- `"llcResonantConverter"`, `"cllcResonantConverter"`, `"clllcResonantConverter"`, `"seriesResonantConverter"`, `"dualActiveBridgeConverter"`
+- `"isolatedBuckConverter"`, `"isolatedBuckBoostConverter"`
+- `"powerFactorCorrection"`, `"viennaRectifierConverter"`
 - `"currentTransformer"`, `"commonModeChoke"`, `"differentialModeChoke"`
-- `"isolatedBuckConverter"`, `"isolatedBuckBoostConverter"`, `"powerFactorCorrection"`
 
 ## DimensionWithTolerance Pattern
 
@@ -203,20 +207,27 @@ Examples:
 The schemas use JSON Schema Draft 2020-12. Validate with:
 
 ```python
+import glob
 import json
-import jsonschema
+
 from jsonschema import Draft202012Validator
+from referencing import Registry, Resource
+
+# Register every schema file under its $id (https://psma.com/mas/...).
+# Include the sibling PEAS schemas too, since MAS $refs them.
+resources = []
+for path in glob.glob("schemas/**/*.json", recursive=True) + \
+            glob.glob("../PEAS/schemas/**/*.json", recursive=True):
+    with open(path) as f:
+        contents = json.load(f)
+    resources.append((contents["$id"], Resource.from_contents(contents)))
+registry = Registry().with_resources(resources)
 
 # Load schema
 with open("schemas/MAS.json") as f:
     schema = json.load(f)
 
-# Create validator with reference resolution
-resolver = jsonschema.RefResolver(
-    base_uri="file:///path/to/MAS/schemas/",
-    referrer=schema
-)
-validator = Draft202012Validator(schema, resolver=resolver)
+validator = Draft202012Validator(schema, registry=registry)
 
 # Validate document
 with open("my_design.json") as f:
@@ -224,6 +235,14 @@ with open("my_design.json") as f:
 
 validator.validate(data)
 ```
+
+`scripts/validate-samples.py` does exactly this for every document under
+`samples/complete/`; `scripts/validate-fixtures.py` validates the
+per-record sub-schema fixtures under `samples/`; `scripts/validate-db.py`
+validates every record in `data/*.ndjson` (records in
+`advanced_core_materials.ndjson` are heavy-field patches and are
+validated merged onto their base `core_materials.ndjson` material, never
+standalone).
 
 ## File Locations
 

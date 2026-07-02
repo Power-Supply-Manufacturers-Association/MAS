@@ -35,16 +35,13 @@ In scope:
 - Cores: ferrite, powder, amorphous, nanocrystalline; ungapped and gapped.
 - Coils: single and multi-winding, round / rectangular / foil / planar / litz wires.
 - Insulation: temperature classes, dielectric strength, creepage, reinforced and double insulation per IEC 62368-1 / IEC 61558.
-- Sixteen converter topologies, from buck and boost through LLC, CLLC, dual-active-bridge, push-pull and PFC.
+- Twenty-five converter topologies, from buck and boost through LLC, CLLC, dual-active-bridge, push-pull and PFC.
 
 Out of scope:
 
 - PCB layout and routing (covered by IPC formats).
 - Thermal-management hardware beyond the magnetic itself.
 - Rotating machines (motor / generator construction).
-
-Conformance classes — A (Inductor Basic), B (Transformer), C (Full) —
-are proposed in [`proposals/0002-conformance-classes.md`](proposals/0002-conformance-classes.md).
 
 ## Normative references
 
