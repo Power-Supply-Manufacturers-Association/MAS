@@ -134,6 +134,7 @@ inline void schema_loader(const json_uri& uri, json& schema)
         {"/sas/",  "../SAS/schemas/"},
         {"/ras/",  "../RAS/schemas/"},
         {"/cias/", "../CIAS/schemas/"},
+        {"/tbas/", "../TBAS/schemas/"},
     };
     std::string filename = mas_root() + p;
     for (const auto& repo : repos) {
