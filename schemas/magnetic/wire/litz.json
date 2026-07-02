@@ -8,8 +8,9 @@
     "type": "object",
     "properties": {
         "type": {
+            "$ref": "../wire.json#/$defs/wireType",
             "const": "litz",
-            "$comment": "Discriminator pin: this file matches ONLY its own wire type (the union is a real oneOf)."
+            "$comment": "Discriminator pin with the shared enum type: the $ref keeps code generators (quicktype -> MAS.hpp WireType) on the common enum; the const sibling narrows validation to this subtype only (same semantics as a bare const)."
         },
         "strand": {
             "description": "The wire used as strands",
