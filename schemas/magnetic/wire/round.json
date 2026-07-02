@@ -4,14 +4,9 @@
     "$comment": "SPDX-License-Identifier: Apache-2.0",
     "$ref": "./basicWire.json",
     "title": "wire/round",
-    "description": "The description of a solid round magnet wire",
+    "description": "The description of a solid round magnet wire Discriminator: this file matches ONLY documents with type='round' (enforced by the if/required/else:false conditional, which stays invisible to code generators so the shared wireType enum keeps generating as WireType).",
     "type": "object",
     "properties": {
-        "type": {
-            "$ref": "../wire.json#/$defs/wireType",
-            "const": "round",
-            "$comment": "Discriminator pin with the shared enum type: the $ref keeps code generators (quicktype -> MAS.hpp WireType) on the common enum; the const sibling narrows validation to this subtype only (same semantics as a bare const)."
-        },
         "material": {
             "title": "WireMaterialDataOrNameUnion",
             "oneOf": [
@@ -34,9 +29,19 @@
         }
     },
     "required": [
-        "type",
         "conductingDiameter"
     ],
-    "$defs": {},
-    "unevaluatedProperties": false
+    "unevaluatedProperties": false,
+    "if": {
+        "properties": {
+            "type": {
+                "const": "round"
+            }
+        },
+        "required": [
+            "type"
+        ]
+    },
+    "then": true,
+    "else": false
 }
