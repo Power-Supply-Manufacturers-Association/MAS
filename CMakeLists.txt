@@ -4,9 +4,6 @@ project(MAS_tests)
 
 SET(CMAKE_CXX_STANDARD 20)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-
-SET(CMAKE_CXX_FLAGS "-Wall -Wextra -Wno-deprecated-declarations -Wno-unused-parameter -Wno-switch")
 
 option(BUILD_SHARED_LIBS      "Build tests"    ON)
 option(BUILD_TESTS      "Build tests"    OFF)
@@ -20,31 +17,19 @@ FetchContent_Declare(Catch2
         GIT_REPOSITORY https://github.com/catchorg/Catch2.git
         GIT_TAG  tags/v3.8.1)
 
-FetchContent_Declare(json
-        GIT_REPOSITORY https://github.com/nlohmann/json/
-        GIT_TAG  tags/v3.11.2)
+# jsoncons: header-only JSON library whose jsonschema extension implements
+# JSON Schema draft 2020-12 NATIVELY — including $ref with sibling keywords
+# and unevaluatedProperties, which the PSMA schemas rely on (the wire-subtype
+# discriminators and the sealed allOf-extension objects). It replaces
+# pboettch/json-schema-validator (draft-07 only, unevaluatedProperties
+# silently ignored) and the lower_draft202012_ref_siblings() shim the tests
+# used to need. Pinned to an exact release tag — never a branch.
+set(JSONCONS_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+FetchContent_Declare(jsoncons
+        GIT_REPOSITORY https://github.com/danielaparker/jsoncons.git
+        GIT_TAG  tags/v1.8.1)
 
-FetchContent_Declare(json-schema-validator
-        GIT_REPOSITORY https://github.com/pboettch/json-schema-validator.git
-        GIT_TAG  origin/main)
-
-FetchContent_MakeAvailable(Catch2 json json-schema-validator)
-
-# Patch json-schema-validator to skip duplicate schema insertions instead of throwing.
-# This fixes an issue where schemas with shared $ref dependencies cause "already inserted" errors.
-# Use the FetchContent-provided source dir (NOT a hardcoded ${CMAKE_BINARY_DIR}/_deps path)
-# so FETCHCONTENT_SOURCE_DIR_JSON-SCHEMA-VALIDATOR redirection keeps working, and only
-# rewrite the file when the unpatched line is still present (idempotent, no spurious rebuilds).
-set(JSON_VALIDATOR_THROW_LINE "throw std::invalid_argument(\"schema with \" + uri.to_string() + \" already inserted\");")
-file(READ "${json-schema-validator_SOURCE_DIR}/src/json-validator.cpp" JSON_VALIDATOR_CPP)
-string(FIND "${JSON_VALIDATOR_CPP}" "${JSON_VALIDATOR_THROW_LINE}" JSON_VALIDATOR_THROW_POS)
-if(NOT JSON_VALIDATOR_THROW_POS EQUAL -1)
-    string(REPLACE
-        "${JSON_VALIDATOR_THROW_LINE}"
-        "return; // Skip if already inserted (patched by MAS)"
-        JSON_VALIDATOR_CPP "${JSON_VALIDATOR_CPP}")
-    file(WRITE "${json-schema-validator_SOURCE_DIR}/src/json-validator.cpp" "${JSON_VALIDATOR_CPP}")
-endif()
+FetchContent_MakeAvailable(Catch2 jsoncons)
 
 SET(CMAKE_CXX_FLAGS "-Wall -Wextra")
 
@@ -52,7 +37,11 @@ file(GLOB MAS_sources
     "tests/*.cpp")
 
 add_executable(MAS_tests ${MAS_sources})
-# Include dirs come from the imported targets (nlohmann_json::nlohmann_json,
-# Catch2::Catch2WithMain) — never hardcode ${CMAKE_BINARY_DIR}/_deps paths,
-# they break when FETCHCONTENT_SOURCE_DIR_* redirects a dependency.
-target_link_libraries(MAS_tests PRIVATE nlohmann_json::nlohmann_json nlohmann_json_schema_validator Catch2::Catch2WithMain)
+# jsoncons' schema evaluator is header-only template code: without optimization
+# the ~18k-record NDJSON sweep runs ~15x slower. Force -O2 on this target so the
+# suite stays fast even when no CMAKE_BUILD_TYPE is set.
+target_compile_options(MAS_tests PRIVATE -O2)
+# Include dirs come from the imported targets (jsoncons, Catch2::Catch2WithMain)
+# — never hardcode ${CMAKE_BINARY_DIR}/_deps paths, they break when
+# FETCHCONTENT_SOURCE_DIR_* redirects a dependency.
+target_link_libraries(MAS_tests PRIVATE jsoncons Catch2::Catch2WithMain)

@@ -6,6 +6,27 @@ schema. Conforming implementations of the MAS specification need not
 follow this build; they need only consume MAS documents that validate
 against `schemas/MAS.json`.
 
+## Dependencies
+
+Fetched automatically by CMake `FetchContent` (network needed on the first
+configure only), each pinned to an exact release tag — never a branch:
+
+- [Catch2](https://github.com/catchorg/Catch2) `v3.8.1` — test framework.
+  The test binary is run directly (`./MAS_tests`); no ctest registration.
+- [jsoncons](https://github.com/danielaparker/jsoncons) `v1.8.1` —
+  header-only JSON library whose `jsonschema` extension implements JSON
+  Schema **draft 2020-12 natively**, including `$ref` with sibling keywords
+  (the wire-subtype discriminators) and `unevaluatedProperties` (the sealed
+  allOf-extension objects). It replaced pboettch/json-schema-validator
+  (draft-07 only) and the draft-07 lowering shim the tests used to carry,
+  so the C++ binding now enforces the same semantics as Python's
+  `Draft202012Validator` (`scripts/validate-*.py`).
+
+The tests need the sibling schema repos (`PEAS`, `CAS`, `SAS`, `RAS`,
+`CIAS`) checked out alongside MAS: cross-repo `$ref`s use
+`https://psma.com/<repo>/...` `$id` URIs which `tests/TestUtils.hpp`
+resolves to `../<REPO>/schemas/` on disk.
+
 ## Build steps
 
 1. Create a build directory:

@@ -7,13 +7,11 @@
 #include <vector>
 #include "TestUtils.hpp"
 
-using json = nlohmann::json;
-using nlohmann::json_schema::json_validator;
-using mas_test::format_check;
-using mas_test::load_schema_file;
-using mas_test::lower_draft202012_ref_siblings;
+using mas_test::json;
+using mas_test::load_json_file;
+using mas_test::make_validator;
 using mas_test::mas_root;
-using mas_test::schema_loader;
+using mas_test::validate_report;
 
 namespace {
 
@@ -30,32 +28,20 @@ std::string ReplaceAll(std::string str, const std::string& from, const std::stri
 bool validate_single_schema(const std::string& validator_path, const std::vector<std::filesystem::path>& files)
 {
     try {
-        json shape_schema;
-        try {
-            shape_schema = load_schema_file(validator_path);
-        }
-        catch (const std::exception& e) {
-            std::cerr << "Could not open and parse schema " << validator_path << ": " << e.what() << "\n";
-            return false;
-        }
-
-        json_validator validator(schema_loader, format_check);
-        try {
-            validator.set_root_schema(shape_schema);
-        }
-        catch (const std::exception& e) {
-            std::cerr << "Validation of schema " << validator_path << " failed, here is why: " << e.what() << "\n";
-            return false;
-        }
-
-        for (const auto& file_path : files) {
-            std::ifstream json_file(file_path);
-            auto jf = json::parse(json_file);
+        mas_test::json_schema validator = [&] {
             try {
-                validator.validate(jf);
+                return make_validator(validator_path);
             }
             catch (const std::exception& e) {
-                std::cerr << "Validation of " << file_path << " failed, here is why: " << e.what() << "\n";
+                std::cerr << "Could not compile schema " << validator_path << ": " << e.what() << "\n";
+                throw;
+            }
+        }();
+
+        for (const auto& file_path : files) {
+            json jf = load_json_file(file_path.string());
+            if (!validate_report(validator, jf, std::cerr, file_path.string())) {
+                std::cerr << "Validation of " << file_path << " failed\n";
                 return false;
             }
         }
@@ -100,38 +86,28 @@ std::map<std::string, std::vector<std::filesystem::path>> group_samples_by_schem
 void validate_ndjson(const std::string& validator_path, const std::string& database)
 {
     try {
-        json shape_schema;
-        try {
-            shape_schema = load_schema_file(validator_path);
-        }
-        catch (const std::exception& e) {
-            std::cerr << "Could not open and parse schema " << validator_path << ": " << e.what() << "\n";
-            CHECK(false); // fails
-            return;
-        }
-
-        json_validator validator(schema_loader, format_check); // create validator
-        try {
-            validator.set_root_schema(shape_schema); // insert root-schema
-        }
-        catch (const std::exception& e) {
-            std::cerr << "Validation of schema failed, here is why: " << e.what() << "\n";
-            CHECK(false); // fails
-            return;
-        }
+        mas_test::json_schema validator = [&] {
+            try {
+                return make_validator(validator_path);
+            }
+            catch (const std::exception& e) {
+                std::cerr << "Could not compile schema " << validator_path << ": " << e.what() << "\n";
+                throw;
+            }
+        }();
 
         try {
             std::ifstream ndjson_file(database);
             std::string myline;
+            size_t line_number = 0;
 
             while (std::getline(ndjson_file, myline)) {
+                line_number++;
                 json jf = json::parse(myline);
 
-                try {
-                    validator.validate(jf); // validate the document - uses the default throwing error-handler
-                }
-                catch (const std::exception& e) {
-                    std::cerr << "Validation failed, here is why: " << e.what() << "\n";
+                const std::string context = database + ":" + std::to_string(line_number);
+                if (!validate_report(validator, jf, std::cerr, context)) {
+                    std::cerr << "Validation failed for " << context << "\n";
                     CHECK(false); // fails
                     break;
                 }
@@ -269,4 +245,83 @@ TEST_CASE("Cores", "[data]")
     auto data_file_path = mas_root() + "data/cores.ndjson";
     auto schema_file_path = mas_root() + "schemas/magnetic/core.json";
     validate_ndjson(schema_file_path, data_file_path);
+}
+
+namespace {
+
+// A schema-valid solid round wire, shaped like the records in
+// data/wires.ndjson.
+json valid_round_wire()
+{
+    return json::parse(R"({
+        "name": "Round 0.01 - Grade 1",
+        "standardName": "0.01 mm",
+        "type": "round",
+        "material": "copper",
+        "manufacturerInfo": {"name": "Elektrisola"},
+        "numberConductors": 1,
+        "standard": "IEC 60317",
+        "conductingDiameter": {"nominal": 0.00001},
+        "outerDiameter": {"minimum": 0.000012, "maximum": 0.0000165}
+    })");
+}
+
+} // namespace
+
+// Draft 2020-12 regression: `unevaluatedProperties: false` in the wire
+// subtype schemas seals the object across the `$ref: ./basicWire.json`
+// boundary. The retired draft-07 validator (pboettch) silently ignored the
+// keyword, so a typo'd extra key was accepted; the 2020-12 validator must
+// reject it — matching Python's Draft202012Validator.
+TEST_CASE("Wire_UnevaluatedProperties_RejectsTypoKey", "[schema-2020-12]")
+{
+    auto wire_validator = make_validator(mas_root() + "schemas/magnetic/wire.json");
+
+    json good = valid_round_wire();
+    CHECK(validate_report(wire_validator, good, std::cerr, "valid round wire"));
+
+    json typo = valid_round_wire();
+    typo["tolerence"] = 0.1; // typo'd extra key inside the sealed object
+    CHECK(!wire_validator.is_valid(typo));
+
+    // The extra key must also be rejected against the subtype schema
+    // directly, not just via the union.
+    auto round_validator = make_validator(mas_root() + "schemas/magnetic/wire/round.json");
+    CHECK(!round_validator.is_valid(typo));
+}
+
+// Draft 2020-12 regression: the wire-union discriminators are `$ref` with
+// sibling keywords (properties/required/unevaluatedProperties plus the
+// if/{type:const}/then:true/else:false conditional). Under draft-07 the
+// siblings were ignored and every wire matched all five oneOf branches;
+// natively evaluated, a record must match EXACTLY the branch its `type`
+// names — with no schema-lowering shim involved.
+TEST_CASE("Wire_Union_Discriminator_ExactlyOneBranch", "[schema-2020-12]")
+{
+    const json round = valid_round_wire();
+
+    // The union accepts the round record (oneOf: exactly one branch).
+    auto wire_validator = make_validator(mas_root() + "schemas/magnetic/wire.json");
+    CHECK(validate_report(wire_validator, round, std::cerr, "round wire vs wire.json"));
+
+    // Branch by branch: only round.json matches.
+    const std::string subtypes[] = {"round", "foil", "rectangular", "litz", "planar"};
+    int matches = 0;
+    for (const auto& subtype : subtypes) {
+        auto branch_validator = make_validator(mas_root() + "schemas/magnetic/wire/" + subtype + ".json");
+        const bool valid = branch_validator.is_valid(round);
+        INFO("subtype branch: " << subtype);
+        CHECK(valid == (subtype == "round"));
+        if (valid) {
+            matches++;
+        }
+    }
+    CHECK(matches == 1);
+
+    // A type:planar record carrying round-only fields matches no branch.
+    json planar_with_round_fields = json::parse(R"({
+        "type": "planar",
+        "conductingDiameter": {"nominal": 0.00001}
+    })");
+    CHECK(!wire_validator.is_valid(planar_with_round_fields));
 }
