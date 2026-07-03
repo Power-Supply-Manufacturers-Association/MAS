@@ -35,7 +35,6 @@ add_custom_command(
             "${MAS_ROOT}/schemas/inputs.json"
             -S "${MAS_ROOT}/schemas/inputs/designRequirements.json"
             -S "${MAS_ROOT}/schemas/inputs/operatingPoint.json"
-            -S "${MAS_ROOT}/schemas/inputs/operatingPointExcitation.json"
             -S "${MAS_ROOT}/schemas/inputs/operatingConditions.json"
             -S "${MAS_ROOT}/schemas/utils.json"
             -S "${PEAS_SCHEMAS}/utils.json"
@@ -75,7 +74,6 @@ add_custom_command(
     DEPENDS "${MAS_ROOT}/schemas/inputs.json"
             "${MAS_ROOT}/schemas/inputs/designRequirements.json"
             "${MAS_ROOT}/schemas/inputs/operatingPoint.json"
-            "${MAS_ROOT}/schemas/inputs/operatingPointExcitation.json"
             "${MAS_ROOT}/schemas/utils.json"
     COMMENT "Generating MAS.hpp (designRequirements + operatingPoint graph) via quicktype"
     VERBATIM)
