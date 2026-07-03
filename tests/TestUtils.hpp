@@ -64,7 +64,7 @@ inline json schema_resolver(const jsoncons::uri& uri)
         {"/sas/",  "../SAS/schemas/"},
         {"/ras/",  "../RAS/schemas/"},
         {"/cias/", "../CIAS/schemas/"},
-        {"/tbas/", "../TBAS/schemas/"},
+        {"/tdas/", "../TDAS/schemas/"},
     };
     std::string filename = mas_root() + p;
     for (const auto& repo : repos) {
