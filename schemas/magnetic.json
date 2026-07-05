@@ -219,6 +219,33 @@
             ],
             "additionalProperties": false
         },
+        "magneticDatasheetSaturationCurrent": {
+            "title": "DatasheetSaturationCurrent",
+            "description": "Saturation current stated at a specific inductance-drop criterion — one row of a datasheet's I_sat table. Manufacturer-agnostic: a vendor that quotes I_sat at several |dL/L| criteria (e.g. 10% and 30%) contributes one entry per criterion; a vendor that quotes a single unqualified I_sat uses the scalar saturationCurrentPeak instead.",
+            "type": "object",
+            "properties": {
+                "percentInductanceDrop": {
+                    "description": "Roll-off criterion in percent: the inductance drop |dL/L| from the small-signal value at which this saturation current is specified (e.g. 10, 20, 30).",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                },
+                "current": {
+                    "description": "Saturation current in Amperes at the stated inductance-drop criterion.",
+                    "type": "number",
+                    "minimum": 0
+                },
+                "temperature": {
+                    "description": "Measurement temperature in degrees Celsius.",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "percentInductanceDrop",
+                "current"
+            ],
+            "additionalProperties": false
+        },
         "magneticDatasheetResistancePoint": {
             "title": "DatasheetResistancePoint",
             "description": "Resistance vs. frequency point from the datasheet, optionally parameterised by DC bias current.",
@@ -368,9 +395,16 @@
                     }
                 },
                 "saturationCurrentPeak": {
-                    "description": "Peak saturation current in Amperes (I_sat from datasheet).",
+                    "description": "Peak saturation current in Amperes (I_sat from datasheet). A single unqualified I_sat; when the datasheet states I_sat at explicit inductance-drop criteria, use saturationCurrents instead (or in addition).",
                     "type": "number",
                     "minimum": 0
+                },
+                "saturationCurrents": {
+                    "description": "Saturation-current table: I_sat at one or more inductance-drop criteria (|dL/L| %), when the datasheet specifies them. Preferred over the single saturationCurrentPeak scalar because it carries the roll-off basis, enabling apples-to-apples cross-manufacturer comparison. Omit for a part whose datasheet gives only one unqualified I_sat.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/magneticDatasheetSaturationCurrent"
+                    }
                 },
                 "selfResonantFrequency": {
                     "description": "Self-resonant frequency in Hz.",
@@ -440,9 +474,16 @@
                     }
                 },
                 "saturationCurrentPeak": {
-                    "description": "Peak saturation current in Amperes (I_sat from datasheet).",
+                    "description": "Peak saturation current in Amperes (I_sat from datasheet). A single unqualified I_sat; when the datasheet states I_sat at explicit inductance-drop criteria, use saturationCurrents instead (or in addition).",
                     "type": "number",
                     "minimum": 0
+                },
+                "saturationCurrents": {
+                    "description": "Saturation-current table: I_sat at one or more inductance-drop criteria (|dL/L| %), when the datasheet specifies them. Preferred over the single saturationCurrentPeak scalar because it carries the roll-off basis, enabling apples-to-apples cross-manufacturer comparison. Omit for a part whose datasheet gives only one unqualified I_sat.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/magneticDatasheetSaturationCurrent"
+                    }
                 },
                 "selfResonantFrequency": {
                     "description": "Self-resonant frequency in Hz.",
