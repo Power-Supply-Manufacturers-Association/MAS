@@ -92,8 +92,19 @@ json datasheet_atom(const json& peas, size_t nsec, const std::string& name) {
                                  "' (a DATASHEET magnetic must be a bound catalog part; a designed "
                                  "core+coil magnetic needs the MKF_MODEL subcircuit export instead)");
     const json& mi = mag.at("manufacturerInfo");
-    if (!mi.contains("datasheetInfo") || !mi.at("datasheetInfo").is_object())
-        throw std::runtime_error("MAS DATASHEET: manufacturerInfo.datasheetInfo missing on '" + name + "'");
+    if (!mi.contains("datasheetInfo") || !mi.at("datasheetInfo").is_object()) {
+        // The classic trigger: a DESIGNED magnetic (an OpenMagnetics/MKF adviser result carrying
+        // core/coil + manufacturerInfo but no catalog datasheet) bound into the slot. Its real model
+        // is the MKF-exported SPICE subcircuit, not a datasheet — point the user at the two ways out.
+        const bool designed = mag.contains("core") || mag.contains("coil");
+        throw std::runtime_error(
+            "MAS DATASHEET: manufacturerInfo.datasheetInfo missing on '" + name + "'" +
+            (designed ? " — this is a designed (OpenMagnetics/MKF) magnetic, not a catalog part. "
+                        "Re-export it with its SPICE subcircuit (magnetic.modelOutputs."
+                        "spiceSubcircuit, MKF export_magnetic_as_subcircuit) to simulate the real "
+                        "model, or select the ideal model for this component."
+                      : ""));
+    }
     const json& di = mi.at("datasheetInfo");
     if (!di.contains("electrical") || !di.at("electrical").is_array() || di.at("electrical").empty())
         throw std::runtime_error("MAS DATASHEET: datasheetInfo.electrical missing/empty on '" + name + "'");
