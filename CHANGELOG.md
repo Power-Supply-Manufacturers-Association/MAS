@@ -34,6 +34,27 @@ MAJOR.
 
 Note: `scripts/migrate-to-1.0.py` still writes `masVersion` and is now obsolete.
 
+### Added
+
+- **`frequencyFactor` on `pocoPermeabilityMethodData`** (optional `{a, b, c, d}`):
+  percent-of-initial logistic rolloff `(a / (1 + (f/b)^c) + d) * 0.01`, matching
+  the implementation MKF ships since ABT #169. Legalizes the 48 POCO V2026
+  records that already carried the fitted factors.
+
+### Fixed
+
+- **Metglas, AF, AN (data):** manufacturer loss curves were W/kg values stored as
+  `volumetricLosses` (W/m³) — moved to `massLosses` (Nanoperm precedent), and the
+  Steinmetz fits made on those W/kg points rescaled `k × density` into true W/m³.
+- **Duplicate records (data):** 58 duplicated advanced lines removed (Kool Mµ /
+  XFlux / High Flux / Edge / FS / MS / HF families; kept the last of each name,
+  which is what MKF's last-wins merge already used); duplicate `XFlux 125`
+  (2023 fit superseded by the 2025-08 refit) and `TMFD` base lines removed.
+- **Nanoperm ×7 (data):** empty `volumetricLosses: {}` shells removed (undefined
+  behavior in MKF's C++ advanced-materials merge).
+- **M34 (data):** `datasheetUrl` pointed at M33's download path with the filename
+  swapped; now the real TDK M34 datasheet URL.
+
 ## [1.0.0] - 2026-04-27
 
 The breaking-changes release. Verified end-to-end against MKF
