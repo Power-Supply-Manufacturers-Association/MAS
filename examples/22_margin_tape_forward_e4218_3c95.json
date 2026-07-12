@@ -1,120 +1,121 @@
 {
-    "inputs": {
-        "designRequirements": {
-            "magnetizingInductance": {
-                "nominal": 0.0008
-            },
-            "turnsRatios": [
-                {
-                    "nominal": 3.0
-                }
-            ],
-            "insulation": {
-                "insulationType": "reinforced",
-                "mainSupplyVoltage": {
-                    "maximum": 300
-                },
-                "overvoltageCategory": "II",
-                "pollutionDegree": "PD2",
-                "altitude": {
-                    "maximum": 2000
-                },
-                "cti": "groupII",
-                "standards": [
-                    "IEC 60664-1"
-                ]
-            }
-        },
-        "operatingPoints": [
-            {
-                "name": "Nominal",
-                "conditions": {
-                    "ambientTemperature": 40
-                },
-                "excitationsPerWinding": [
-                    {
-                        "frequency": 120000,
-                        "current": {
-                            "processed": {
-                                "label": "triangular",
-                                "peakToPeak": 0.3,
-                                "offset": 0,
-                                "dutyCycle": 0.4
-                            }
-                        },
-                        "voltage": {
-                            "processed": {
-                                "label": "rectangular",
-                                "peakToPeak": 96,
-                                "offset": 0,
-                                "dutyCycle": 0.4
-                            }
-                        }
-                    },
-                    {
-                        "frequency": 120000,
-                        "current": {
-                            "processed": {
-                                "label": "triangular",
-                                "peakToPeak": 0.9,
-                                "offset": 3.5,
-                                "dutyCycle": 0.4
-                            }
-                        },
-                        "voltage": {
-                            "processed": {
-                                "label": "rectangular",
-                                "peakToPeak": 32,
-                                "offset": 0,
-                                "dutyCycle": 0.4
-                            }
-                        }
-                    }
-                ]
-            }
-        ]
-    },
-    "magnetic": {
-        "coil": {
-            "bobbin": "basic",
-            "functionalDescription": [
-                {
-                    "name": "Primary",
-                    "numberTurns": 28,
-                    "numberParallels": 1,
-                    "isolationSide": "primary",
-                    "wire": "Round 0.3 - Grade 2"
-                },
-                {
-                    "name": "Secondary",
-                    "numberTurns": 9,
-                    "numberParallels": 2,
-                    "isolationSide": "secondary",
-                    "wire": "Round 0.5 - Grade 1"
-                }
-            ]
-        },
-        "core": {
-            "functionalDescription": {
-                "type": "twoPieceSet",
-                "material": "3C95",
-                "shape": "E 42/21/15",
-                "gapping": [
-                    {
-                        "type": "residual",
-                        "length": 1e-05
-                    },
-                    {
-                        "type": "residual",
-                        "length": 1e-05
-                    },
-                    {
-                        "type": "residual",
-                        "length": 1e-05
-                    }
-                ],
-                "numberStacks": 1
-            }
+  "inputs": {
+    "designRequirements": {
+      "magnetizingInductance": {
+        "nominal": 0.0008
+      },
+      "turnsRatios": [
+        {
+          "nominal": 3.0
         }
+      ],
+      "insulation": {
+        "insulationType": "reinforced",
+        "mainSupplyVoltage": {
+          "maximum": 300
+        },
+        "overvoltageCategory": "II",
+        "pollutionDegree": "PD2",
+        "altitude": {
+          "maximum": 2000
+        },
+        "cti": "groupII",
+        "standards": [
+          "IEC 60664-1"
+        ]
+      }
+    },
+    "operatingPoints": [
+      {
+        "name": "Nominal",
+        "conditions": {
+          "ambientTemperature": 40
+        },
+        "excitationsPerWinding": [
+          {
+            "frequency": 120000,
+            "current": {
+              "processed": {
+                "label": "triangular",
+                "peakToPeak": 0.3,
+                "offset": 0,
+                "dutyCycle": 0.4
+              }
+            },
+            "voltage": {
+              "processed": {
+                "label": "rectangular",
+                "peakToPeak": 96,
+                "offset": 0,
+                "dutyCycle": 0.4
+              }
+            }
+          },
+          {
+            "frequency": 120000,
+            "current": {
+              "processed": {
+                "label": "triangular",
+                "peakToPeak": 0.9,
+                "offset": 3.5,
+                "dutyCycle": 0.4
+              }
+            },
+            "voltage": {
+              "processed": {
+                "label": "rectangular",
+                "peakToPeak": 32,
+                "offset": 0,
+                "dutyCycle": 0.4
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "magnetic": {
+    "coil": {
+      "bobbin": "basic",
+      "functionalDescription": [
+        {
+          "name": "Primary",
+          "numberTurns": 28,
+          "numberParallels": 1,
+          "isolationSide": "primary",
+          "wire": "Round 0.3 - Grade 2"
+        },
+        {
+          "name": "Secondary",
+          "numberTurns": 9,
+          "numberParallels": 2,
+          "isolationSide": "secondary",
+          "wire": "Round 0.5 - Grade 1"
+        }
+      ]
+    },
+    "core": {
+      "functionalDescription": {
+        "type": "twoPieceSet",
+        "material": "3C95",
+        "shape": "E 42/21/15",
+        "gapping": [
+          {
+            "type": "residual",
+            "length": 1e-05
+          },
+          {
+            "type": "residual",
+            "length": 1e-05
+          },
+          {
+            "type": "residual",
+            "length": 1e-05
+          }
+        ],
+        "numberStacks": 1
+      }
     }
+  },
+  "outputs": []
 }

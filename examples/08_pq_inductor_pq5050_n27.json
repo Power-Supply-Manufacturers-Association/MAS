@@ -1,83 +1,84 @@
 {
-    "inputs": {
-        "designRequirements": {
-            "magnetizingInductance": {
-                "nominal": 0.0005
-            },
-            "turnsRatios": []
-        },
-        "operatingPoints": [
-            {
-                "name": "Operating Point 1",
-                "conditions": {
-                    "ambientTemperature": 45
-                },
-                "excitationsPerWinding": [
-                    {
-                        "frequency": 50000,
-                        "current": {
-                            "processed": {
-                                "label": "triangular",
-                                "peakToPeak": 1.0,
-                                "offset": 3.0,
-                                "dutyCycle": 0.5
-                            }
-                        },
-                        "voltage": {
-                            "processed": {
-                                "label": "rectangular",
-                                "peakToPeak": 100,
-                                "offset": 0,
-                                "dutyCycle": 0.5
-                            }
-                        }
-                    }
-                ]
-            }
-        ]
+  "inputs": {
+    "designRequirements": {
+      "magnetizingInductance": {
+        "nominal": 0.0005
+      },
+      "turnsRatios": []
     },
-    "magnetic": {
-        "coil": {
-            "bobbin": "basic",
-            "functionalDescription": [
-                {
-                    "name": "Primary",
-                    "numberTurns": 38,
-                    "numberParallels": 1,
-                    "isolationSide": "primary",
-                    "wire": "Round 0.63 - Grade 2"
-                }
-            ]
+    "operatingPoints": [
+      {
+        "name": "Operating Point 1",
+        "conditions": {
+          "ambientTemperature": 45
         },
-        "core": {
-            "functionalDescription": {
-                "type": "twoPieceSet",
-                "material": "N27",
-                "shape": "PQ 50/50",
-                "gapping": [
-                    {
-                        "type": "subtractive",
-                        "length": 0.0005
-                    },
-                    {
-                        "type": "subtractive",
-                        "length": 0.0005
-                    },
-                    {
-                        "type": "residual",
-                        "length": 1e-05
-                    },
-                    {
-                        "type": "residual",
-                        "length": 1e-05
-                    },
-                    {
-                        "type": "residual",
-                        "length": 1e-05
-                    }
-                ],
-                "numberStacks": 1
+        "excitationsPerWinding": [
+          {
+            "frequency": 50000,
+            "current": {
+              "processed": {
+                "label": "triangular",
+                "peakToPeak": 1.0,
+                "offset": 3.0,
+                "dutyCycle": 0.5
+              }
+            },
+            "voltage": {
+              "processed": {
+                "label": "rectangular",
+                "peakToPeak": 100,
+                "offset": 0,
+                "dutyCycle": 0.5
+              }
             }
+          }
+        ]
+      }
+    ]
+  },
+  "magnetic": {
+    "coil": {
+      "bobbin": "basic",
+      "functionalDescription": [
+        {
+          "name": "Primary",
+          "numberTurns": 38,
+          "numberParallels": 1,
+          "isolationSide": "primary",
+          "wire": "Round 0.63 - Grade 2"
         }
+      ]
+    },
+    "core": {
+      "functionalDescription": {
+        "type": "twoPieceSet",
+        "material": "N27",
+        "shape": "PQ 50/50",
+        "gapping": [
+          {
+            "type": "subtractive",
+            "length": 0.0005
+          },
+          {
+            "type": "subtractive",
+            "length": 0.0005
+          },
+          {
+            "type": "residual",
+            "length": 1e-05
+          },
+          {
+            "type": "residual",
+            "length": 1e-05
+          },
+          {
+            "type": "residual",
+            "length": 1e-05
+          }
+        ],
+        "numberStacks": 1
+      }
     }
+  },
+  "outputs": []
 }

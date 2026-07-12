@@ -1,151 +1,152 @@
 {
-    "inputs": {
-        "designRequirements": {
-            "magnetizingInductance": {
-                "nominal": 0.0004
-            },
-            "turnsRatios": [
-                {
-                    "nominal": 4.4
-                }
-            ]
-        },
-        "operatingPoints": [
-            {
-                "name": "Operating Point 1",
-                "conditions": {
-                    "ambientTemperature": 25
-                },
-                "excitationsPerWinding": [
-                    {
-                        "frequency": 150000,
-                        "current": {
-                            "processed": {
-                                "label": "triangular",
-                                "peakToPeak": 0.3,
-                                "offset": 0,
-                                "dutyCycle": 0.4
-                            }
-                        },
-                        "voltage": {
-                            "processed": {
-                                "label": "rectangular",
-                                "peakToPeak": 48,
-                                "offset": 0,
-                                "dutyCycle": 0.4
-                            }
-                        }
-                    },
-                    {
-                        "frequency": 150000,
-                        "current": {
-                            "processed": {
-                                "label": "triangular",
-                                "peakToPeak": 1.2,
-                                "offset": 2.0,
-                                "dutyCycle": 0.4
-                            }
-                        },
-                        "voltage": {
-                            "processed": {
-                                "label": "rectangular",
-                                "peakToPeak": 12,
-                                "offset": 0,
-                                "dutyCycle": 0.4
-                            }
-                        }
-                    }
-                ]
-            },
-            {
-                "name": "Operating Point 2",
-                "conditions": {
-                    "ambientTemperature": 80
-                },
-                "excitationsPerWinding": [
-                    {
-                        "frequency": 150000,
-                        "current": {
-                            "processed": {
-                                "label": "triangular",
-                                "peakToPeak": 0.5,
-                                "offset": 0,
-                                "dutyCycle": 0.3
-                            }
-                        },
-                        "voltage": {
-                            "processed": {
-                                "label": "rectangular",
-                                "peakToPeak": 72,
-                                "offset": 0,
-                                "dutyCycle": 0.3
-                            }
-                        }
-                    },
-                    {
-                        "frequency": 150000,
-                        "current": {
-                            "processed": {
-                                "label": "triangular",
-                                "peakToPeak": 2.0,
-                                "offset": 5.0,
-                                "dutyCycle": 0.3
-                            }
-                        },
-                        "voltage": {
-                            "processed": {
-                                "label": "rectangular",
-                                "peakToPeak": 18,
-                                "offset": 0,
-                                "dutyCycle": 0.3
-                            }
-                        }
-                    }
-                ]
-            }
-        ]
-    },
-    "magnetic": {
-        "coil": {
-            "bobbin": "basic",
-            "functionalDescription": [
-                {
-                    "name": "Primary",
-                    "numberTurns": 22,
-                    "numberParallels": 1,
-                    "isolationSide": "primary",
-                    "wire": "Round 0.63 - Grade 2"
-                },
-                {
-                    "name": "Secondary",
-                    "numberTurns": 5,
-                    "numberParallels": 3,
-                    "isolationSide": "secondary",
-                    "wire": "Round 0.80 - Grade 1"
-                }
-            ]
-        },
-        "core": {
-            "functionalDescription": {
-                "type": "twoPieceSet",
-                "material": "PC95",
-                "shape": "ETD 39/20/13",
-                "gapping": [
-                    {
-                        "type": "residual",
-                        "length": 1e-05
-                    },
-                    {
-                        "type": "residual",
-                        "length": 1e-05
-                    },
-                    {
-                        "type": "residual",
-                        "length": 1e-05
-                    }
-                ],
-                "numberStacks": 1
-            }
+  "inputs": {
+    "designRequirements": {
+      "magnetizingInductance": {
+        "nominal": 0.0004
+      },
+      "turnsRatios": [
+        {
+          "nominal": 4.4
         }
+      ]
+    },
+    "operatingPoints": [
+      {
+        "name": "Operating Point 1",
+        "conditions": {
+          "ambientTemperature": 25
+        },
+        "excitationsPerWinding": [
+          {
+            "frequency": 150000,
+            "current": {
+              "processed": {
+                "label": "triangular",
+                "peakToPeak": 0.3,
+                "offset": 0,
+                "dutyCycle": 0.4
+              }
+            },
+            "voltage": {
+              "processed": {
+                "label": "rectangular",
+                "peakToPeak": 48,
+                "offset": 0,
+                "dutyCycle": 0.4
+              }
+            }
+          },
+          {
+            "frequency": 150000,
+            "current": {
+              "processed": {
+                "label": "triangular",
+                "peakToPeak": 1.2,
+                "offset": 2.0,
+                "dutyCycle": 0.4
+              }
+            },
+            "voltage": {
+              "processed": {
+                "label": "rectangular",
+                "peakToPeak": 12,
+                "offset": 0,
+                "dutyCycle": 0.4
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Operating Point 2",
+        "conditions": {
+          "ambientTemperature": 80
+        },
+        "excitationsPerWinding": [
+          {
+            "frequency": 150000,
+            "current": {
+              "processed": {
+                "label": "triangular",
+                "peakToPeak": 0.5,
+                "offset": 0,
+                "dutyCycle": 0.3
+              }
+            },
+            "voltage": {
+              "processed": {
+                "label": "rectangular",
+                "peakToPeak": 72,
+                "offset": 0,
+                "dutyCycle": 0.3
+              }
+            }
+          },
+          {
+            "frequency": 150000,
+            "current": {
+              "processed": {
+                "label": "triangular",
+                "peakToPeak": 2.0,
+                "offset": 5.0,
+                "dutyCycle": 0.3
+              }
+            },
+            "voltage": {
+              "processed": {
+                "label": "rectangular",
+                "peakToPeak": 18,
+                "offset": 0,
+                "dutyCycle": 0.3
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "magnetic": {
+    "coil": {
+      "bobbin": "basic",
+      "functionalDescription": [
+        {
+          "name": "Primary",
+          "numberTurns": 22,
+          "numberParallels": 1,
+          "isolationSide": "primary",
+          "wire": "Round 0.63 - Grade 2"
+        },
+        {
+          "name": "Secondary",
+          "numberTurns": 5,
+          "numberParallels": 3,
+          "isolationSide": "secondary",
+          "wire": "Round 0.80 - Grade 1"
+        }
+      ]
+    },
+    "core": {
+      "functionalDescription": {
+        "type": "twoPieceSet",
+        "material": "PC95",
+        "shape": "ETD 39/20/13",
+        "gapping": [
+          {
+            "type": "residual",
+            "length": 1e-05
+          },
+          {
+            "type": "residual",
+            "length": 1e-05
+          },
+          {
+            "type": "residual",
+            "length": 1e-05
+          }
+        ],
+        "numberStacks": 1
+      }
     }
+  },
+  "outputs": []
 }
