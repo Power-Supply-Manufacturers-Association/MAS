@@ -43,6 +43,13 @@ Note: `scripts/migrate-to-1.0.py` still writes `masVersion` and is now obsolete.
 
 ### Added
 
+- **6 more TDG MnZn ferrites (data): TPF26, TPW23, TP5H, TP5-B, TP5R, TP6** —
+  measured μi–T curves and Pcv points from TDG's material-performance workbook
+  with house-pipeline Steinmetz fits (13–31% mean error; TP6 split into
+  [1,3 MHz]+[3 MHz,1 GHz] ranges). These grades have **no public datasheet**;
+  Bs/Tc/resistivity/density are anchored on the closest documented family grade
+  (TPF26←TP4A, TPW23←TPW30, TP5H/TP6←TP5E, TP5-B/TP5R←TP5) and must be replaced
+  when TDG characteristic sheets arrive (ABT #196).
 - **5 TDG MnZn ferrites (data): TP4, TPW33, TPG33B, TPB16, TPB22** — built from
   TDG's measured material-performance workbook (μi–T curves as the initial
   permeability, manufacturer Pcv points) plus per-material datasheet constants
