@@ -284,6 +284,11 @@
                         "U",
                         "Z"
                     ]
+                },
+                "column": {
+                    "description": "Index of the column (in the columns list of the core processed description) that the turns placed in this winding window are wound around. If not present, the main column is assumed (the first central column, or the first column if there is no central one)",
+                    "type": "integer",
+                    "minimum": 0
                 }
             },
             "required": [
@@ -349,6 +354,11 @@
                         "U",
                         "Z"
                     ]
+                },
+                "column": {
+                    "description": "Index of the column (in the columns list of the core processed description) that the turns placed in this winding window are wound around. If not present, the main column is assumed (the first central column, or the first column if there is no central one)",
+                    "type": "integer",
+                    "minimum": 0
                 }
             },
             "required": [
@@ -361,8 +371,12 @@
             "description": "Data describing a column of the core",
             "type": "object",
             "properties": {
+                "name": {
+                    "description": "Name given to the column, so it can be referenced. If not present, the column is identified by its index in the columns list and by its coordinates",
+                    "type": "string"
+                },
                 "type": {
-                    "description": "Name of the column",
+                    "description": "Type of the column, according to its position in the core: central column or lateral (return) column",
                     "type": "string",
                     "enum": [
                         "central",

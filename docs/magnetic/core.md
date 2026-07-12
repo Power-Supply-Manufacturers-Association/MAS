@@ -637,6 +637,7 @@ The opposite step, from processed to functional, is done when selecting a magnet
 The width (x axis or A dimension according to DIN EN 62317), the height (y axis or B dimension according to DIN EN 62317), and the depth of the core (z axis or C dimension according to DIN EN 62317)
 ### Columns
 * List of elements, where each one represents one of the columns of the magnetic core, and has the following variables:
+* Name (optional): Name given to the column, so it can be referenced. If not present, the column is identified by its index in this list and by its coordinates.
 * Type: Central or Lateral
 * Shape: Shape of the column. It can be one of the following:
     * Oblong
@@ -656,6 +657,7 @@ The width (x axis or A dimension according to DIN EN 62317), the height (y axis 
 * Height/Radial Height: Vertical height of the winding window (y axis or B dimension according to DIN EN 62317). In the case of toroids, the radial height from the surface of the toroid towards its center.
 * Area: Area of the winding window.
 * Coordinates: The coordinates of the center of the winding window, referred to the center of the main column. In the case of half-sets, the center will be in the top point, where it would join another half-set.
+* Column (optional): Index of the column (in the columns list above) that the turns placed in this winding window are wound around. If not present, the main column is assumed (the first central column, or the first column if there is no central one). Windows wrapping different columns describe windings on different legs; windows sharing the same column value describe stacked chambers of a split bobbin. The coil side declares which window each winding/group/section is placed in (see the Winding Placement section of the coil documentation).
 ### Effective parameters
 The field contains the effective parameters as defined in DIN IEC 60205. They are:
 * Effective Length: Equivalent length that the magnetic flux travels through the core.

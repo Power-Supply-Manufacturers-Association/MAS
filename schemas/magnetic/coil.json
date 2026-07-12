@@ -358,6 +358,11 @@
                         "polar",
                         "cylindrical"
                     ]
+                },
+                "windingWindow": {
+                    "description": "Index of the winding window (in the windingWindows list of the governing bobbin or core processed description) the sections of this group are placed in. If not present, the first winding window (index 0) is assumed. Overridable per section",
+                    "type": "integer",
+                    "minimum": 0
                 }
             },
             "required": [
@@ -481,6 +486,11 @@
                 "group": {
                     "description": "The name of the group that this section belongs to",
                     "type": "string"
+                },
+                "windingWindow": {
+                    "description": "Index of the winding window (in the windingWindows list of the governing bobbin or core processed description) this section is placed in. If not present, the group's windingWindow applies, else the first winding window (index 0). Coordinates stay referred to the center of the main column regardless of this value",
+                    "type": "integer",
+                    "minimum": 0
                 }
             },
             "required": [
@@ -622,6 +632,11 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "windingWindow": {
+                    "description": "Index of the winding window (in the windingWindows list of the governing bobbin or core processed description) this winding is intended to be placed in, used by auto-winders and advisers before sections exist. If not present, the first winding window (index 0) is assumed. Overridable per group and per section",
+                    "type": "integer",
+                    "minimum": 0
                 }
             },
             "required": [

@@ -307,3 +307,24 @@ It can be used together with all the previous Descriptions or just with the Func
 * Length (optional): The length of the physical turn, referred from the center of its cross section.
 * Angle: The angle that the physical turn does, useful for partial turns.
 * Coordinates: The coordinates of the center of the physical turn, referred to the center of the main column.
+
+## Winding Placement (multiple winding windows and columns)
+By default, every winding is placed in the first winding window (index 0), which wraps the main column of the core (the central column, or the first column for shapes without a central one, like U cores). This is the historical behavior and remains the default when no placement field is present, so all pre-existing MAS files keep their meaning.
+
+For magnetics that place windings in more than one winding window — windings on the lateral legs of an E core, each leg of a U/UT core, split-bobbin chambers, or angular sectors of a toroid — the placement is declared explicitly with three optional fields, all of them indices into the `windingWindows` list of the governing bobbin (or core) processed description:
+
+* `windingWindow` on a **winding** (functional description): the intent, used by auto-winders and advisers before any section exists.
+* `windingWindow` on a **group**: where the sections of that group are placed. This realizes the original purpose of groups ("distinct winding windows or PCB sub-assemblies").
+* `windingWindow` on a **section**: the finest override.
+
+The effective winding window of a section resolves as: `section.windingWindow` if present, else its group's `windingWindow`, else the `windingWindow` of the winding of its first partial winding, else 0. Layers and turns inherit the placement of their section through their existing `section`/`layer` name references; they carry no placement field of their own.
+
+Which physical column a window wraps is declared on the window itself: each winding window of the core (and bobbin) processed description may carry a `column` field, the index of the column (in the `columns` list) that turns placed in that window are wound around. If absent, the main column is assumed. This single edge disambiguates the two multi-window layouts that exist in practice:
+
+* **Per-column windows** (windings on different legs): the windows carry *different* `column` values.
+* **Stacked chambers** (split bobbins around one column): the windows carry the *same* `column` value and differ only in their coordinates.
+
+Two consistency rules apply regardless of placement:
+
+1. **Coordinates are always global.** The `coordinates` of groups, sections, layers and turns remain referred to the center of the main column of the core, whatever their assigned winding window. The placement fields are declarative labels; the coordinates stay the single geometric truth, and a valid coil has each element's coordinates contained in its assigned window.
+2. **Fractions of a winding split across windows** are expressed with the existing `partialWindings` proportions: two sections (or groups) in different windows, each holding a proportion of the same winding, describe for example a common-mode choke with half the turns on each side, or a transformer with its primary split between the central and a lateral leg.
