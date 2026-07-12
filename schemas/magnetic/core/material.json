@@ -1078,6 +1078,31 @@
                         "d"
                     ],
                     "additionalProperties": false
+                },
+                "frequencyFactor": {
+                    "description": "Field with the coefficients used to calculate how much the permeability decreases with frequency, as the percent-of-initial rolloff factor = (a / (1 + pow(f / b, c)) + d) * 0.01, with f in Hz. a is the rolling-off share, d the high-frequency asymptote (a + d = 100 at DC), b the corner frequency in Hz and c the steepness. Fitted to the permeability-vs-frequency curves of the POCO catalog.",
+                    "type": "object",
+                    "properties": {
+                        "a": {
+                            "type": "number"
+                        },
+                        "b": {
+                            "type": "number"
+                        },
+                        "c": {
+                            "type": "number"
+                        },
+                        "d": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "a",
+                        "b",
+                        "c",
+                        "d"
+                    ],
+                    "additionalProperties": false
                 }
             },
             "required": [
