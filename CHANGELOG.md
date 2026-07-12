@@ -43,6 +43,24 @@ Note: `scripts/migrate-to-1.0.py` still writes `masVersion` and is now obsolete.
 
 ### Fixed
 
+- **Non-physical Steinmetz ranges refitted (data, ABT #183):** 12 ranges that
+  validated but were physically garbage (β≈0: DMR28/DMR50B/DMR52/DMR51W/DN15P/JNP95;
+  α≈0: ACME P47/P5; overfits: SMP53/DMR51/PC200) refitted with the house pipeline
+  on manufacturer points from `advanced_core_materials`, normalized to `ct(25°C)=1`
+  and gated (α∈[0.5,3.5], β≥1). Two unsupportable extrapolation ranges (DMR51W
+  `[1,500k]`, P47 `[1M,1G]`) were deleted — MKF falls back to the neighbouring
+  healthy range. DMR51's refit (α=3.59) exceeds the α-gate by 0.09 as a documented
+  exception: the steepness is catalog-consistent (136 kW/m³ @ 3 MHz/10 mT/100 °C vs
+  DMEGC's ≤150 spec). P5 is now temperature-flat (its only temperature-varying
+  points were bogus, see below).
+- **JNP95 (data):** the B=150 mT and B=300 mT loss series in
+  `advanced_core_materials` were 1000× too small (kW/m³ digitized as W/m³).
+- **P5 (data):** removed the 18 f=700 Hz loss points — three conflicting values per
+  (f,B,T) and ~10⁵ W/m³ at 700 Hz/200 mT is impossible (frequency labels were lost
+  in digitization).
+- **`validate-db.py`:** merge-validates `massLosses` like `volumetricLosses` and
+  flags losses blocks without a non-empty `default` method list (mirrors the MKF
+  loader contract, ABT #184).
 - **Metglas, AF, AN (data):** manufacturer loss curves were W/kg values stored as
   `volumetricLosses` (W/m³) — moved to `massLosses` (Nanoperm precedent), and the
   Steinmetz fits made on those W/kg points rescaled `k × density` into true W/m³.

@@ -45,9 +45,19 @@ def validate_advanced_core_materials(reg):
         merged=json.loads(json.dumps(b))  # deep copy
         if 'bhCycle' in patch:
             merged['bhCycle']=patch['bhCycle']
-        if 'volumetricLosses' in patch:
-            merged.setdefault('volumetricLosses',{}).setdefault('default',[]) \
-                  .extend(patch['volumetricLosses'].get('default',[]))
+        contract_err=None
+        for losses in ('volumetricLosses','massLosses'):
+            if losses not in patch: continue
+            # MKF load_advanced_core_materials throws on a losses block without a
+            # non-empty "default" method list — flag it here with the same contract
+            if not patch[losses].get('default'):
+                contract_err=f"'{patch['name']}': {losses} without a non-empty 'default' method list"
+                break
+            merged.setdefault(losses,{}).setdefault('default',[]) \
+                  .extend(patch[losses]['default'])
+        if contract_err:
+            bad+=1; first=first or contract_err
+            continue
         if 'permeability' in patch and 'amplitude' in patch['permeability']:
             merged.setdefault('permeability',{})['amplitude']=patch['permeability']['amplitude']
         errs=list(v.iter_errors(merged))
