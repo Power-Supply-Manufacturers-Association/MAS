@@ -31,11 +31,29 @@ MAJOR.
   and `docs/conformance.md` were removed. RFC 0002 is marked Withdrawn.
 - **Removed `inputs.converterInformation`** (unused; the topology seed files
   under `inputs/topologies/` remain for future use).
+- **`TMFD` (μi=14) replaced by `TMFD 60` / `TMFD 90` (data, ABT #185).** TDG's
+  own material workbook shows TMFD is an Fe-Si powder series in 60μ/90μ only —
+  the two "duplicate" DC-bias fits were the per-grade coefficients (60μ:
+  b=7.8e-7/c=1.70; 90μ: b=2.95e-7/c=2.23), and the μi=14 single record was a
+  botched merge of them. No cores referenced `TMFD`. The per-grade fits
+  reproduce TDG's published 82% μe@100 Oe (60μ) and the series loss
+  coefficients reproduce the published 450 kW/m³ @ 50 kHz/100 mT.
 
 Note: `scripts/migrate-to-1.0.py` still writes `masVersion` and is now obsolete.
 
 ### Added
 
+- **5 TDG MnZn ferrites (data): TP4, TPW33, TPG33B, TPB16, TPB22** — built from
+  TDG's measured material-performance workbook (μi–T curves as the initial
+  permeability, manufacturer Pcv points) plus per-material datasheet constants
+  (Bs/Br/Hc/Tc/ρ/density; TPG33B constants from the 2025-11 automotive brochure,
+  ρ/density carried from the TPG33 base grade). TPW33/TPG33B get house-pipeline
+  Steinmetz fits (6.2% / 3.4% mean error, points in `advanced_core_materials`);
+  TP4/TPB16/TPB22 carry their measured Pcv points inline (single (f,B) sweeps —
+  a Steinmetz fit is not identifiable from them).
+- **TP4A initial permeability upgraded** from the single spec point (2400 @ 25 °C)
+  to the measured 24-point μi–T curve; TP4A/TP5 gained their measured Pcv–T
+  sweeps in `advanced_core_materials`.
 - **`frequencyFactor` on `pocoPermeabilityMethodData`** (optional `{a, b, c, d}`):
   percent-of-initial logistic rolloff `(a / (1 + (f/b)^c) + d) * 0.01`, matching
   the implementation MKF ships since ABT #169. Legalizes the 48 POCO V2026
