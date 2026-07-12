@@ -43,6 +43,17 @@ Note: `scripts/migrate-to-1.0.py` still writes `masVersion` and is now obsolete.
 
 ### Added
 
+- **Magnetics (Mag Inc.) power ferrites (data, ABT #213): L, R, P, F, T** — first
+  Magnetics ferrite materials in the DB (their powder cores were already covered).
+  Constants from the 2021 ferrite catalog (μi, Bs@1194 A/m 25 °C, Br, Tc, ρ,
+  density, cross-checked against the parts database); loss model = Magnetics'
+  official per-range equations `P[W/m³] = a·f^x·B^y·(b−cT+dT²)` mapped verbatim
+  onto Steinmetz ranges (R/F/T reproduce the catalog's typical-loss table to ±3%);
+  the catalog typical points are stored in `advanced_core_materials`. Known
+  caveats: P's official equation overpredicts ~3× at 100 kHz vs the (internally
+  inconsistent) typical table — kept official, discrepancy tracked in ABT #213;
+  saturation has only the 25 °C point (Magnetics publishes no tabular 100 °C Bs);
+  J/W/M/C/E/V (high-perm/filter grades) still pending loss-factor data.
 - **6 more TDG MnZn ferrites (data): TPF26, TPW23, TP5H, TP5-B, TP5R, TP6** —
   measured μi–T curves and Pcv points from TDG's material-performance workbook
   with house-pipeline Steinmetz fits (13–31% mean error; TP6 split into
