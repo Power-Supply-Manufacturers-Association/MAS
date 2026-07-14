@@ -1,67 +1,76 @@
 {
-    "inputs": {
-        "designRequirements": {
-            "magnetizingInductance": {
-                "nominal": 2.2e-06
-            },
-            "turnsRatios": []
-        },
-        "operatingPoints": [
-            {
-                "name": "Operating Point 1",
-                "conditions": {
-                    "ambientTemperature": 40
-                },
-                "excitationsPerWinding": [
-                    {
-                        "frequency": 500000,
-                        "current": {
-                            "processed": {
-                                "label": "triangular",
-                                "peakToPeak": 1.0,
-                                "offset": 5.0,
-                                "dutyCycle": 0.3
-                            }
-                        }
-                    }
-                ]
-            }
-        ]
+  "inputs": {
+    "designRequirements": {
+      "magnetizingInductance": {
+        "nominal": 2.2e-06
+      },
+      "turnsRatios": []
     },
-    "magnetic": {
-        "coil": {
-            "bobbin": "basic",
-            "functionalDescription": [
-                {
-                    "name": "Primary",
-                    "numberTurns": 6,
-                    "numberParallels": 1,
-                    "isolationSide": "primary",
-                    "wire": "Round 0.4 - Grade 1"
-                }
-            ]
+    "operatingPoints": [
+      {
+        "name": "Operating Point 1",
+        "conditions": {
+          "ambientTemperature": 40
         },
-        "core": {
-            "functionalDescription": {
-                "type": "twoPieceSet",
-                "material": "3F4",
-                "shape": "E 13/7/4",
-                "gapping": [
-                    {
-                        "type": "subtractive",
-                        "length": 0.0008
-                    },
-                    {
-                        "type": "residual",
-                        "length": 1e-05
-                    },
-                    {
-                        "type": "residual",
-                        "length": 1e-05
-                    }
-                ],
-                "numberStacks": 1
+        "excitationsPerWinding": [
+          {
+            "frequency": 500000,
+            "current": {
+              "processed": {
+                "label": "triangular",
+                "peakToPeak": 1.0,
+                "offset": 5.0,
+                "dutyCycle": 0.3
+              }
+            },
+            "voltage": {
+              "processed": {
+                "label": "rectangular",
+                "peakToPeak": 5.2381,
+                "offset": 0,
+                "dutyCycle": 0.3
+              }
             }
+          }
+        ]
+      }
+    ]
+  },
+  "magnetic": {
+    "coil": {
+      "bobbin": "basic",
+      "functionalDescription": [
+        {
+          "name": "Primary",
+          "numberTurns": 6,
+          "numberParallels": 1,
+          "isolationSide": "primary",
+          "wire": "Round 0.4 - Grade 1"
         }
+      ]
+    },
+    "core": {
+      "functionalDescription": {
+        "type": "twoPieceSet",
+        "material": "3F4",
+        "shape": "E 13/7/4",
+        "gapping": [
+          {
+            "type": "subtractive",
+            "length": 0.0008
+          },
+          {
+            "type": "residual",
+            "length": 1e-05
+          },
+          {
+            "type": "residual",
+            "length": 1e-05
+          }
+        ],
+        "numberStacks": 1
+      }
     }
+  },
+  "outputs": []
 }

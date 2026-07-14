@@ -1,106 +1,107 @@
 {
-    "inputs": {
-        "designRequirements": {
-            "magnetizingInductance": {
-                "nominal": 0.00012
-            },
-            "turnsRatios": [
-                {
-                    "nominal": 1.0
-                }
-            ],
-            "topology": "CLLC"
-        },
-        "operatingPoints": [
-            {
-                "name": "Operating Point 1",
-                "conditions": {
-                    "ambientTemperature": 55
-                },
-                "excitationsPerWinding": [
-                    {
-                        "frequency": 200000,
-                        "current": {
-                            "processed": {
-                                "label": "sinusoidal",
-                                "peakToPeak": 4.0,
-                                "offset": 0,
-                                "dutyCycle": 0.5
-                            }
-                        },
-                        "voltage": {
-                            "processed": {
-                                "label": "sinusoidal",
-                                "peakToPeak": 400,
-                                "offset": 0,
-                                "dutyCycle": 0.5
-                            }
-                        }
-                    },
-                    {
-                        "frequency": 200000,
-                        "current": {
-                            "processed": {
-                                "label": "sinusoidal",
-                                "peakToPeak": 4.0,
-                                "offset": 0,
-                                "dutyCycle": 0.5
-                            }
-                        },
-                        "voltage": {
-                            "processed": {
-                                "label": "sinusoidal",
-                                "peakToPeak": 400,
-                                "offset": 0,
-                                "dutyCycle": 0.5
-                            }
-                        }
-                    }
-                ]
-            }
-        ]
-    },
-    "magnetic": {
-        "coil": {
-            "bobbin": "basic",
-            "functionalDescription": [
-                {
-                    "name": "Primary",
-                    "numberTurns": 20,
-                    "numberParallels": 1,
-                    "isolationSide": "primary",
-                    "wire": "Litz 180x0.1 - Grade 1 - Single Served"
-                },
-                {
-                    "name": "Secondary",
-                    "numberTurns": 20,
-                    "numberParallels": 1,
-                    "isolationSide": "secondary",
-                    "wire": "Litz 180x0.1 - Grade 1 - Single Served"
-                }
-            ]
-        },
-        "core": {
-            "functionalDescription": {
-                "type": "twoPieceSet",
-                "material": "3C92A",
-                "shape": "E 55/28/21",
-                "gapping": [
-                    {
-                        "type": "subtractive",
-                        "length": 0.0002
-                    },
-                    {
-                        "type": "residual",
-                        "length": 1e-05
-                    },
-                    {
-                        "type": "residual",
-                        "length": 1e-05
-                    }
-                ],
-                "numberStacks": 1
-            }
+  "inputs": {
+    "designRequirements": {
+      "magnetizingInductance": {
+        "nominal": 0.00012
+      },
+      "turnsRatios": [
+        {
+          "nominal": 1.0
         }
+      ],
+      "topology": "cllcResonantConverter"
+    },
+    "operatingPoints": [
+      {
+        "name": "Operating Point 1",
+        "conditions": {
+          "ambientTemperature": 55
+        },
+        "excitationsPerWinding": [
+          {
+            "frequency": 200000,
+            "current": {
+              "processed": {
+                "label": "sinusoidal",
+                "peakToPeak": 4.0,
+                "offset": 0,
+                "dutyCycle": 0.5
+              }
+            },
+            "voltage": {
+              "processed": {
+                "label": "sinusoidal",
+                "peakToPeak": 400,
+                "offset": 0,
+                "dutyCycle": 0.5
+              }
+            }
+          },
+          {
+            "frequency": 200000,
+            "current": {
+              "processed": {
+                "label": "sinusoidal",
+                "peakToPeak": 4.0,
+                "offset": 0,
+                "dutyCycle": 0.5
+              }
+            },
+            "voltage": {
+              "processed": {
+                "label": "sinusoidal",
+                "peakToPeak": 400,
+                "offset": 0,
+                "dutyCycle": 0.5
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "magnetic": {
+    "coil": {
+      "bobbin": "basic",
+      "functionalDescription": [
+        {
+          "name": "Primary",
+          "numberTurns": 20,
+          "numberParallels": 1,
+          "isolationSide": "primary",
+          "wire": "Litz 180x0.1 - Grade 1 - Single Served"
+        },
+        {
+          "name": "Secondary",
+          "numberTurns": 20,
+          "numberParallels": 1,
+          "isolationSide": "secondary",
+          "wire": "Litz 180x0.1 - Grade 1 - Single Served"
+        }
+      ]
+    },
+    "core": {
+      "functionalDescription": {
+        "type": "twoPieceSet",
+        "material": "3C92A",
+        "shape": "E 55/28/21",
+        "gapping": [
+          {
+            "type": "subtractive",
+            "length": 0.0002
+          },
+          {
+            "type": "residual",
+            "length": 1e-05
+          },
+          {
+            "type": "residual",
+            "length": 1e-05
+          }
+        ],
+        "numberStacks": 1
+      }
     }
+  },
+  "outputs": []
 }

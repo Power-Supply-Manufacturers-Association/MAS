@@ -1,157 +1,158 @@
 {
-    "inputs": {
-        "designRequirements": {
-            "magnetizingInductance": {
-                "nominal": 0.0004
-            },
-            "turnsRatios": [
-                {
-                    "nominal": 4.0
-                },
-                {
-                    "nominal": 12.0
-                }
-            ],
-            "topology": "Flyback",
-            "insulation": {
-                "insulationType": "reinforced",
-                "mainSupplyVoltage": {
-                    "maximum": 250
-                },
-                "overvoltageCategory": "III",
-                "pollutionDegree": "PD2",
-                "altitude": {
-                    "maximum": 5000
-                },
-                "cti": "groupII",
-                "standards": [
-                    "IEC 60664-1",
-                    "IEC 62368-1"
-                ]
-            }
+  "inputs": {
+    "designRequirements": {
+      "magnetizingInductance": {
+        "nominal": 0.0004
+      },
+      "turnsRatios": [
+        {
+          "nominal": 4.0
         },
-        "operatingPoints": [
-            {
-                "name": "Full Load",
-                "conditions": {
-                    "ambientTemperature": 55
-                },
-                "excitationsPerWinding": [
-                    {
-                        "frequency": 85000,
-                        "current": {
-                            "processed": {
-                                "label": "triangular",
-                                "peakToPeak": 1.0,
-                                "offset": 1.5,
-                                "dutyCycle": 0.42
-                            }
-                        },
-                        "voltage": {
-                            "processed": {
-                                "label": "rectangular",
-                                "peakToPeak": 250,
-                                "offset": 0,
-                                "dutyCycle": 0.42
-                            }
-                        }
-                    },
-                    {
-                        "frequency": 85000,
-                        "current": {
-                            "processed": {
-                                "label": "triangular",
-                                "peakToPeak": 4.0,
-                                "offset": 6.0,
-                                "dutyCycle": 0.58
-                            }
-                        },
-                        "voltage": {
-                            "processed": {
-                                "label": "rectangular",
-                                "peakToPeak": 62.5,
-                                "offset": 0,
-                                "dutyCycle": 0.58
-                            }
-                        }
-                    },
-                    {
-                        "frequency": 85000,
-                        "current": {
-                            "processed": {
-                                "label": "triangular",
-                                "peakToPeak": 0.3,
-                                "offset": 0.5,
-                                "dutyCycle": 0.58
-                            }
-                        },
-                        "voltage": {
-                            "processed": {
-                                "label": "rectangular",
-                                "peakToPeak": 20.8,
-                                "offset": 0,
-                                "dutyCycle": 0.58
-                            }
-                        }
-                    }
-                ]
-            }
-        ]
-    },
-    "magnetic": {
-        "coil": {
-            "bobbin": "basic",
-            "functionalDescription": [
-                {
-                    "name": "Primary",
-                    "numberTurns": 48,
-                    "numberParallels": 1,
-                    "isolationSide": "primary",
-                    "wire": "Round 0.3 - Grade 2",
-                    "woundWith": [
-                        "Secondary 12V"
-                    ]
-                },
-                {
-                    "name": "Secondary 12V",
-                    "numberTurns": 12,
-                    "numberParallels": 2,
-                    "isolationSide": "secondary",
-                    "wire": "Round 0.5 - Grade 1",
-                    "woundWith": [
-                        "Primary"
-                    ]
-                },
-                {
-                    "name": "Auxiliary 3.3V",
-                    "numberTurns": 4,
-                    "numberParallels": 3,
-                    "isolationSide": "secondary",
-                    "wire": "Round 0.4 - Grade 1"
-                }
-            ]
-        },
-        "core": {
-            "functionalDescription": {
-                "type": "twoPieceSet",
-                "material": "3C94",
-                "shape": "PQ 32/30",
-                "gapping": [
-                    {
-                        "type": "subtractive",
-                        "length": 0.0005
-                    },
-                    {
-                        "type": "residual",
-                        "length": 1e-05
-                    },
-                    {
-                        "type": "residual",
-                        "length": 1e-05
-                    }
-                ],
-                "numberStacks": 1
-            }
+        {
+          "nominal": 12.0
         }
+      ],
+      "topology": "flybackConverter",
+      "insulation": {
+        "insulationType": "reinforced",
+        "mainSupplyVoltage": {
+          "maximum": 250
+        },
+        "overvoltageCategory": "III",
+        "pollutionDegree": "PD2",
+        "altitude": {
+          "maximum": 5000
+        },
+        "cti": "groupII",
+        "standards": [
+          "IEC 60664-1",
+          "IEC 62368-1"
+        ]
+      }
+    },
+    "operatingPoints": [
+      {
+        "name": "Full Load",
+        "conditions": {
+          "ambientTemperature": 55
+        },
+        "excitationsPerWinding": [
+          {
+            "frequency": 85000,
+            "current": {
+              "processed": {
+                "label": "triangular",
+                "peakToPeak": 1.0,
+                "offset": 1.5,
+                "dutyCycle": 0.42
+              }
+            },
+            "voltage": {
+              "processed": {
+                "label": "rectangular",
+                "peakToPeak": 250,
+                "offset": 0,
+                "dutyCycle": 0.42
+              }
+            }
+          },
+          {
+            "frequency": 85000,
+            "current": {
+              "processed": {
+                "label": "triangular",
+                "peakToPeak": 4.0,
+                "offset": 6.0,
+                "dutyCycle": 0.58
+              }
+            },
+            "voltage": {
+              "processed": {
+                "label": "rectangular",
+                "peakToPeak": 62.5,
+                "offset": 0,
+                "dutyCycle": 0.58
+              }
+            }
+          },
+          {
+            "frequency": 85000,
+            "current": {
+              "processed": {
+                "label": "triangular",
+                "peakToPeak": 0.3,
+                "offset": 0.5,
+                "dutyCycle": 0.58
+              }
+            },
+            "voltage": {
+              "processed": {
+                "label": "rectangular",
+                "peakToPeak": 20.8,
+                "offset": 0,
+                "dutyCycle": 0.58
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "magnetic": {
+    "coil": {
+      "bobbin": "basic",
+      "functionalDescription": [
+        {
+          "name": "Primary",
+          "numberTurns": 48,
+          "numberParallels": 1,
+          "isolationSide": "primary",
+          "wire": "Round 0.3 - Grade 2",
+          "woundWith": [
+            "Secondary 12V"
+          ]
+        },
+        {
+          "name": "Secondary 12V",
+          "numberTurns": 12,
+          "numberParallels": 2,
+          "isolationSide": "secondary",
+          "wire": "Round 0.5 - Grade 1",
+          "woundWith": [
+            "Primary"
+          ]
+        },
+        {
+          "name": "Auxiliary 3.3V",
+          "numberTurns": 4,
+          "numberParallels": 3,
+          "isolationSide": "secondary",
+          "wire": "Round 0.4 - Grade 1"
+        }
+      ]
+    },
+    "core": {
+      "functionalDescription": {
+        "type": "twoPieceSet",
+        "material": "3C94",
+        "shape": "PQ 32/30",
+        "gapping": [
+          {
+            "type": "subtractive",
+            "length": 0.0005
+          },
+          {
+            "type": "residual",
+            "length": 1e-05
+          },
+          {
+            "type": "residual",
+            "length": 1e-05
+          }
+        ],
+        "numberStacks": 1
+      }
     }
+  },
+  "outputs": []
 }

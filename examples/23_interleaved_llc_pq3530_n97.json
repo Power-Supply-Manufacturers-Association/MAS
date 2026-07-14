@@ -1,106 +1,107 @@
 {
-    "inputs": {
-        "designRequirements": {
-            "magnetizingInductance": {
-                "nominal": 0.00018
-            },
-            "turnsRatios": [
-                {
-                    "nominal": 8.0
-                }
-            ],
-            "topology": "LLC"
-        },
-        "operatingPoints": [
-            {
-                "name": "Full Load",
-                "conditions": {
-                    "ambientTemperature": 45
-                },
-                "excitationsPerWinding": [
-                    {
-                        "frequency": 200000,
-                        "current": {
-                            "processed": {
-                                "label": "sinusoidal",
-                                "peakToPeak": 2.5,
-                                "offset": 0,
-                                "dutyCycle": 0.5
-                            }
-                        },
-                        "voltage": {
-                            "processed": {
-                                "label": "sinusoidal",
-                                "peakToPeak": 380,
-                                "offset": 0,
-                                "dutyCycle": 0.5
-                            }
-                        }
-                    },
-                    {
-                        "frequency": 200000,
-                        "current": {
-                            "processed": {
-                                "label": "sinusoidal",
-                                "peakToPeak": 20.0,
-                                "offset": 0,
-                                "dutyCycle": 0.5
-                            }
-                        },
-                        "voltage": {
-                            "processed": {
-                                "label": "sinusoidal",
-                                "peakToPeak": 48,
-                                "offset": 0,
-                                "dutyCycle": 0.5
-                            }
-                        }
-                    }
-                ]
-            }
-        ]
-    },
-    "magnetic": {
-        "coil": {
-            "bobbin": "basic",
-            "functionalDescription": [
-                {
-                    "name": "Primary",
-                    "numberTurns": 24,
-                    "numberParallels": 2,
-                    "isolationSide": "primary",
-                    "wire": "Round 0.5 - Grade 1"
-                },
-                {
-                    "name": "Secondary",
-                    "numberTurns": 3,
-                    "numberParallels": 4,
-                    "isolationSide": "secondary",
-                    "wire": "Round 0.63 - Grade 1"
-                }
-            ]
-        },
-        "core": {
-            "functionalDescription": {
-                "type": "twoPieceSet",
-                "material": "N97",
-                "shape": "PQ 35/20",
-                "gapping": [
-                    {
-                        "type": "subtractive",
-                        "length": 0.0003
-                    },
-                    {
-                        "type": "residual",
-                        "length": 1e-05
-                    },
-                    {
-                        "type": "residual",
-                        "length": 1e-05
-                    }
-                ],
-                "numberStacks": 1
-            }
+  "inputs": {
+    "designRequirements": {
+      "magnetizingInductance": {
+        "nominal": 0.00018
+      },
+      "turnsRatios": [
+        {
+          "nominal": 8.0
         }
+      ],
+      "topology": "llcResonantConverter"
+    },
+    "operatingPoints": [
+      {
+        "name": "Full Load",
+        "conditions": {
+          "ambientTemperature": 45
+        },
+        "excitationsPerWinding": [
+          {
+            "frequency": 200000,
+            "current": {
+              "processed": {
+                "label": "sinusoidal",
+                "peakToPeak": 2.5,
+                "offset": 0,
+                "dutyCycle": 0.5
+              }
+            },
+            "voltage": {
+              "processed": {
+                "label": "sinusoidal",
+                "peakToPeak": 380,
+                "offset": 0,
+                "dutyCycle": 0.5
+              }
+            }
+          },
+          {
+            "frequency": 200000,
+            "current": {
+              "processed": {
+                "label": "sinusoidal",
+                "peakToPeak": 20.0,
+                "offset": 0,
+                "dutyCycle": 0.5
+              }
+            },
+            "voltage": {
+              "processed": {
+                "label": "sinusoidal",
+                "peakToPeak": 48,
+                "offset": 0,
+                "dutyCycle": 0.5
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "magnetic": {
+    "coil": {
+      "bobbin": "basic",
+      "functionalDescription": [
+        {
+          "name": "Primary",
+          "numberTurns": 24,
+          "numberParallels": 2,
+          "isolationSide": "primary",
+          "wire": "Round 0.5 - Grade 1"
+        },
+        {
+          "name": "Secondary",
+          "numberTurns": 3,
+          "numberParallels": 4,
+          "isolationSide": "secondary",
+          "wire": "Round 0.63 - Grade 1"
+        }
+      ]
+    },
+    "core": {
+      "functionalDescription": {
+        "type": "twoPieceSet",
+        "material": "N97",
+        "shape": "PQ 35/20",
+        "gapping": [
+          {
+            "type": "subtractive",
+            "length": 0.0003
+          },
+          {
+            "type": "residual",
+            "length": 1e-05
+          },
+          {
+            "type": "residual",
+            "length": 1e-05
+          }
+        ],
+        "numberStacks": 1
+      }
     }
+  },
+  "outputs": []
 }

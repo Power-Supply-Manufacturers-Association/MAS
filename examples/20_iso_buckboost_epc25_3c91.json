@@ -1,106 +1,107 @@
 {
-    "inputs": {
-        "designRequirements": {
-            "magnetizingInductance": {
-                "nominal": 0.00018
-            },
-            "turnsRatios": [
-                {
-                    "nominal": 2.5
-                }
-            ],
-            "topology": "Isolated buck-boost"
-        },
-        "operatingPoints": [
-            {
-                "name": "Operating Point 1",
-                "conditions": {
-                    "ambientTemperature": 35
-                },
-                "excitationsPerWinding": [
-                    {
-                        "frequency": 200000,
-                        "current": {
-                            "processed": {
-                                "label": "triangular",
-                                "peakToPeak": 0.6,
-                                "offset": 0.8,
-                                "dutyCycle": 0.45
-                            }
-                        },
-                        "voltage": {
-                            "processed": {
-                                "label": "rectangular",
-                                "peakToPeak": 24,
-                                "offset": 0,
-                                "dutyCycle": 0.45
-                            }
-                        }
-                    },
-                    {
-                        "frequency": 200000,
-                        "current": {
-                            "processed": {
-                                "label": "triangular",
-                                "peakToPeak": 1.5,
-                                "offset": 3.75,
-                                "dutyCycle": 0.55
-                            }
-                        },
-                        "voltage": {
-                            "processed": {
-                                "label": "rectangular",
-                                "peakToPeak": 9.6,
-                                "offset": 0,
-                                "dutyCycle": 0.55
-                            }
-                        }
-                    }
-                ]
-            }
-        ]
-    },
-    "magnetic": {
-        "coil": {
-            "bobbin": "basic",
-            "functionalDescription": [
-                {
-                    "name": "Primary",
-                    "numberTurns": 20,
-                    "numberParallels": 1,
-                    "isolationSide": "primary",
-                    "wire": "Round 0.355 - Grade 1"
-                },
-                {
-                    "name": "Secondary",
-                    "numberTurns": 8,
-                    "numberParallels": 2,
-                    "isolationSide": "secondary",
-                    "wire": "Round 0.5 - Grade 1"
-                }
-            ]
-        },
-        "core": {
-            "functionalDescription": {
-                "type": "twoPieceSet",
-                "material": "3C91",
-                "shape": "EP 20",
-                "gapping": [
-                    {
-                        "type": "subtractive",
-                        "length": 0.0006
-                    },
-                    {
-                        "type": "residual",
-                        "length": 1e-05
-                    },
-                    {
-                        "type": "residual",
-                        "length": 1e-05
-                    }
-                ],
-                "numberStacks": 1
-            }
+  "inputs": {
+    "designRequirements": {
+      "magnetizingInductance": {
+        "nominal": 0.00018
+      },
+      "turnsRatios": [
+        {
+          "nominal": 2.5
         }
+      ],
+      "topology": "isolatedBuckBoostConverter"
+    },
+    "operatingPoints": [
+      {
+        "name": "Operating Point 1",
+        "conditions": {
+          "ambientTemperature": 35
+        },
+        "excitationsPerWinding": [
+          {
+            "frequency": 200000,
+            "current": {
+              "processed": {
+                "label": "triangular",
+                "peakToPeak": 0.6,
+                "offset": 0.8,
+                "dutyCycle": 0.45
+              }
+            },
+            "voltage": {
+              "processed": {
+                "label": "rectangular",
+                "peakToPeak": 24,
+                "offset": 0,
+                "dutyCycle": 0.45
+              }
+            }
+          },
+          {
+            "frequency": 200000,
+            "current": {
+              "processed": {
+                "label": "triangular",
+                "peakToPeak": 1.5,
+                "offset": 3.75,
+                "dutyCycle": 0.55
+              }
+            },
+            "voltage": {
+              "processed": {
+                "label": "rectangular",
+                "peakToPeak": 9.6,
+                "offset": 0,
+                "dutyCycle": 0.55
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "magnetic": {
+    "coil": {
+      "bobbin": "basic",
+      "functionalDescription": [
+        {
+          "name": "Primary",
+          "numberTurns": 20,
+          "numberParallels": 1,
+          "isolationSide": "primary",
+          "wire": "Round 0.355 - Grade 1"
+        },
+        {
+          "name": "Secondary",
+          "numberTurns": 8,
+          "numberParallels": 2,
+          "isolationSide": "secondary",
+          "wire": "Round 0.5 - Grade 1"
+        }
+      ]
+    },
+    "core": {
+      "functionalDescription": {
+        "type": "twoPieceSet",
+        "material": "3C91",
+        "shape": "EP 20",
+        "gapping": [
+          {
+            "type": "subtractive",
+            "length": 0.0006
+          },
+          {
+            "type": "residual",
+            "length": 1e-05
+          },
+          {
+            "type": "residual",
+            "length": 1e-05
+          }
+        ],
+        "numberStacks": 1
+      }
     }
+  },
+  "outputs": []
 }

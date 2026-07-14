@@ -1,55 +1,63 @@
 {
-    "inputs": {
-        "designRequirements": {
-            "magnetizingInductance": {
-                "nominal": 0.00025
-            },
-            "turnsRatios": [],
-            "topology": "powerFactorCorrection"
-        },
-        "operatingPoints": [
-            {
-                "name": "Operating Point 1",
-                "conditions": {
-                    "ambientTemperature": 80
-                },
-                "excitationsPerWinding": [
-                    {
-                        "frequency": 65000,
-                        "current": {
-                            "processed": {
-                                "label": "sinusoidal",
-                                "peakToPeak": 1.5,
-                                "offset": 3.0,
-                                "dutyCycle": 0.5
-                            }
-                        }
-                    }
-                ]
-            }
-        ]
+  "inputs": {
+    "designRequirements": {
+      "magnetizingInductance": {
+        "nominal": 0.00025
+      },
+      "turnsRatios": [],
+      "topology": "powerFactorCorrection"
     },
-    "magnetic": {
-        "coil": {
-            "bobbin": "basic",
-            "functionalDescription": [
-                {
-                    "name": "Primary",
-                    "numberTurns": 45,
-                    "numberParallels": 1,
-                    "isolationSide": "primary",
-                    "wire": "Round 0.80 - Grade 1"
-                }
-            ]
+    "operatingPoints": [
+      {
+        "name": "Operating Point 1",
+        "conditions": {
+          "ambientTemperature": 80
         },
-        "core": {
-            "functionalDescription": {
-                "type": "toroidal",
-                "material": "High DC Bias XFlux 60",
-                "shape": "T 40/24/16",
-                "gapping": [],
-                "numberStacks": 1
+        "excitationsPerWinding": [
+          {
+            "frequency": 65000,
+            "current": {
+              "processed": {
+                "label": "sinusoidal",
+                "peakToPeak": 1.5,
+                "offset": 3.0,
+                "dutyCycle": 0.5
+              }
+            },
+            "voltage": {
+              "processed": {
+                "label": "sinusoidal",
+                "peakToPeak": 153.15,
+                "offset": 0
+              }
             }
+          }
+        ]
+      }
+    ]
+  },
+  "magnetic": {
+    "coil": {
+      "bobbin": "basic",
+      "functionalDescription": [
+        {
+          "name": "Primary",
+          "numberTurns": 45,
+          "numberParallels": 1,
+          "isolationSide": "primary",
+          "wire": "Round 0.80 - Grade 1"
         }
+      ]
+    },
+    "core": {
+      "functionalDescription": {
+        "type": "toroidal",
+        "material": "High DC Bias XFlux 60",
+        "shape": "T 40/24/16",
+        "gapping": [],
+        "numberStacks": 1
+      }
     }
+  },
+  "outputs": []
 }
