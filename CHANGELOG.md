@@ -38,6 +38,15 @@ MAJOR.
   botched merge of them. No cores referenced `TMFD`. The per-grade fits
   reproduce TDG's published 82% μe@100 Oe (60μ) and the series loss
   coefficients reproduce the published 450 kW/m³ @ 50 kHz/100 mT.
+- **Generic `Metglas` / `Finemet` records renamed to their actual alloy grades
+  (data, ABT #221).** Each was a single record flattening a whole alloy family.
+  Migration map for consumers that referenced a material by these bare names:
+  `Metglas` → `Metglas 2605SA1` (Fe-based amorphous, the workhorse; Tc 395 °C
+  matches 2605SA1), `Finemet` → `FT-3M` (FeCuNbSiB nanocrystalline; Bs 1.23 T /
+  Tc 570 °C match FT-3M). The fitted μ(T) and loss curves are unchanged, only
+  re-attributed. No cores or examples in MAS referenced the old bare names.
+  Additional grades (Metglas 2605S3A/2605HB1M/2714A, Finemet FT-3K50T, …) are
+  added separately (MINOR).
 
 Note: `scripts/migrate-to-1.0.py` still writes `masVersion` and is now obsolete.
 
