@@ -21,8 +21,14 @@ Checks (HARD = non-zero exit, physics violations; SOFT = warning, eyeball-worthy
   HARD  loss non-finite or <= 0 at any reference point
   HARD  loss not strictly increasing with B (at fixed f,T)
   HARD  loss not strictly increasing with f (at fixed B,T)
+  HARD  steinmetz alpha/beta outside the physical band (import/fit blunder)
+  HARD  saturation flux density RISES with temperature (Bs falls toward the Curie point)
   SOFT  reference loss (100 kHz, 100 mT, 100 C) outside [PLAUS_LO, PLAUS_HI] kW/m^3
   SOFT  reference loss > OUTLIER_RATIO x its material-family median (per-family scale error)
+  SOFT  steinmetz ct(T) <= 0 in [-40,220] C  (MKF skips scaling -> temp dependence dead)
+  SOFT  steinmetz alpha/beta outside the typical band
+  SOFT  Bs above the material-class ceiling / Curie temp below a characterization temp
+  SOFT  lossFactor drops with rising frequency (loss factor normally increases)
   HARD  lossFactor factor value outside [LF_LO, LF_HI]  (tan-delta/mu_i is ~1e-6..1e-1)
 
 Usage:  python3 scripts/check-loss-sanity.py [--verbose] [--baseline]
@@ -45,6 +51,23 @@ GRID_B = [0.025, 0.050, 0.100, 0.200]
 PLAUS_LO, PLAUS_HI = 0.5, 30000.0
 OUTLIER_RATIO = 6.0    # x family median
 LF_LO, LF_HI = 1e-8, 1.0   # relative loss factor tan-delta/mu_i physical range
+
+# temperature span over which a Steinmetz ct(T) scale must stay positive. MKF's
+# apply_temperature_coefficients SKIPS the ct scaling when ct(T) <= 0, which silently
+# inflates the loss by whatever factor ct would have applied (documented ~1000x trap) —
+# so a ct polynomial that dips <= 0 anywhere a user might operate is a real hazard.
+CT_TSPAN = list(range(-40, 221, 5))
+
+# Steinmetz exponent gates (per the ct/#183 sanity memory: reject alpha<0.5 / alpha>3.5 /
+# beta<1, eyeball beta>4.5). Outside the HARD band is almost always a fit/import bug.
+ALPHA_LO, ALPHA_HI = 0.5, 3.5
+BETA_LO,  BETA_HI  = 1.0, 4.5
+ALPHA_HARD_LO, ALPHA_HARD_HI = 0.3, 4.0   # beyond this a power law is unphysical
+BETA_HARD_LO,  BETA_HARD_HI  = 0.8, 6.0
+
+# physical saturation-flux ceiling by material class (T, peak); above this Bs is wrong.
+BS_MAX = {'ferrite': 0.62, 'nanocrystalline': 1.35, 'amorphous': 1.75,
+          'electricalSteel': 2.2, 'powder': 1.9}
 
 
 def steinmetz_range(ranges, f):
@@ -93,6 +116,80 @@ def family_of(name, fam):
     return fam or name.rsplit(' ', 1)[0]
 
 
+def check_steinmetz_coeffs(name, primary, hard, soft):
+    """Steinmetz exponent gates + the ct(T)<=0 loss-inflation trap (per range)."""
+    if primary.get('method') != 'steinmetz':
+        return
+    for r in primary.get('ranges', []):
+        a, b = r.get('alpha'), r.get('beta')
+        if a is not None:
+            if not (ALPHA_HARD_LO <= a <= ALPHA_HARD_HI):
+                hard.append(f"{name}: steinmetz alpha={a:.3g} outside physical "
+                            f"[{ALPHA_HARD_LO},{ALPHA_HARD_HI}]")
+            elif not (ALPHA_LO <= a <= ALPHA_HI):
+                soft.append(f"{name}: steinmetz alpha={a:.3g} outside typical [{ALPHA_LO},{ALPHA_HI}]")
+        if b is not None:
+            if not (BETA_HARD_LO <= b <= BETA_HARD_HI):
+                hard.append(f"{name}: steinmetz beta={b:.3g} outside physical "
+                            f"[{BETA_HARD_LO},{BETA_HARD_HI}]")
+            elif not (BETA_LO <= b <= BETA_HI):
+                soft.append(f"{name}: steinmetz beta={b:.3g} outside typical [{BETA_LO},{BETA_HI}]")
+        ct0, ct1, ct2 = r.get('ct0'), r.get('ct1'), r.get('ct2')
+        if ct0 is not None and ct1 is not None and ct2 is not None:
+            # ct(T) = ct2*T^2 - ct1*T + ct0  (MKF sign convention, CoreLosses.h). When
+            # scale <= 0 MKF returns the UNSCALED k*f^a*B^b, so a ct that dips <= 0 in the
+            # operating band means the temperature scaling is silently inoperative there
+            # (degenerate joint fit). SOFT: the loss magnitude is separately bounded by the
+            # monotonicity (HARD) and plausibility (SOFT) checks, so this is a fit-quality
+            # flag, not a magnitude blow-up.
+            neg = [T for T in CT_TSPAN if ct2*T*T - ct1*T + ct0 <= 0]
+            if neg:
+                lo, hi = min(neg), max(neg)
+                soft.append(f"{name}: steinmetz ct(T)<=0 on T in [{lo},{hi}]C "
+                            f"(MKF skips scaling there -> temperature dependence inoperative) "
+                            f"[range {r.get('minimumFrequency')}-{r.get('maximumFrequency')} Hz]")
+
+
+def _series_vs_temperature(entries, key):
+    """Return [(temperature, value)] sorted by temperature for a list of {temperature,key}."""
+    out = []
+    for e in entries or []:
+        if isinstance(e, dict) and 'temperature' in e and key in e:
+            out.append((e['temperature'], e[key]))
+    return sorted(out)
+
+
+def check_saturation(name, o, hard, soft):
+    """Bs must not exceed its material-class ceiling and must not RISE with temperature
+    (saturation falls toward the Curie point)."""
+    pts = _series_vs_temperature(o.get('saturation'), 'magneticFluxDensity')
+    if not pts:
+        return
+    cap = BS_MAX.get(o.get('material'))
+    for T, B in pts:
+        if cap and B > cap * 1.02:
+            soft.append(f"{name}: Bs={B:.3g} T @ {T}C exceeds {o.get('material')} ceiling {cap} T")
+    for i in range(len(pts) - 1):
+        (t0, b0), (t1, b1) = pts[i], pts[i+1]
+        if b1 > b0 * 1.02:           # >2% rise with temperature is unphysical
+            hard.append(f"{name}: Bs rises with temperature ({b0:.3g}@{t0}C -> {b1:.3g}@{t1}C)")
+            break
+
+
+def check_curie(name, o, soft):
+    """Curie temperature should sit above the hottest characterization temperature."""
+    tc = o.get('curieTemperature')
+    if tc is None:
+        return
+    tmax = 0
+    for fld, key in (('saturation','magneticFluxDensity'), ('remanence','magneticFluxDensity'),
+                     ('coerciveForce','magneticField')):
+        for T, _ in _series_vs_temperature(o.get(fld), key):
+            tmax = max(tmax, T)
+    if tmax and tc < tmax:
+        soft.append(f"{name}: Curie temperature {tc}C below a characterization temp {tmax}C")
+
+
 def main():
     verbose = '--verbose' in sys.argv
     baseline = '--baseline' in sys.argv
@@ -109,6 +206,9 @@ def main():
 
     for o in records:
         name = o['name']
+        # material-level physics (independent of the loss model)
+        check_saturation(name, o, hard, soft)
+        check_curie(name, o, soft)
         vl = o.get('volumetricLosses')
         if not isinstance(vl, dict):
             continue
@@ -120,14 +220,25 @@ def main():
                     'steinmetz', 'magnetics', 'poco', 'tdg', 'micrometals'):
                 primary = meth
                 break
-        # lossFactor factor-range check
+        # steinmetz exponent + ct(T) guards
+        if primary is not None:
+            check_steinmetz_coeffs(name, primary, hard, soft)
+        # lossFactor factor-range + frequency-monotonicity check
         for meth in methods:
             if isinstance(meth, dict) and meth.get('method') == 'lossFactor':
-                for fac in meth.get('factors', []):
+                facs = [f for f in meth.get('factors', []) if isinstance(f, dict)]
+                for fac in facs:
                     v = fac.get('value')
                     if v is None or not (LF_LO <= v <= LF_HI):
                         hard.append(f"{name}: lossFactor value {v} @ {fac.get('frequency')} Hz "
                                     f"outside physical [{LF_LO},{LF_HI}]")
+                fv = sorted((f.get('frequency'), f.get('value')) for f in facs
+                            if f.get('frequency') is not None and f.get('value') is not None)
+                for i in range(len(fv) - 1):
+                    if fv[i+1][1] < fv[i][1] * 0.5:   # loss factor should not halve as f rises
+                        soft.append(f"{name}: lossFactor drops with frequency "
+                                    f"({fv[i][1]:.2g}@{fv[i][0]:.0f}Hz -> {fv[i+1][1]:.2g}@{fv[i+1][0]:.0f}Hz)")
+                        break
         if primary is None:
             continue
 
