@@ -25,6 +25,11 @@ MAS today has no way to express them:
 - `functionalDescription` models *windings*. A shield is a conductor but not a
   winding — modeling it as a one-turn winding corrupts `turnsRatios`, demands
   a fake excitation in every operating point, and miscounts isolation sides.
+- Electrically, a winding is a two-terminal element: its `connections` are a
+  start/finish pair and load current flows between them. A shield connects at
+  one end only — the far end is left floating so the shield cannot close a
+  shorted turn around the core — and carries only displacement current to
+  its termination. The winding shape cannot express a single-ended conductor.
 - The coil description already *can represent* the result — `layer.type`
   already includes `shielding` — but nothing upstream of the coil can request
   it, so the only route today is hand-authoring `layersDescription`.
