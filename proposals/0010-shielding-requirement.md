@@ -152,6 +152,33 @@ shape exists across the stack (schema, MKF layer insertion including
 interleaving and margins, wasm, builder UI, summary rendering) and will be
 submitted as the linked implementation PRs on acceptance.
 
+## Alternatives considered
+
+- **A one-turn "shield winding" in `functionalDescription` (the established
+  workaround).** A winding gets placement, painting, and loss models for free
+  and needs no schema or engine change — but it corrupts the electrical model
+  (`turnsRatios` and every operating point acquire a phantom entry, isolation
+  sides miscount), and every consumer must special-case a winding that is not
+  electrically a winding. The winding shape also cannot express single-ended
+  termination: `connections` is a start/finish pair and winding paths assume
+  both ends carry load current. A requirements-level variant (folding shields
+  into `numberWindings`) fails the same way, since the winding count drives
+  `turnsRatios` and per-winding excitations. These are the failures the
+  Motivation section describes.
+
+- **Hand-authoring SHIELDING layers in `layersDescription` (what MAS allows
+  today).** Expresses the result but not the intent: the declaration is not
+  portable across tools, cannot participate in requirement-stage workflows,
+  and is destroyed whenever the coil is re-wound after a core, wire, or
+  interleaving change. It remains the low-level representation this
+  requirement materializes into.
+
+- **Extending the `insulation` requirement instead of a first-class array.**
+  A shield is a conductor, not insulation, and it is placed per interface
+  occurrence rather than per winding pair; folding it into the insulation
+  requirement would overload those pair-level semantics and could not express
+  selectively shielded interleaved constructions.
+
 ## Open questions
 
 1. Should the insulation coordinator credit a grounded shield between the pair
