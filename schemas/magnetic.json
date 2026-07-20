@@ -246,6 +246,32 @@
             ],
             "additionalProperties": false
         },
+        "magneticDatasheetRatedCurrent": {
+            "title": "DatasheetRatedCurrent",
+            "description": "Rated current stated at a specific temperature-rise criterion — one row of a datasheet's rated-current table. Manufacturer-agnostic: a vendor that quotes the rating at several self-heating criteria (e.g. Würth IR1 at ΔT=20 K and IR2 at ΔT=40 K) contributes one entry per criterion; a vendor that quotes a single unqualified rating keeps using the plain ratedCurrents array.",
+            "type": "object",
+            "properties": {
+                "current": {
+                    "description": "Rated DC current in Amperes at the stated temperature rise.",
+                    "type": "number",
+                    "minimum": 0
+                },
+                "temperatureRise": {
+                    "description": "Self-heating criterion: the temperature rise above ambient, in K, at which this current is rated. Vendors range from 10 K to 40 K for the same '1 A' class of part, so cross-manufacturer comparison is only valid on a common basis.",
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                },
+                "temperature": {
+                    "description": "Ambient reference temperature in degrees Celsius, when the datasheet states it.",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "current",
+                "temperatureRise"
+            ],
+            "additionalProperties": false
+        },
         "magneticDatasheetResistancePoint": {
             "title": "DatasheetResistancePoint",
             "description": "Resistance vs. frequency point from the datasheet, optionally parameterised by DC bias current.",
@@ -394,6 +420,13 @@
                         "minimum": 0
                     }
                 },
+                "ratedCurrentPoints": {
+                    "description": "Rated-current table qualified by temperature-rise criterion. Preferred over the bare ratedCurrents array because it carries the ΔT basis, enabling apples-to-apples cross-manufacturer comparison. Omit when the datasheet states only an unqualified rating.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/magneticDatasheetRatedCurrent"
+                    }
+                },
                 "saturationCurrentPeak": {
                     "description": "Peak saturation current in Amperes (I_sat from datasheet). A single unqualified I_sat; when the datasheet states I_sat at explicit inductance-drop criteria, use saturationCurrents instead (or in addition).",
                     "type": "number",
@@ -473,6 +506,13 @@
                         "minimum": 0
                     }
                 },
+                "ratedCurrentPoints": {
+                    "description": "Rated-current table qualified by temperature-rise criterion. Preferred over the bare ratedCurrents array because it carries the ΔT basis, enabling apples-to-apples cross-manufacturer comparison. Omit when the datasheet states only an unqualified rating.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/magneticDatasheetRatedCurrent"
+                    }
+                },
                 "saturationCurrentPeak": {
                     "description": "Peak saturation current in Amperes (I_sat from datasheet). A single unqualified I_sat; when the datasheet states I_sat at explicit inductance-drop criteria, use saturationCurrents instead (or in addition).",
                     "type": "number",
@@ -549,6 +589,13 @@
                     "items": {
                         "type": "number",
                         "minimum": 0
+                    }
+                },
+                "ratedCurrentPoints": {
+                    "description": "Rated-current table qualified by temperature-rise criterion. Preferred over the bare ratedCurrents array because it carries the ΔT basis, enabling apples-to-apples cross-manufacturer comparison. Omit when the datasheet states only an unqualified rating.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/magneticDatasheetRatedCurrent"
                     }
                 },
                 "ratedVoltageDC": {
@@ -633,6 +680,13 @@
                         "minimum": 0
                     }
                 },
+                "ratedCurrentPoints": {
+                    "description": "Rated-current table qualified by temperature-rise criterion. Preferred over the bare ratedCurrents array because it carries the ΔT basis, enabling apples-to-apples cross-manufacturer comparison. Omit when the datasheet states only an unqualified rating.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/magneticDatasheetRatedCurrent"
+                    }
+                },
                 "ratedVoltageDC": {
                     "description": "Maximum rated DC voltage between any two terminals in Volts.",
                     "type": "number",
@@ -711,6 +765,13 @@
                     "items": {
                         "type": "number",
                         "minimum": 0
+                    }
+                },
+                "ratedCurrentPoints": {
+                    "description": "Rated-current table qualified by temperature-rise criterion (per element for a bead array). Preferred over the bare ratedCurrents array because it carries the ΔT basis, enabling apples-to-apples cross-manufacturer comparison — bead vendors rate '1 A' anywhere from a 10 K to a 40 K rise. Omit when the datasheet states only an unqualified rating.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/magneticDatasheetRatedCurrent"
                     }
                 },
                 "impedancePoints": {
