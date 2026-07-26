@@ -52,6 +52,11 @@ Note: `scripts/migrate-to-1.0.py` still writes `masVersion` and is now obsolete.
 
 ### Added
 
+- **`saturationCurrentPeak` on the `commonModeChoke` electrical variant (ABT #279)** —
+  peak core-saturating bias current in Amperes for current-compensated CMCs, mirroring
+  the inductor variant's field. Motivation: 427 catalogued CMCs (WE-CMB/WE-LF/WE-CMBNC
+  among others) carry a datasheet I_sat that previously had no schema slot, blocking
+  their retag from the mistagged `inductor` variant.
 - **Magnetics (Mag Inc.) power ferrites (data, ABT #213): L, R, P, F, T** — first
   Magnetics ferrite materials in the DB (their powder cores were already covered).
   Constants from the 2021 ferrite catalog (μi, Bs@1194 A/m 25 °C, Br, Tc, ρ,

@@ -680,6 +680,11 @@
                         "minimum": 0
                     }
                 },
+                "saturationCurrentPeak": {
+                    "description": "Peak saturation current in Amperes (I_sat from datasheet). For a current-compensated common-mode choke this is the bias (differential/unbalance) current at which the core saturates, as specified by the manufacturer.",
+                    "type": "number",
+                    "minimum": 0
+                },
                 "ratedCurrentPoints": {
                     "description": "Rated-current table qualified by temperature-rise criterion. Preferred over the bare ratedCurrents array because it carries the ΔT basis, enabling apples-to-apples cross-manufacturer comparison. Omit when the datasheet states only an unqualified rating.",
                     "type": "array",
