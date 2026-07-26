@@ -47,7 +47,16 @@
                 "rod",
                 "ei",
                 "h",
-                "c"
+                "c",
+                "eer",
+                "epc",
+                "epq",
+                "epw",
+                "ept",
+                "lep",
+                "ef",
+                "rsds",
+                "block"
             ]
         },
         "magneticCircuit": {
