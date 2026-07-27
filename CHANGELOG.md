@@ -52,6 +52,26 @@ Note: `scripts/migrate-to-1.0.py` still writes `masVersion` and is now obsolete.
 
 ### Added
 
+- **`cableCore` datasheet electrical subtype (new `oneOf` branch on `magnetic.manufacturerInfo.datasheetInfo.electrical[]`)** —
+  clamp-on / cable ferrite cores (clip-on ferrites, cable rings, split/snap-on
+  suppressors): a 1-port common-mode suppression core the cable is threaded
+  through. Electrically a 1-port impedance like `chipBead`, but a distinct part
+  class — retrofit/threaded onto a cable rather than reflow-soldered — so a
+  consumer can query and prefer real cable cores for cable-level CM mitigation
+  instead of overloading `chipBead`. Carries `impedancePoints` (with the
+  existing per-point `current` for the DC-bias-derating curve), `numberTurns`,
+  `dcResistance`, `ratedCurrents`/`ratedCurrentPoints`, `impedanceTolerance`,
+  `selfResonantFrequency`. Multi-turn curves reuse the existing
+  one-electrical-entry-per-configuration idiom (a datasheet's 1/2/3-turn |Z|
+  tables become one entry each, discriminated by `numberTurns`), and the
+  toroid/ring geometry (inner/outer diameter, height) and ferrite material stay
+  in the shared core description — no geometry or material fields are duplicated
+  into the electrical block. Purely additive: every existing part still matches
+  exactly one `oneOf` branch (verified against a per-subtype sample of the
+  bundled catalog), and unknown-subtype-ignoring consumers are unaffected.
+  Motivation: Hertz's radiated cable-mitigation picker currently selects from
+  `chipBead` SMD beads for want of a cable-core class; this gives clamp-on cores
+  a first-class home once the parts are ingested.
 - **`saturationCurrentPeak` on the `commonModeChoke` electrical variant (ABT #279)** —
   peak core-saturating bias current in Amperes for current-compensated CMCs, mirroring
   the inductor variant's field. Motivation: 427 catalogued CMCs (WE-CMB/WE-LF/WE-CMBNC

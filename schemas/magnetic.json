@@ -76,6 +76,9 @@
                             },
                             {
                                 "$ref": "#/$defs/magneticDatasheetChipBeadElectrical"
+                            },
+                            {
+                                "$ref": "#/$defs/magneticDatasheetCableCoreElectrical"
                             }
                         ]
                     }
@@ -816,6 +819,67 @@
                 },
                 "impedanceTolerance": {
                     "description": "Tolerance on the impedance values, expressed as a percentage (e.g. 20 means +/-20%).",
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                },
+                "selfResonantFrequency": {
+                    "description": "Self-resonant frequency in Hz.",
+                    "type": "number",
+                    "minimum": 0
+                }
+            },
+            "required": [
+                "subtype"
+            ],
+            "additionalProperties": false
+        },
+        "magneticDatasheetCableCoreElectrical": {
+            "title": "MagneticDatasheetCableCoreElectrical",
+            "description": "Datasheet electrical characteristics of a clamp-on / cable ferrite core (a 1-port common-mode suppression core the cable is threaded through: clip-on ferrites, cable rings, split/snap-on cores). Electrically a 1-port impedance like a chip bead, but a distinct part class — retrofit/threaded onto a cable rather than reflow-soldered. Per the array-of-configurations idiom, a datasheet that publishes |Z| for several pass counts contributes one entry per pass count, discriminated by numberTurns; the toroid/ring geometry (inner/outer diameter, height) and ferrite material live in the shared core description, not here.",
+            "type": "object",
+            "properties": {
+                "subtype": {
+                    "description": "Discriminator selecting this electrical variant.",
+                    "const": "cableCore"
+                },
+                "name": {
+                    "description": "Label of this connection configuration as given in the datasheet (e.g. '1 turn', '2 turns', 'single pass'). Omit for a part with a single configuration.",
+                    "type": "string"
+                },
+                "numberTurns": {
+                    "description": "Number of cable passes through the core for this configuration's |Z| curve (1 = single pass). Datasheets that tabulate 1/2/3-turn impedance contribute one electrical entry per turn count.",
+                    "type": "number",
+                    "minimum": 0
+                },
+                "dcResistance": {
+                    "description": "DC resistance of the threaded conductor in Ohms (usually negligible; present when the datasheet states it). nominal = typical value, maximum = datasheet max.",
+                    "$ref": "./utils.json#/$defs/dimensionWithTolerance"
+                },
+                "ratedCurrents": {
+                    "description": "Rated DC current in Amperes (one entry per conductor; a single-entry array for a single cable). Above this the core's impedance derates through partial saturation.",
+                    "type": "array",
+                    "items": {
+                        "type": "number",
+                        "minimum": 0
+                    }
+                },
+                "ratedCurrentPoints": {
+                    "description": "Rated-current table qualified by temperature-rise criterion. Preferred over the bare ratedCurrents array because it carries the ΔT basis, enabling apples-to-apples cross-manufacturer comparison. Omit when the datasheet states only an unqualified rating.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/magneticDatasheetRatedCurrent"
+                    }
+                },
+                "impedancePoints": {
+                    "description": "Common-mode impedance vs. frequency points for this pass count, optionally parameterised by DC bias current (impedancePoint.current) for the bias-derating curve.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/magneticDatasheetImpedancePoint"
+                    }
+                },
+                "impedanceTolerance": {
+                    "description": "Tolerance on the impedance values, expressed as a percentage (e.g. 25 means +/-25%).",
                     "type": "number",
                     "minimum": 0,
                     "maximum": 100
