@@ -888,6 +888,16 @@
                     "description": "Self-resonant frequency in Hz.",
                     "type": "number",
                     "minimum": 0
+                },
+                "mountingForm": {
+                    "description": "How the core is fitted to the cable: a closed 'solidRing' the cable is threaded through at build, a hinged 'snapOn' clip that opens for retrofit, a two-piece 'split' core, or a 'screwable' housing. Distinguishes retrofit-installable clamps from build-time rings.",
+                    "type": "string",
+                    "enum": ["solidRing", "snapOn", "split", "screwable"]
+                },
+                "maximumCableOuterDiameter": {
+                    "description": "Largest cable / bundle outer diameter in metres that fits through the core (the inner-diameter fit limit) — a primary selection parameter for a cable core.",
+                    "type": "number",
+                    "minimum": 0
                 }
             },
             "required": [
