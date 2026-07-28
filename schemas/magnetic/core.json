@@ -34,7 +34,8 @@
                         "twoPieceSet",
                         "pieceAndPlate",
                         "toroidal",
-                        "closedShape"
+                        "closedShape",
+                        "openShape"
                     ]
                 },
                 "material": {

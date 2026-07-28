@@ -84,20 +84,14 @@
           "numberTurns": 36,
           "numberParallels": 1,
           "isolationSide": "primary",
-          "wire": "Round 0.4 - Grade 2",
-          "woundWith": [
-            "Secondary"
-          ]
+          "wire": "Round 0.4 - Grade 2"
         },
         {
           "name": "Secondary",
           "numberTurns": 7,
           "numberParallels": 3,
           "isolationSide": "secondary",
-          "wire": "Round 0.63 - Grade 1",
-          "woundWith": [
-            "Primary"
-          ]
+          "wire": "Round 0.63 - Grade 1"
         }
       ]
     },

@@ -107,20 +107,14 @@
           "numberTurns": 48,
           "numberParallels": 1,
           "isolationSide": "primary",
-          "wire": "Round 0.3 - Grade 2",
-          "woundWith": [
-            "Secondary 12V"
-          ]
+          "wire": "Round 0.3 - Grade 2"
         },
         {
           "name": "Secondary 12V",
           "numberTurns": 12,
           "numberParallels": 2,
           "isolationSide": "secondary",
-          "wire": "Round 0.5 - Grade 1",
-          "woundWith": [
-            "Primary"
-          ]
+          "wire": "Round 0.5 - Grade 1"
         },
         {
           "name": "Auxiliary 3.3V",
