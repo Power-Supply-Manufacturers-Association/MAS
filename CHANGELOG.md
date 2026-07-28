@@ -61,7 +61,10 @@ Note: `scripts/migrate-to-1.0.py` still writes `masVersion` and is now obsolete.
   instead of overloading `chipBead`. Carries `impedancePoints` (with the
   existing per-point `current` for the DC-bias-derating curve), `numberTurns`,
   `dcResistance`, `ratedCurrents`/`ratedCurrentPoints`, `impedanceTolerance`,
-  `selfResonantFrequency`. Multi-turn curves reuse the existing
+  `selfResonantFrequency`, `mountingForm` (solidRing / snapOn / split /
+  screwable — retrofit clamp vs build-time ring) and `maximumCableOuterDiameter`
+  (the inner-diameter cable-fit limit, a primary cable-core selection param).
+  Multi-turn curves reuse the existing
   one-electrical-entry-per-configuration idiom (a datasheet's 1/2/3-turn |Z|
   tables become one entry each, discriminated by `numberTurns`), and the
   toroid/ring geometry (inner/outer diameter, height) and ferrite material stay
