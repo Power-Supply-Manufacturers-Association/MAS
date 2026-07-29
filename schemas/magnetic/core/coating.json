@@ -14,7 +14,8 @@
                 "epoxy",
                 "parylene",
                 "nylon",
-                "glass"
+                "glass",
+                "magneticEpoxy"
             ]
         },
         "thickness": {
