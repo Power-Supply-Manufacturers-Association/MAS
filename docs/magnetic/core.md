@@ -198,6 +198,16 @@ The fields needed to describe a shape are:
 * Family Subtype: When several forms are possible for a shape, this field represents the index of that subtype (e.g.: PM has two subtypes: 1 and 2)
 * Dimensions: Dictionary/Map holding the different dimensions of the shape, according to DIN EN 62317. It can contain different values due to tolerances, with variables for minimum, nominal and maximum dimensions.
 
+#### Letter conventions for the inductor-construction families
+
+Four families describe finished-inductor core constructions rather than DIN EN 62317 catalogue pieces. Their dimension letters are defined here (all values in meters, as everywhere in MAS):
+
+* **drum** (open magnetic circuit, ABT #331): a bobbin/dumbbell core wound in the groove. `A` flange OD, `A2` second flange OD when asymmetric, `B` total height, `C` post OD, `D` top flange thickness, `E` winding groove height, `F` bottom flange thickness, `H` bore (optional). Catalogue rows satisfy `D+E+F == B`. Its return path is air: no effective length exists and consumers must use an explicit open-core model, never the closed-circuit reluctance path.
+* **drumRing** (closed, core type `pieceAndPlate`, ABT #366): a drum closed by a concentric shield ring. Drum letters as above plus `J` ring OD, `K` ring ID, `L` ring height, with `K > A` required. The two annular radial clearances (`(K−A)/2` at each flange rim) are STRUCTURAL: consumers synthesize them as `residual` gapping entries; user-supplied gapping is rejected — nothing can be ground on the assembly.
+* **drumSemishielded** (closed, core type `closedShape`, ABT #362): a wound drum overcoated with magnetic epoxy (binder + magnetic powder) as a low-permeability return shell. Drum letters plus `J`/`K`/`L` for the shell envelope (rectangular bodies use `J`/`K` as the two footprint dimensions; square bodies have `J == K`). The shell material is carried by the core `coating` with `type: magneticEpoxy` and `material` naming a core-material record; the circuit crosses two materials, so single-`(Ae, le)` reluctance does not apply and consumers need the per-material path split. No gaps exist or may be supplied: the epoxy is cast in contact with the flange rims.
+* **molded** (closed, core type `closedShape`, ABT #357): a coil compression-molded inside a homogeneous soft-magnetic-composite block (distributed gap; the body is the circuit). `A` body width, `B` body height, `C` body depth, `D` coil-cavity height, `E` coil-cavity outer diameter, `F` coil-cavity inner diameter (the winding post). Constraints: `E > F`, `D < B`, `E < min(A, C)`.
+
+Shape records for these families may be catalogued when the bare-core pairing is public; assemblies whose dimensions come from confidential construction data must stay inline (`type: custom`) in the consuming MAS file and must not be added to the public shape data.
 
 ```mermaid
 classDiagram
