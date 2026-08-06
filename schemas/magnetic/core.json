@@ -47,8 +47,26 @@
                         {
                             "description": "The name of the material used in the core",
                             "type": "string"
+                        },
+                        {
+                            "description": "The materials of a multi-grade core assembly, primary piece first.",
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {
+                                "title": "CoreMaterialDataOrNameUnion",
+                                "oneOf": [
+                                    {
+                                        "$ref": "./core/material.json"
+                                    },
+                                    {
+                                        "description": "The name of the material used in this piece",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
                         }
-                    ]
+                    ],
+                    "description": "The material(s) the core is made of. A single material (by record or by name) for the overwhelming majority of cores. A LIST when the assembly genuinely comprises pieces of different grades that the analytical models must treat separately — e.g. a shielded drum whose closing ring is a different ferrite from the drum (ABT #576). Order is significant: the FIRST entry is the primary piece (the drum / the wound piece), subsequent entries are the closing pieces in the order the magnetic circuit crosses them. A one-element list means the same thing as the bare form."
                 },
                 "shape": {
                     "title": "CoreShapeDataOrNameUnion",
