@@ -55,27 +55,44 @@ def load_records(path):
 
 
 def loss_points(name, base_by_name, adv_by_name):
-    """Measured Pv points for a material: [(f, B, T, Pv)], preferring MagNet where mixed."""
+    """Measured Pv points for a material: [(f, B, T, Pv)], preferring MagNet where mixed.
+
+    Points arrive in either of the two forms the schema defines: `volumetricLosses` in W/m^3 and
+    `massLosses` in W/kg. The latter is what the tape-wound, amorphous and nanocrystalline records
+    carry (their vendors publish loss per unit mass), and it is just as fittable once multiplied by
+    the material density — the Steinmetz model MKF evaluates is volumetric, so mass points that are
+    never converted look to this script like a material with no data at all. That is how AF ended up
+    with a beta of 0.946 while 289 clean measured points sat in the file unused (ABT #643).
+    """
     raw = []
     sources = list(adv_by_name.get(name, []))
     if name in base_by_name:
         sources.append(base_by_name[name])
+    density = base_by_name.get(name, {}).get('density')
     for src in sources:
-        vl = src.get('volumetricLosses')
-        if not isinstance(vl, dict):
-            continue
-        for method in vl.get('default', []):
-            if isinstance(method, list):
-                raw.extend(method)
-    if any(p.get('origin') == 'MagNet' for p in raw):
-        raw = [p for p in raw if p.get('origin') == 'MagNet']
+        for key, scale in (('volumetricLosses', 1.0), ('massLosses', density)):
+            block = src.get(key)
+            if not isinstance(block, dict):
+                continue
+            for method in block.get('default', []):
+                if not isinstance(method, list) or not method:
+                    continue
+                if scale is None:
+                    # No density, no conversion. Guessing one would put a made-up factor straight
+                    # into k, so this is an error, not something to quietly skip.
+                    raise ValueError(f"{name}: massLosses points (W/kg) but no density in "
+                                     f"{DATA} — cannot convert to the volumetric W/m^3 the "
+                                     f"Steinmetz model is fitted in")
+                raw.extend((p, scale) for p in method)
+    if any(p.get('origin') == 'MagNet' for p, _ in raw):
+        raw = [(p, s) for p, s in raw if p.get('origin') == 'MagNet']
     out = []
-    for p in raw:
+    for p, scale in raw:
         try:
             exc = p['magneticFluxDensity']
             f = exc['frequency']
             B = exc['magneticFluxDensity']['processed']['peak']
-            out.append((f, B, p['temperature'], p['value']))
+            out.append((f, B, p['temperature'], p['value'] * scale))
         except (KeyError, TypeError):
             continue
     return [r for r in out if r[0] > 0 and r[1] > 0 and r[3] > 0]
@@ -117,6 +134,22 @@ def fit_range(points):
     A = np.column_stack([np.ones(near.sum()), np.log10(f[near]), np.log10(B[near])])
     (log_k0, alpha0, beta0), *_ = np.linalg.lstsq(A, y[near], rcond=None)
 
+    # --- no ct at all unless the data can identify one. ct is a parabola in T: three parameters,
+    # so it needs at least three distinct temperatures. Below that the ct stages below are fitting
+    # an unconstrained direction and will happily return their own initial guess dressed up as a
+    # temperature dependence — AF's 289 points are all at 25 C and produced ct(100)=0.81, a 19%
+    # loss DROP with heating that nothing in the file says (ABT #643). Omitting ct0/ct1/ct2 is a
+    # meaningful state: MKF's apply_temperature_coefficients requires all three and otherwise
+    # applies no scaling at all, which is exactly the right behaviour for single-temperature data.
+    temperatures = sorted(set(T.tolist()))
+    if len(temperatures) < 3:
+        A_all = np.column_stack([np.ones(len(f)), np.log10(f), np.log10(B)])
+        (log_k, alpha, beta), *_ = np.linalg.lstsq(A_all, y, rcond=None)
+        k = 10 ** log_k
+        pred = k * f ** alpha * B ** beta
+        err = float(np.mean(np.abs(pred - P) / P))
+        return ({'k': float(k), 'alpha': float(alpha), 'beta': float(beta)}, err)
+
     # --- stage 2: ct only, k/alpha/beta held
     def resid_ct(q):
         a, h, log_m = q
@@ -151,12 +184,16 @@ def model_error(coeffs, points):
     """Mean |relative error| of an existing coefficient set over the same points, MKF semantics."""
     if not points:
         return None
+    # MKF applies the temperature term only when all three coefficients are present
+    # (CoreLosses.h apply_temperature_coefficients), and only when it comes out positive.
+    has_ct = all(coeffs.get(key) is not None for key in ('ct0', 'ct1', 'ct2'))
     tot = 0.0
     for f, B, T, P in points:
-        scale = coeffs['ct2'] * T * T - coeffs['ct1'] * T + coeffs['ct0']
         p = coeffs['k'] * f ** coeffs['alpha'] * B ** coeffs['beta']
-        if scale > 0:                      # MKF skips the factor otherwise
-            p *= scale
+        if has_ct:
+            scale = coeffs['ct2'] * T * T - coeffs['ct1'] * T + coeffs['ct0']
+            if scale > 0:
+                p *= scale
         tot += abs(p - P) / P
     return tot / len(points)
 
@@ -225,10 +262,11 @@ def refit_material(rec, points, narrow_only=False):
                 new, err = fit_range(sub)
                 old_err = model_error(r, sub)
                 bad = gates(new)
+                ct_tag = ('no ct (single-temperature data)' if 'ct0' not in new else
+                          f"ct(25)=1 ct(100)={new['ct2']*1e4 - new['ct1']*100 + new['ct0']:.3f}")
                 tag = (f"    range {i} [{nr['minimumFrequency']:.4g},{nr['maximumFrequency']:.4g}] "
                        f"n={len(sub)}: k={new['k']:.4g} a={new['alpha']:.3f} b={new['beta']:.3f} "
-                       f"ct(25)=1 ct(100)={new['ct2']*1e4 - new['ct1']*100 + new['ct0']:.3f} "
-                       f"| err {old_err*100:.1f}% -> {err*100:.1f}%")
+                       f"{ct_tag} | err {old_err*100:.1f}% -> {err*100:.1f}%")
                 # A range whose old ct was dead in the operating band was structurally broken —
                 # its apparent error was measured with the temperature scaling dropped, so it is
                 # not a bar the replacement has to clear. Anywhere else, refuse to trade accuracy
@@ -241,6 +279,11 @@ def refit_material(rec, points, narrow_only=False):
                     report.append(tag + "  REJECTED (fits the measured points worse)")
                 else:
                     report.append(tag + ("  (old ct was dead in band)" if was_broken and worse else ""))
+                    if 'ct0' not in new:
+                        # An old ct must not outlive the fit it belonged to: left in place next to
+                        # new k/alpha/beta it would scale a curve it was never fitted against.
+                        for key in ('ct0', 'ct1', 'ct2'):
+                            nr.pop(key, None)
                     nr.update(new)
         new_ranges.append(nr)
 
