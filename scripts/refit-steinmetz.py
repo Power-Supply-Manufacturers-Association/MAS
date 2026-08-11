@@ -100,12 +100,20 @@ def fit_range(points):
     P = np.array([p[3] for p in points], float)
     y = np.log10(P)
 
-    # --- stage 1: k/alpha/beta on a near-25 C slice (never an exact == 25 match)
-    near = np.abs(T - REF_T) <= 3.0
+    # --- stage 1: k/alpha/beta on one temperature slice. Pick the slice carrying the most
+    # distinct (f, B) pairs rather than always reaching for 25 C: alpha and beta are only
+    # identifiable where the data spreads over frequency AND flux density, and some sources
+    # (Ferroxcube's Pv-vs-B figure, for one) draw that spread at 100 C and give temperature
+    # only as a few separate curves. Ties break toward 25 C. The older `temperature == 25`
+    # exact match silently emptied the slice on DMEGC data whose temperatures read 26.7 C.
+    def slice_score(t0):
+        sel = np.abs(T - t0) <= 3.0
+        return (len({(round(a, 6), round(b, 6)) for a, b in zip(f[sel], B[sel])}),
+                -abs(t0 - REF_T))
+    best = max(sorted(set(T.tolist())), key=slice_score)
+    near = np.abs(T - best) <= 3.0
     if near.sum() < 4:
-        # fall back to the single closest temperature group
-        closest = T[np.argmin(np.abs(T - REF_T))]
-        near = np.abs(T - closest) <= 3.0
+        near = np.ones_like(T, dtype=bool)
     A = np.column_stack([np.ones(near.sum()), np.log10(f[near]), np.log10(B[near])])
     (log_k0, alpha0, beta0), *_ = np.linalg.lstsq(A, y[near], rcond=None)
 
@@ -246,7 +254,10 @@ def refit_material(rec, points, narrow_only=False):
             new_ranges[i] = dict(r, **{k: v for k, v in nr.items()
                                        if k not in ('minimumFrequency', 'maximumFrequency')})
     for a_, b_ in zip(new_ranges, new_ranges[1:]):
-        if abs(a_['maximumFrequency'] - b_['minimumFrequency']) > 1e-9:
+        # Only a true GAP matters. Several records deliberately overlap consecutive ranges by
+        # 1 Hz ([1, 100001] then [100000, 300001]) so that MKF's "first range containing f"
+        # always has a winner at the boundary; that is not a gap.
+        if b_['minimumFrequency'] - a_['maximumFrequency'] > max(1.0, 1e-6 * a_['maximumFrequency']):
             report.append(f"    !! interior gap {a_['maximumFrequency']:.4g}->"
                           f"{b_['minimumFrequency']:.4g} Hz — MKF throws on those, leaving alone")
             return None, report
