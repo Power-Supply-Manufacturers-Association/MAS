@@ -28,6 +28,13 @@ MAJOR.
   effects (dimensional resonance) and displacement current in high-permittivity
   ferrites, and the effective usable bandwidth of a given core size. Non-breaking:
   the field is optional and existing materials are unaffected.
+- **Complex permittivity data for 7 MnZn power ferrites** — ML91S, ML95S, ML27D
+  (JFE), DMR51W, DMR96A (DMEGC), P63 (ACME) and 3F36 (Ferroxcube). ε_r'(f) and
+  ε_r''(f) over 0.1–10 MHz, digitized from A. Nabih, Q. Li, F. C. Lee,
+  "Characterization and Mitigation of Dimensional Effects on Core Loss in
+  High-Power High-Frequency Converters," IEEE Trans. Power Electron. 38(11),
+  2023 (Fig. 23; https://ieeexplore.ieee.org/document/10149511). Values are
+  read-offs from log–log figures — expect ~5–10 % uncertainty.
 
 ### Breaking
 
