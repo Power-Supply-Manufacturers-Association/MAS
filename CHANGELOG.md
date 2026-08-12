@@ -22,16 +22,17 @@ MAJOR.
 ### Added
 
 - **Optional `permittivity` on core materials.** Adds a `permittivity` object to
-  the core material schema (mirroring `permeability`) with a `real` part (ε_r′)
-  and a `complex` part (ε_r′ + j·ε_r″, same sign convention as complex
-  permeability), each a new `permittivityPoint` (value,
-  plus optional temperature and frequency). Enables modelling of dimensional
+  the core material schema with a `complex` part (ε′ + j·ε″, same sign
+  convention as complex permeability — the imaginary part is a positive loss
+  magnitude), mirroring the `complex` entry under `permeability`: a `real` and
+  an `imaginary` sub-object, each a new `permittivityPoint` (value, plus
+  optional temperature and frequency). Enables modelling of dimensional
   effects (dimensional resonance) and displacement current in high-permittivity
   ferrites, and the effective usable bandwidth of a given core size. Non-breaking:
   the field is optional and existing materials are unaffected.
 - **Complex permittivity data for 7 MnZn power ferrites** — ML91S, ML95S, ML27D
-  (JFE), DMR51W, DMR96A (DMEGC), P63 (ACME) and 3F36 (Ferroxcube). ε_r'(f) and
-  ε_r''(f) over 0.1–10 MHz, digitized from Fig. 23 of A. Nabih, F. Jin,
+  (JFE), DMR51W, DMR96A (DMEGC), P63 (ACME) and 3F36 (Ferroxcube). ε'(f) and
+  ε''(f) over 0.1–10 MHz, digitized from Fig. 23 of A. Nabih, F. Jin,
   R. Gadelrab and F. C. Lee, "Characterization and Mitigation of Dimensional
   Effects on Core Loss in High-Power High-Frequency Converters," IEEE Trans.
   Power Electron., 2023, doi: 10.1109/TPEL.2023.3285633

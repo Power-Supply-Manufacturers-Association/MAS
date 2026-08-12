@@ -176,7 +176,7 @@
             "type": "object",
             "properties": {
                 "complex": {
-                    "description": "Complex relative permittivity (eps_r' + j*eps_r''), following the same sign convention as complex permeability above: the imaginary part is stored as a positive loss magnitude. Used for dimensional-effect and displacement-current modelling at high frequency.",
+                    "description": "Complex relative permittivity (eps' + j*eps''), following the same sign convention as complex permeability above: the imaginary part is stored as a positive loss magnitude. Used for dimensional-effect and displacement-current modelling at high frequency.",
                     "title": "complexPermittivityData",
                     "type": "object",
                     "properties": {
