@@ -175,10 +175,6 @@
             "title": "permittivities",
             "type": "object",
             "properties": {
-                "real": {
-                    "description": "Real relative permittivity eps_r', as a function of frequency and temperature (the value manufacturers typically quote).",
-                    "$ref": "#/$defs/permittivity"
-                },
                 "complex": {
                     "description": "Complex relative permittivity (eps_r' - j*eps_r''), used for dimensional-effect and displacement-current modelling at high frequency.",
                     "title": "complexPermittivityData",

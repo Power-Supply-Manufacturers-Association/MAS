@@ -27,10 +27,6 @@
         }
     ],
     "permittivity": {
-        "real": [
-            { "value": 90000.0, "frequency": 100000.0, "temperature": 25 },
-            { "value": 60000.0, "frequency": 1000000.0, "temperature": 25 }
-        ],
         "complex": {
             "real": [
                 { "value": 90000.0, "frequency": 100000.0, "temperature": 25 },
