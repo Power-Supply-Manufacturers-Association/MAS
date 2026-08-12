@@ -1,0 +1,55 @@
+{
+    "type": "commercial",
+    "material": "ferrite",
+    "name": "3C95",
+    "manufacturerInfo": {
+        "name": "Ferroxcube"
+    },
+    "permeability": {
+        "initial": {
+            "value": 3000,
+            "tolerance": 0.2,
+            "temperature": 25,
+            "magneticFluxDensityPeak": 0.00025
+        }
+    },
+    "saturation": [
+        {
+            "magneticFluxDensity": 0.41,
+            "magneticField": 250,
+            "temperature": 25
+        }
+    ],
+    "resistivity": [
+        {
+            "value": 5,
+            "temperature": 25
+        }
+    ],
+    "permittivity": {
+        "real": [
+            { "value": 90000.0, "frequency": 100000.0, "temperature": 25 },
+            { "value": 60000.0, "frequency": 1000000.0, "temperature": 25 }
+        ],
+        "complex": {
+            "real": [
+                { "value": 90000.0, "frequency": 100000.0, "temperature": 25 },
+                { "value": 60000.0, "frequency": 1000000.0, "temperature": 25 }
+            ],
+            "imaginary": [
+                { "value": 25000.0, "frequency": 100000.0, "temperature": 25 },
+                { "value": 30000.0, "frequency": 1000000.0, "temperature": 25 }
+            ]
+        }
+    },
+    "volumetricLosses": {
+        "default": [
+            {
+                "method": "lossFactor",
+                "factors": [
+                    { "value": 1.0e-6, "frequency": 100000.0, "temperature": 25 }
+                ]
+            }
+        ]
+    }
+}

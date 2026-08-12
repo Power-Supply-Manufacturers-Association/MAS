@@ -19,6 +19,16 @@ MAJOR.
 
 ## [Unreleased]
 
+### Added
+
+- **Optional `permittivity` on core materials.** Adds a `permittivity` object to
+  the core material schema (mirroring `permeability`) with a `real` part (ε_r′)
+  and a `complex` part (ε_r′ − j·ε_r″), each a new `permittivityPoint` (value,
+  plus optional temperature and frequency). Enables modelling of dimensional
+  effects (dimensional resonance) and displacement current in high-permittivity
+  ferrites, and the effective usable bandwidth of a given core size. Non-breaking:
+  the field is optional and existing materials are unaffected.
+
 ### Breaking
 
 - **Removed `masVersion` and `masConformance` top-level fields.** MAS documents
