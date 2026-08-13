@@ -23,13 +23,20 @@ Checks (HARD = non-zero exit, physics violations; SOFT = warning, eyeball-worthy
   HARD  loss not strictly increasing with f (at fixed B,T)
   HARD  steinmetz alpha/beta outside the physical band (import/fit blunder)
   HARD  saturation flux density RISES with temperature (Bs falls toward the Curie point)
+  HARD  steinmetz ct(T) <= 0 anywhere in the OPERATING band (OPERATING_TSPAN): MKF drops the
+        temperature scaling there, so the model has no temperature dependence where it is used
   SOFT  reference loss (100 kHz, 100 mT, 100 C) outside [PLAUS_LO, PLAUS_HI] kW/m^3
   SOFT  reference loss > OUTLIER_RATIO x its material-family median (per-family scale error)
-  SOFT  steinmetz ct(T) <= 0 in [-40,220] C  (MKF skips scaling -> temp dependence dead)
+  SOFT  steinmetz ct(T) <= 0 only OUTSIDE the operating band (fit runs out at the extremes)
   SOFT  steinmetz alpha/beta outside the typical band
   SOFT  Bs above the material-class ceiling / Curie temp below a characterization temp
   SOFT  lossFactor drops with rising frequency (loss factor normally increases)
   HARD  lossFactor factor value outside [LF_LO, LF_HI]  (tan-delta/mu_i is ~1e-6..1e-1)
+
+Materials whose steinmetz ranges do not cover REF_F are NOT evaluated at the reference point and
+take no part in the plausibility / family-median comparisons: MKF's range selection extrapolates
+to the nearest range end, so a grade fitted at 1-3 MHz would otherwise be judged on a number
+invented two decades below its data. They are counted and listed under --verbose.
 
 Usage:  python3 scripts/check-loss-sanity.py [--verbose] [--baseline]
         --verbose   list the reference loss of every material
@@ -57,6 +64,10 @@ LF_LO, LF_HI = 1e-8, 1.0   # relative loss factor tan-delta/mu_i physical range
 # inflates the loss by whatever factor ct would have applied (documented ~1000x trap) —
 # so a ct polynomial that dips <= 0 anywhere a user might operate is a real hazard.
 CT_TSPAN = list(range(-40, 221, 5))
+# ...but a fitted quadratic running out of road at 200 C is not the same defect as one that is
+# negative at room temperature. Dips inside this band are HARD (the model is used there and has
+# no temperature dependence); dips only outside it are SOFT (fit-quality flag).
+OPERATING_TSPAN = (-40, 140)
 
 # Steinmetz exponent gates (per the ct/#183 sanity memory: reject alpha<0.5 / alpha>3.5 /
 # beta<1, eyeball beta>4.5). Outside the HARD band is almost always a fit/import bug.
@@ -65,9 +76,11 @@ BETA_LO,  BETA_HI  = 1.0, 4.5
 ALPHA_HARD_LO, ALPHA_HARD_HI = 0.3, 4.0   # beyond this a power law is unphysical
 BETA_HARD_LO,  BETA_HARD_HI  = 0.8, 6.0
 
-# physical saturation-flux ceiling by material class (T, peak); above this Bs is wrong.
+# physical saturation-flux ceiling by material class (T, peak) AT 25 C; above this Bs is wrong.
 BS_MAX = {'ferrite': 0.62, 'nanocrystalline': 1.35, 'amorphous': 1.75,
           'electricalSteel': 2.2, 'powder': 1.9}
+BS_COLD_PER_K = 0.005   # max believable Bs rise per K below 25 C, relative to the 25 C value
+BS_COLD_ABS = 1.25      # ...and never more than this multiple of the 25 C class ceiling
 
 
 def steinmetz_range(ranges, f):
@@ -116,6 +129,24 @@ def family_of(name, fam):
     return fam or name.rsplit(' ', 1)[0]
 
 
+def declared_span(method):
+    """(min, max) frequency the method claims to be valid over, or None for the closed forms."""
+    ranges = method.get('ranges')
+    if not ranges:
+        return None
+    return (min(r['minimumFrequency'] for r in ranges),
+            max(r['maximumFrequency'] for r in ranges))
+
+
+def covers_reference(method, f):
+    """True if f lies inside a declared range. MKF happily extrapolates to the nearest range
+    end, so a grade fitted at 1-3 MHz would otherwise be scored on an invented 100 kHz number."""
+    ranges = method.get('ranges')
+    if not ranges:                      # magnetics/poco/tdg/micrometals declare no range
+        return True
+    return any(r['minimumFrequency'] <= f <= r['maximumFrequency'] for r in ranges)
+
+
 def check_steinmetz_coeffs(name, primary, hard, soft):
     """Steinmetz exponent gates + the ct(T)<=0 loss-inflation trap (per range)."""
     if primary.get('method') != 'steinmetz':
@@ -137,17 +168,33 @@ def check_steinmetz_coeffs(name, primary, hard, soft):
         ct0, ct1, ct2 = r.get('ct0'), r.get('ct1'), r.get('ct2')
         if ct0 is not None and ct1 is not None and ct2 is not None:
             # ct(T) = ct2*T^2 - ct1*T + ct0  (MKF sign convention, CoreLosses.h). When
-            # scale <= 0 MKF returns the UNSCALED k*f^a*B^b, so a ct that dips <= 0 in the
-            # operating band means the temperature scaling is silently inoperative there
-            # (degenerate joint fit). SOFT: the loss magnitude is separately bounded by the
-            # monotonicity (HARD) and plausibility (SOFT) checks, so this is a fit-quality
-            # flag, not a magnitude blow-up.
+            # scale <= 0 MKF returns the UNSCALED k*f^a*B^b, so a ct that dips <= 0 means the
+            # temperature scaling is silently inoperative there (degenerate joint fit).
+            # Report the CONTIGUOUS dead intervals, never the [min,max] hull: a fit that is
+            # dead only at -40 C and again above 140 C is a different animal from one that is
+            # dead at room temperature, and the hull renders both as "[-40,220]".
             neg = [T for T in CT_TSPAN if ct2*T*T - ct1*T + ct0 <= 0]
             if neg:
-                lo, hi = min(neg), max(neg)
-                soft.append(f"{name}: steinmetz ct(T)<=0 on T in [{lo},{hi}]C "
-                            f"(MKF skips scaling there -> temperature dependence inoperative) "
-                            f"[range {r.get('minimumFrequency')}-{r.get('maximumFrequency')} Hz]")
+                step = CT_TSPAN[1] - CT_TSPAN[0]
+                ivs, start, prev = [], neg[0], neg[0]
+                for T in neg[1:]:
+                    if T == prev + step:
+                        prev = T
+                    else:
+                        ivs.append((start, prev)); start = prev = T
+                ivs.append((start, prev))
+                olo, ohi = OPERATING_TSPAN
+                inband = [iv for iv in ivs if iv[1] >= olo and iv[0] <= ohi]
+                shown = ', '.join(f"[{lo},{hi}]C" for lo, hi in ivs)
+                where = (f"[range {r.get('minimumFrequency')}-{r.get('maximumFrequency')} Hz]")
+                if inband:
+                    hard.append(f"{name}: steinmetz ct(T)<=0 inside the operating band on "
+                                f"{', '.join(f'[{lo},{hi}]C' for lo, hi in inband)} "
+                                f"(all dead: {shown}) -> MKF drops the temperature scaling "
+                                f"where the model is used {where}")
+                else:
+                    soft.append(f"{name}: steinmetz ct(T)<=0 on {shown}, outside the operating "
+                                f"band {list(OPERATING_TSPAN)}C (fit runs out at the extremes) {where}")
 
 
 def _series_vs_temperature(entries, key):
@@ -166,9 +213,24 @@ def check_saturation(name, o, hard, soft):
     if not pts:
         return
     cap = BS_MAX.get(o.get('material'))
+    # BS_MAX is a room-temperature ceiling. Bs RISES as temperature falls (a MnZn power ferrite
+    # gains ~15% between 25 C and -30 C), so applying the 25 C number to a cold point flags real
+    # data. Below 25 C the gate is relative to the material's own 25 C value (<= 0.5 %/K, which
+    # bounds any real ferrite) plus a loose absolute cap that still catches a unit/scale error.
+    b25 = next((B for T, B in pts if abs(T - 25) < 1), None)
     for T, B in pts:
-        if cap and B > cap * 1.02:
-            soft.append(f"{name}: Bs={B:.3g} T @ {T}C exceeds {o.get('material')} ceiling {cap} T")
+        if not cap:
+            continue
+        if T >= 25:
+            if B > cap * 1.02:
+                soft.append(f"{name}: Bs={B:.3g} T @ {T}C exceeds {o.get('material')} ceiling {cap} T")
+        else:
+            allowed = cap * BS_COLD_ABS
+            if b25 is not None:
+                allowed = min(allowed, b25 * (1 + BS_COLD_PER_K * (25 - T)))
+            if B > allowed * 1.02:
+                soft.append(f"{name}: Bs={B:.3g} T @ {T}C exceeds the cold-temperature allowance "
+                            f"{allowed:.3g} T ({o.get('material')} ceiling {cap} T at 25C)")
     for i in range(len(pts) - 1):
         (t0, b0), (t1, b1) = pts[i], pts[i+1]
         if b1 > b0 * 1.02:           # >2% rise with temperature is unphysical
@@ -195,6 +257,7 @@ def main():
     baseline = '--baseline' in sys.argv
     hard, soft = [], []
     ref = {}   # name -> reference loss (kW/m^3)
+    uncovered = {}   # name -> declared span, for models whose ranges exclude REF_F
     fam_ref = {}
 
     records = []
@@ -263,6 +326,9 @@ def main():
             hard.append(f"{name}: loss not increasing with f "
                         f"({[round(x/1e3) for x in pf]} kW/m3 @ f={GRID_F})")
 
+        if not covers_reference(primary, REF_F):
+            uncovered[name] = declared_span(primary)
+            continue
         rk = pref / 1000.0  # kW/m^3
         ref[name] = rk
         fam_ref.setdefault(family_of(name, o.get('family')), []).append(rk)
@@ -290,9 +356,14 @@ def main():
     if verbose:
         for n in sorted(ref):
             print(f"  {n:22s} {ref[n]:9.1f} kW/m3 @100kHz/100mT/100C")
+        for n in sorted(uncovered):
+            lo, hi = uncovered[n]
+            print(f"  {n:22s} {'not scored':>9s}  (fitted {lo/1e3:.0f}-{hi/1e3:.0f} kHz, "
+                  f"reference {REF_F/1e3:.0f} kHz is outside it)")
 
     print(f"\nchecked {len(ref)} evaluable materials "
-          f"({len(records)} records total)")
+          f"({len(records)} records total, "
+          f"{len(uncovered)} not scored at the reference point: fitted outside {REF_F/1e3:.0f} kHz)")
     if soft:
         print(f"\n-- {len(soft)} SOFT warnings --")
         for s in soft:
