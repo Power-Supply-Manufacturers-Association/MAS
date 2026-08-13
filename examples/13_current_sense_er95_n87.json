@@ -6,7 +6,7 @@
       },
       "turnsRatios": [
         {
-          "nominal": 0.01
+          "nominal": 0.0125
         }
       ]
     },
@@ -41,7 +41,7 @@
             "current": {
               "processed": {
                 "label": "sinusoidal",
-                "peakToPeak": 0.005,
+                "peakToPeak": 0.00625,
                 "offset": 0,
                 "dutyCycle": 0.5
               }
@@ -49,7 +49,7 @@
             "voltage": {
               "processed": {
                 "label": "sinusoidal",
-                "peakToPeak": 0.02,
+                "peakToPeak": 0.025,
                 "offset": 0,
                 "dutyCycle": 0.5
               }
@@ -72,7 +72,7 @@
         },
         {
           "name": "Secondary",
-          "numberTurns": 100,
+          "numberTurns": 80,
           "numberParallels": 1,
           "isolationSide": "secondary",
           "wire": "Round 0.1 - Grade 1"
