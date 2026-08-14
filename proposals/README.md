@@ -33,4 +33,5 @@ before any schema or code lands.
 | [0007](0007-enum-casing-convention.md) | Enum value casing convention | Draft | 1.0.0 |
 | [0008](0008-pollution-overvoltage-iec60664.md) | Pollution/overvoltage IEC 60664 alignment | Draft | 1.0.0 |
 | [0009](0009-coordinate-system-cleanup.md) | Coordinate-system cleanup (polar / cylindrical) | **Implemented** | 0.2.0 |
+| [0010](0010-peas-pinout-landpattern.md) | Adopt shared PEAS `pinout` / `landPattern` for finished magnetics | Draft | — |
 | [0011](0011-data-provenance.md) | Machine-readable data provenance (adopt PEAS `provenance`) | Draft | 0.3.0 |
