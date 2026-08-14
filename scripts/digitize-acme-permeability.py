@@ -8,34 +8,52 @@ straight out of the vendor catalogue PDF, and emit the MAS `permeability.complex
 Source
 ------
   https://www.acme-ferrite.com.tw/img/CorePDF/acme_product_now.pdf   (whole catalogue)
-  https://www.acme-ferrite.com.tw/doc/Datasheet/<MATERIAL>.pdf       (same page, per material)
+  https://www.acme-ferrite.com.tw/doc/Datasheet/<MATERIAL>.pdf       (same page, per material;
+                                                                      verified identical art)
 
 Why a script instead of eyeballing the plot
 -------------------------------------------
 The charts are pure vector art, so the published curves can be read back EXACTLY: mu' is a
 chain of solid line segments, mu'' a single dashed polyline, and the plot frame rectangle
-IS the axis box (x = 1..1e5 kHz, y = 1e2..1e5), which calibrates the log-log mapping with
-no human judgement. Every emitted point therefore lies on the curve ACME drew.
+IS the axis box, which calibrates the log-log mapping with no human judgement. Every
+emitted point therefore lies on the curve ACME drew.
 
-Nothing is extrapolated. Each table stops where the vendor's polyline stops: mu' leaves
-the chart when it plunges through ferromagnetic resonance (~1-2.6 MHz for the A family),
-mu'' is drawn considerably further out (16.8 MHz for A10, 100 MHz for A06). Material grades
-whose curves genuinely start at 10 kHz / 40 kHz produce tables that start there too.
+Nothing is extrapolated. Each table stops where the vendor's polyline stops: mu' leaves the
+chart when it plunges through ferromagnetic resonance (~0.8-2.8 MHz for the A family), mu''
+is drawn considerably further out (14 MHz for A10, 100 MHz for A06). Material grades whose
+curves genuinely start at 10 kHz / 40 kHz produce tables that start there too.
+
+Axis calibration
+----------------
+x is 1..1e5 kHz and the y top is 1e5 on every A-family sheet (checked by fingerprinting the
+vector glyphs of the corner tick labels - the labels are paths, not text). The y BOTTOM is
+NOT constant: A043's chart is 10..1e5, everyone else's is 1e2..1e5. The number of y decades
+is therefore measured from the log-minor gridline spacing (the widest gap inside the frame
+is the 1->2 minor, i.e. log10(2) of a decade) and the script refuses to guess if that does
+not come out integral. Assuming 1e2 there read A043's mu' 13 % high and its mu'' up to 90 %
+off.
+
+What counts as "drawn"
+----------------------
+mu' is cut where its polyline leaves the plot box. Past resonance mu' goes negative, so the
+plotting program's line dives off the bottom of a log axis and the plot's clip path hides
+it; that invisible continuation is a near-vertical artefact (a decade of value per ~1 % in
+frequency), not readable data. mu'' is kept as drawn, including the slowly-varying part
+below the axis floor, which is the same curve merely outside the plotted window.
 
 Method validation
 -----------------
-Run on A06 (page 42) it reproduces MAS's pre-existing, independently digitized A06 table:
-mu'' to 1.1 % mean / 4.6 % max over 10 kHz..97 MHz, mu' to 1.1 % mean / 2.6 % max below
-900 kHz (the two points on the near-vertical resonance plunge differ by up to 36 %, where
-mu' drops a decade across 3 % in frequency). On A102 (page 45) it lands within 1-3 % of the
-span that entry already covers faithfully. That agreement is what licenses trusting it on
-materials whose stored data is wrong or missing.
+Reproduces MAS's A10 and A102 records (themselves produced by this script in ABT #313) BYTE
+FOR BYTE, and reproduces nine independently digitized stored tables it never wrote - A06,
+A064, A07, A071, A072, A103, A104, A121, A13, A151 - to 0.1-2.5 % mean over their common
+span (A06 mu'' 1.1 % mean / 4.4 % max over 10 kHz..97 MHz). That agreement is what licenses
+trusting it on materials whose stored data is wrong or missing: in ABT #314 the same
+comparison exposed A043, A044, A05 and A062 as matching no ACME chart at all (rms-log 0.2
+to 0.6 against their own charts, where a faithful entry scores 0.002-0.03).
 """
 import argparse
-import io
 import json
 import math
-import os
 import sys
 
 try:
@@ -43,27 +61,78 @@ try:
 except ImportError:
     sys.exit("needs PyMuPDF:  pip install pymupdf")
 
-# printed page number of each material's "Material Characteristics" sheet is the PDF page
-# index minus 1; the index is resolved from the page text so a re-paginated catalogue still
-# works.
-CHART_REGION = (80, 640, 300, 845)   # bottom-left panel of a material sheet, PDF points
-X_LO, X_HI = 1e3, 1e8                # axis limits, Hz (chart is labelled in kHz: 1..1e5)
-Y_LO, Y_HI = 1e2, 1e5                # axis limits, relative permeability
+
+CHART_REGION = (80, 640, 300, 845)
+X_LO, X_HI = 1e3, 1e8            # x axis is 1..1e5 kHz on every A-family sheet (verified by glyph fingerprint)
+Y_HI = 1e5                       # top y label is 1e5 on every sheet (verified by glyph fingerprint)
 GRID_F0, GRID_PER_DECADE = 1000.0, 80
+DARK = 0.3
 
 
 def find_page(doc, material):
     needle = f"Material Characteristics-{material}"
     for i in range(doc.page_count):
-        text = doc[i].get_text()
-        if needle in text and "\n".join(text.split("\n")).count(needle):
-            for line in text.split("\n"):
-                if line.strip() == needle:
-                    return i
+        for line in doc[i].get_text().split("\n"):
+            if line.strip() == needle:
+                return i
     raise SystemExit(f"no '{needle}' page in {doc.name}")
 
 
-def _points(drawing):
+def _region_drawings(page):
+    """Drawings that OVERLAP the chart panel.
+
+    Overlap, not containment: a curve may start left of the axis or plunge below it (the
+    viewer never sees those parts - the plot's clip path hides them), and such a path has a
+    bounding box sticking out of the panel. Rect.intersects() is not usable here either: a
+    horizontal gridline / curve segment has a zero-height (empty) rect, for which PyMuPDF's
+    intersects() is always False.
+    """
+    x0, y0, x1, y1 = CHART_REGION
+    out = []
+    for d in page.get_drawings():
+        r = d["rect"]
+        if r.x1 >= x0 and r.x0 <= x1 and r.y1 >= y0 and r.y0 <= y1:
+            out.append(d)
+    return out
+
+
+def _frame(ds):
+    frames = [d for d in ds if d["type"] == "s" and d["color"] and max(d["color"]) < DARK
+              and d["rect"].width > 100 and d["rect"].height > 60]
+    if not frames:
+        raise SystemExit("no plot frame found - is this a material characteristics page?")
+    return max(frames, key=lambda d: d["rect"].width * d["rect"].height)["rect"]
+
+
+def _y_decades(ds, fr):
+    """Number of decades on the y axis, from the log-minor gridline spacing."""
+    hs = set()
+    for d in ds:
+        if d["type"] == "s" and d["rect"].width > 0.95 * fr.width and d["rect"].height > 0.95 * fr.height:
+            continue
+        for it in d["items"]:
+            if it[0] == "l":
+                p, q = it[1], it[2]
+                if abs(p.y - q.y) < 0.05 and abs(p.x - q.x) > 0.5 * fr.width:
+                    hs.add(round((p.y + q.y) / 2, 2))
+            elif it[0] == "re":
+                r = it[1]
+                if r.height < 0.05 and r.width > 0.5 * fr.width:
+                    hs.add(round((r.y0 + r.y1) / 2, 2))
+    ys, ded = sorted(hs), []
+    for v in ys:
+        if not ded or v - ded[-1] > 0.3:
+            ded.append(v)
+    if len(ded) < 10:
+        raise SystemExit("too few horizontal gridlines to calibrate the y axis")
+    gap = max(ded[i + 1] - ded[i] for i in range(len(ded) - 1))   # the 1->2 minor gap
+    n = fr.height / (gap / math.log10(2.0))
+    if abs(n - round(n)) > 0.15:
+        raise SystemExit(f"y axis decade count is not integral ({n:.3f}) - refusing to guess")
+    return int(round(n))
+
+
+def _path_points(drawing):
     pts = []
     for it in drawing["items"]:
         if it[0] == "l":
@@ -77,25 +146,70 @@ def _points(drawing):
     return pts
 
 
-def curves(page):
-    """(mu' polyline, mu'' polyline) in data coordinates, from the chart's vector art."""
-    x0, y0, x1, y1 = CHART_REGION
-    ds = [d for d in page.get_drawings()
-          if d["rect"].x0 >= x0 - 1 and d["rect"].x1 <= x1 + 1
-          and d["rect"].y0 >= y0 - 1 and d["rect"].y1 <= y1 + 1]
-    frames = [d for d in ds if d["type"] == "s" and d["color"] and max(d["color"]) < 0.3
-              and d["rect"].width > 100 and d["rect"].height > 60]
-    if not frames:
-        raise SystemExit("no plot frame found - is this a material characteristics page?")
-    fr = max(frames, key=lambda d: d["rect"].width * d["rect"].height)["rect"]
+def _clip_box(poly, y_lo):
+    """Longest run of the curve INSIDE the plot box, with the boundary crossings interpolated.
+
+    Anything outside the frame is not published artwork: the PDF's clip path hides it, so the
+    reader never sees it. Both the mu' plunge (which continues below the axis) and curve heads
+    that start left of the axis get cut exactly where the vendor's plot cuts them.
+    """
+    def inside(p):
+        return X_LO - 1e-9 <= p[0] <= X_HI * (1 + 1e-12) and y_lo * (1 - 1e-12) <= p[1] <= Y_HI * (1 + 1e-12)
+
+    def cross(a, b):
+        """point where segment a->b (straight in log-log) meets the box, walking from a."""
+        lo, hi = 0.0, 1.0
+        la, lb = (math.log(a[0]), math.log(a[1])), (math.log(b[0]), math.log(b[1]))
+        for _ in range(60):
+            t = 0.5 * (lo + hi)
+            p = (math.exp(la[0] + t * (lb[0] - la[0])), math.exp(la[1] + t * (lb[1] - la[1])))
+            if inside(p):
+                lo = t
+            else:
+                hi = t
+        t = lo
+        return (math.exp(la[0] + t * (lb[0] - la[0])), math.exp(la[1] + t * (lb[1] - la[1])))
+
+    runs, cur = [], []
+    for i, p in enumerate(poly):
+        if inside(p):
+            if not cur and i > 0:
+                cur.append(cross(p, poly[i - 1]))
+            cur.append(p)
+        else:
+            if cur:
+                cur.append(cross(cur[-1], p))
+                runs.append(cur)
+                cur = []
+    if cur:
+        runs.append(cur)
+    if not runs:
+        return []
+    runs.sort(key=lambda r: math.log(r[-1][0] / r[0][0]) if r[0][0] > 0 else 0)
+    return sorted(runs[-1])
+
+
+def curves(page, clip_real=True, clip_imaginary=False):
+    """(mu' polyline, mu'' polyline, y axis floor) in data coordinates.
+
+    mu' is cut where the drawn polyline leaves the plot box, mu'' is kept as drawn.
+    Rationale: below the axis floor the two curves are not comparable. mu' is in its
+    near-vertical plunge through ferromagnetic resonance (mu' crosses zero, so on a log
+    axis the polyline dives: a decade of value per ~1 % in frequency), which is both
+    invisible to the reader and numerically meaningless to digitise. mu'' below the floor
+    is the same slowly-varying curve as above it, merely outside the plotted window.
+    """
+    ds = _region_drawings(page)
+    fr = _frame(ds)
+    y_lo = Y_HI / 10.0 ** _y_decades(ds, fr)
 
     solid, dashed = [], []
     for d in ds:
-        if d["type"] != "s" or not d["color"] or max(d["color"]) > 0.3:
+        if d["type"] != "s" or not d["color"] or max(d["color"]) > DARK:
             continue
         if d["rect"].width > 0.95 * fr.width and d["rect"].height > 0.95 * fr.height:
             continue                                   # the frame itself
-        pts = [p for p in _points(d) if fr.x0 - 0.5 <= p[0] <= fr.x1 + 0.5]
+        pts = _path_points(d)
         if not pts:
             continue
         (dashed if d.get("dashes") not in (None, "", "[] 0") else solid).extend(pts)
@@ -104,7 +218,7 @@ def curves(page):
         out = []
         for x, y in pts:
             f = X_LO * (X_HI / X_LO) ** ((x - fr.x0) / fr.width)
-            v = Y_LO * (Y_HI / Y_LO) ** ((fr.y1 - y) / fr.height)
+            v = y_lo * (Y_HI / y_lo) ** ((fr.y1 - y) / fr.height)
             out.append((f, v))
         out.sort()
         merged = []
@@ -115,15 +229,14 @@ def curves(page):
                 merged.append((f, v))
         return merged
 
-    return to_data(solid), to_data(dashed)
+    def maybe_clip(poly, do):
+        return _clip_box(poly, y_lo) if do else poly
+
+    return (maybe_clip(to_data(solid), clip_real),
+            maybe_clip(to_data(dashed), clip_imaginary), y_lo)
 
 
 def resample(poly):
-    """Sample the drawn polyline onto a log grid, strictly inside its own span.
-
-    The polyline is straight-line art in the PDF, i.e. straight in (log f, log mu), so
-    log-log interpolation reproduces the drawn curve rather than approximating it.
-    """
     ratio = 10 ** (1.0 / GRID_PER_DECADE)
     k0 = math.ceil(math.log(poly[0][0] / GRID_F0) / math.log(ratio) - 1e-9)
     k1 = math.floor(math.log(poly[-1][0] / GRID_F0) / math.log(ratio) + 1e-9)
@@ -150,9 +263,11 @@ def main():
 
     doc = fitz.open(args.pdf)
     page = doc[find_page(doc, args.material)]
-    mu1, mu2 = curves(page)
+    mu1, mu2, y_lo = curves(page)
     if not mu1 or not mu2:
         raise SystemExit("no curves extracted")
+    print(f"{args.material}: y axis floor {y_lo:g}, mu' drawn to {mu1[-1][0]:.6g} Hz, "
+          f"mu'' drawn to {mu2[-1][0]:.6g} Hz", file=sys.stderr)
     block = {"real": resample(mu1), "imaginary": resample(mu2)}
     for key in ("real", "imaginary"):
         t = block[key]
