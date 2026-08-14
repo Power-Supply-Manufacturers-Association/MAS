@@ -1164,7 +1164,6 @@
 {"magneticCircuit": "closed", "type": "standard", "family": "t", "name": "T 29/16.5/18", "dimensions": {"A": {"nominal": 0.029}, "B": {"nominal": 0.0165}, "C": {"nominal": 0.018}}}
 {"magneticCircuit": "closed", "type": "standard", "family": "t", "name": "T 35.88/16.35/10.46", "dimensions": {"A": {"nominal": 0.03588}, "B": {"nominal": 0.01635}, "C": {"nominal": 0.01046}}}
 {"magneticCircuit": "closed", "type": "standard", "family": "t", "name": "T 42.9/24.2/24", "dimensions": {"A": {"nominal": 0.0429}, "B": {"nominal": 0.0242}, "C": {"nominal": 0.024}}}
-{"magneticCircuit": "closed", "type": "standard", "family": "t", "name": "T 203.3/12.7/6.35", "dimensions": {"A": {"nominal": 0.2033}, "B": {"nominal": 0.0127}, "C": {"nominal": 0.00635}}}
 {"magneticCircuit": "closed", "type": "standard", "family": "t", "name": "T 46.74/28.07/15.24", "dimensions": {"A": {"nominal": 0.04674}, "B": {"nominal": 0.02807}, "C": {"nominal": 0.01524}}}
 {"magneticCircuit": "closed", "type": "standard", "family": "t", "name": "T 34.19/23.37/8.89", "dimensions": {"A": {"nominal": 0.03419}, "B": {"nominal": 0.02337}, "C": {"nominal": 0.00889}}}
 {"magneticCircuit": "closed", "type": "standard", "family": "t", "name": "T 101.66/57.15/13.59", "dimensions": {"A": {"nominal": 0.10166}, "B": {"nominal": 0.05715}, "C": {"nominal": 0.01359}}}
@@ -1174,7 +1173,6 @@
 {"magneticCircuit": "closed", "type": "standard", "family": "t", "name": "T 17.7/7.62/4.75", "dimensions": {"A": {"nominal": 0.0177}, "B": {"nominal": 0.00762}, "C": {"nominal": 0.00475}}}
 {"magneticCircuit": "closed", "type": "standard", "family": "t", "name": "T 20.32/17.7/6.35", "dimensions": {"A": {"nominal": 0.02032}, "B": {"nominal": 0.0177}, "C": {"nominal": 0.00635}}}
 {"magneticCircuit": "closed", "type": "standard", "family": "t", "name": "T 26.92/17.73/11.18", "dimensions": {"A": {"nominal": 0.02692}, "B": {"nominal": 0.01773}, "C": {"nominal": 0.01118}}}
-{"magneticCircuit": "closed", "type": "standard", "family": "t", "name": "T 57015/35.56/13.97", "dimensions": {"A": {"nominal": 57.015}, "B": {"nominal": 0.03556}, "C": {"nominal": 0.01397}}}
 {"magneticCircuit": "closed", "type": "standard", "family": "t", "name": "T 23.32/12.7/6.35", "dimensions": {"A": {"nominal": 0.02332}, "B": {"nominal": 0.0127}, "C": {"nominal": 0.00635}}}
 {"magneticCircuit": "closed", "type": "standard", "family": "t", "name": "T 33.22/19.94/10.87", "dimensions": {"A": {"nominal": 0.03322}, "B": {"nominal": 0.01994}, "C": {"nominal": 0.01087}}}
 {"magneticCircuit": "closed", "type": "standard", "family": "t", "name": "T 33.47/18/11.84", "dimensions": {"A": {"nominal": 0.03347}, "B": {"nominal": 0.018}, "C": {"nominal": 0.01184}}}
@@ -1196,7 +1194,6 @@
 {"magneticCircuit": "closed", "type": "standard", "family": "t", "name": "T 57.8/31.75/13.46", "dimensions": {"A": {"nominal": 0.0578}, "B": {"nominal": 0.03175}, "C": {"nominal": 0.01346}}}
 {"magneticCircuit": "closed", "type": "standard", "family": "t", "name": "T 132.5/78.6/20.3", "dimensions": {"A": {"nominal": 0.1325}, "B": {"nominal": 0.0786}, "C": {"nominal": 0.0203}}}
 {"magneticCircuit": "closed", "type": "standard", "family": "t", "name": "T 39.98/24.13/14.48", "dimensions": {"A": {"nominal": 0.03998}, "B": {"nominal": 0.02413}, "C": {"nominal": 0.01448}}}
-{"magneticCircuit": "closed", "type": "standard", "family": "t", "name": "T 51.15/35.56/13.97", "dimensions": {"A": {"nominal": 0.05115}, "B": {"nominal": 0.03556}, "C": {"nominal": 0.01397}}}
 {"magneticCircuit": "closed", "type": "standard", "family": "t", "name": "T 10/5/4", "dimensions": {"A": {"nominal": 0.01}, "B": {"nominal": 0.005}, "C": {"nominal": 0.004}}}
 {"magneticCircuit": "closed", "type": "standard", "family": "t", "name": "T 14/8/7", "dimensions": {"A": {"nominal": 0.014}, "B": {"nominal": 0.008}, "C": {"nominal": 0.007}}}
 {"magneticCircuit": "closed", "type": "standard", "family": "t", "name": "T 15.88/8.89/4.7", "dimensions": {"A": {"nominal": 0.01588}, "B": {"nominal": 0.00889}, "C": {"nominal": 0.0047}}}
