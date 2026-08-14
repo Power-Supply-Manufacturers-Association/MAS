@@ -158,21 +158,21 @@
             }
         },
         "coil": {
-            "bobbin": "ETD 29/16/10",
+            "bobbin": "Bobbin ETD 29",
             "functionalDescription": [
                 {
                     "name": "Primary",
                     "numberTurns": 20,
                     "numberParallels": 2,
                     "isolationSide": "primary",
-                    "wire": "Litz 40x0.1 - Grade 1"
+                    "wire": "Litz 40x0.1 - Grade 1 - Unserved"
                 },
                 {
                     "name": "Secondary",
                     "numberTurns": 10,
                     "numberParallels": 3,
                     "isolationSide": "secondary",
-                    "wire": "Litz 60x0.1 - Grade 1"
+                    "wire": "Litz 60x0.1 - Grade 1 - Unserved"
                 }
             ]
         }

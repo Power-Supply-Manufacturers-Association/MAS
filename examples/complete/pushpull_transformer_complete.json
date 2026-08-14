@@ -142,35 +142,35 @@
             }
         },
         "coil": {
-            "bobbin": "ETD 44/22/15",
+            "bobbin": "Bobbin ETD 44",
             "functionalDescription": [
                 {
                     "name": "Primary 1",
                     "numberTurns": 16,
                     "numberParallels": 1,
                     "isolationSide": "primary",
-                    "wire": "Litz 60x0.1 - Grade 1"
+                    "wire": "Litz 60x0.1 - Grade 1 - Unserved"
                 },
                 {
                     "name": "Primary 2",
                     "numberTurns": 16,
                     "numberParallels": 1,
                     "isolationSide": "primary",
-                    "wire": "Litz 60x0.1 - Grade 1"
+                    "wire": "Litz 60x0.1 - Grade 1 - Unserved"
                 },
                 {
                     "name": "Secondary 1",
                     "numberTurns": 4,
                     "numberParallels": 4,
                     "isolationSide": "secondary",
-                    "wire": "Litz 100x0.1 - Grade 1"
+                    "wire": "Litz 105x0.1 - Grade 1 - Unserved"
                 },
                 {
                     "name": "Secondary 2",
                     "numberTurns": 4,
                     "numberParallels": 4,
                     "isolationSide": "secondary",
-                    "wire": "Litz 100x0.1 - Grade 1"
+                    "wire": "Litz 105x0.1 - Grade 1 - Unserved"
                 }
             ]
         }

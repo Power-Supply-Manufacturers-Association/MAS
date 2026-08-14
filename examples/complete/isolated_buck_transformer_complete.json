@@ -110,21 +110,21 @@
             }
         },
         "coil": {
-            "bobbin": "EFD 20/10/7",
+            "bobbin": "Bobbin EFD 20/10/7",
             "functionalDescription": [
                 {
                     "name": "Primary",
                     "numberTurns": 24,
                     "numberParallels": 1,
                     "isolationSide": "primary",
-                    "wire": "Litz 20x0.1 - Grade 1"
+                    "wire": "Litz 20x0.1 - Grade 1 - Unserved"
                 },
                 {
                     "name": "Secondary",
                     "numberTurns": 6,
                     "numberParallels": 3,
                     "isolationSide": "secondary",
-                    "wire": "Litz 60x0.1 - Grade 1"
+                    "wire": "Litz 60x0.1 - Grade 1 - Unserved"
                 }
             ]
         }

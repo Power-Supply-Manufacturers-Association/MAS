@@ -122,7 +122,7 @@
                     "numberTurns": 80,
                     "numberParallels": 1,
                     "isolationSide": "primary",
-                    "wire": "Litz 30x0.1 - Grade 1"
+                    "wire": "Litz 30x0.1 - Grade 1 - Unserved"
                 },
                 {
                     "name": "Secondary",
