@@ -206,36 +206,66 @@ def _series_vs_temperature(entries, key):
     return sorted(out)
 
 
+def _saturation_by_field(entries):
+    """Group `saturation` BH-curve points by the field strength they were measured at.
+
+    ABT #242: `saturation` is an array of bhCyclePoints, and a vendor may publish the knee at
+    SEVERAL field strengths for one temperature (e.g. TDK's Ni-Zn coil grades give Bs at
+    1600 A/m AND at 4000 A/m, both at 25 C). B rising with H at a fixed temperature is correct
+    physics; comparing across field strengths as if it were a Bs(T) series produced nonsense
+    findings of the form "Bs rises with temperature (0.32@25.0C -> 0.33@25.0C)". A Bs(T)
+    monotonicity test is only meaningful WITHIN one field strength.
+
+    Returns {magneticField: [(temperature, B), ...] sorted by temperature}.
+    """
+    groups = {}
+    for e in entries or []:
+        if not isinstance(e, dict) or 'temperature' not in e or 'magneticFluxDensity' not in e:
+            continue
+        groups.setdefault(e.get('magneticField'), []).append((e['temperature'], e['magneticFluxDensity']))
+    return {h: sorted(v) for h, v in groups.items()}
+
+
 def check_saturation(name, o, hard, soft):
     """Bs must not exceed its material-class ceiling and must not RISE with temperature
     (saturation falls toward the Curie point)."""
-    pts = _series_vs_temperature(o.get('saturation'), 'magneticFluxDensity')
-    if not pts:
+    groups = _saturation_by_field(o.get('saturation'))
+    if not groups:
         return
     cap = BS_MAX.get(o.get('material'))
     # BS_MAX is a room-temperature ceiling. Bs RISES as temperature falls (a MnZn power ferrite
     # gains ~15% between 25 C and -30 C), so applying the 25 C number to a cold point flags real
     # data. Below 25 C the gate is relative to the material's own 25 C value (<= 0.5 %/K, which
     # bounds any real ferrite) plus a loose absolute cap that still catches a unit/scale error.
-    b25 = next((B for T, B in pts if abs(T - 25) < 1), None)
-    for T, B in pts:
-        if not cap:
-            continue
-        if T >= 25:
-            if B > cap * 1.02:
-                soft.append(f"{name}: Bs={B:.3g} T @ {T}C exceeds {o.get('material')} ceiling {cap} T")
-        else:
-            allowed = cap * BS_COLD_ABS
-            if b25 is not None:
-                allowed = min(allowed, b25 * (1 + BS_COLD_PER_K * (25 - T)))
-            if B > allowed * 1.02:
-                soft.append(f"{name}: Bs={B:.3g} T @ {T}C exceeds the cold-temperature allowance "
-                            f"{allowed:.3g} T ({o.get('material')} ceiling {cap} T at 25C)")
-    for i in range(len(pts) - 1):
-        (t0, b0), (t1, b1) = pts[i], pts[i+1]
-        if b1 > b0 * 1.02:           # >2% rise with temperature is unphysical
-            hard.append(f"{name}: Bs rises with temperature ({b0:.3g}@{t0}C -> {b1:.3g}@{t1}C)")
-            break
+    # The 25 C reference must come from the SAME field strength (see _saturation_by_field).
+    for h, pts in groups.items():
+        b25 = next((B for T, B in pts if abs(T - 25) < 1), None)
+        for T, B in pts:
+            if not cap:
+                continue
+            if T >= 25:
+                if B > cap * 1.02:
+                    soft.append(f"{name}: Bs={B:.3g} T @ {T}C exceeds {o.get('material')} ceiling {cap} T")
+            else:
+                allowed = cap * BS_COLD_ABS
+                if b25 is not None:
+                    allowed = min(allowed, b25 * (1 + BS_COLD_PER_K * (25 - T)))
+                if B > allowed * 1.02:
+                    soft.append(f"{name}: Bs={B:.3g} T @ {T}C exceeds the cold-temperature allowance "
+                                f"{allowed:.3g} T ({o.get('material')} ceiling {cap} T at 25C)")
+        for i in range(len(pts) - 1):
+            (t0, b0), (t1, b1) = pts[i], pts[i+1]
+            if t1 == t0:
+                # Same temperature AND same field strength: duplicate/two-sided spec point, not a
+                # temperature series. Flag as SOFT (a real spec should not list one point twice).
+                if b1 != b0:
+                    soft.append(f"{name}: two saturation points at the same temperature {t0}C and the "
+                                f"same field {h} A/m disagree ({b0:.3g} vs {b1:.3g} T)")
+                continue
+            if b1 > b0 * 1.02:       # >2% rise with temperature is unphysical
+                hard.append(f"{name}: Bs rises with temperature ({b0:.3g}@{t0}C -> {b1:.3g}@{t1}C) "
+                            f"at {h} A/m")
+                break
 
 
 def check_curie(name, o, soft):

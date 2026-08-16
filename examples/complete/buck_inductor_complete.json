@@ -51,11 +51,11 @@
     },
     "magnetic": {
         "core": {
-            "name": "Toroid T 10.0/6.0/4.5 High Flux 60",
+            "name": "Toroid T 10/6/5 High Flux 60",
             "functionalDescription": {
                 "type": "toroidal",
                 "material": "High Flux 60",
-                "shape": "T 10.0/6.0/4.5",
+                "shape": "T 10/6/5",
                 "gapping": [],
                 "numberStacks": 1
             }
@@ -86,7 +86,7 @@
                     "numberTurns": 8,
                     "numberParallels": 3,
                     "isolationSide": "primary",
-                    "wire": "Round 0.6 - Grade 1"
+                    "wire": "Round 0.63 - Grade 1"
                 }
             ]
         }

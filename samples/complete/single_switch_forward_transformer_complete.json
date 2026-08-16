@@ -126,28 +126,28 @@
             }
         },
         "coil": {
-            "bobbin": "RM 12",
+            "bobbin": "Bobbin RM 12",
             "functionalDescription": [
                 {
                     "name": "Primary",
                     "numberTurns": 80,
                     "numberParallels": 1,
                     "isolationSide": "primary",
-                    "wire": "Round 0.35 - Grade 1"
+                    "wire": "Round 0.355 - Grade 1"
                 },
                 {
                     "name": "Reset Winding",
                     "numberTurns": 80,
                     "numberParallels": 1,
                     "isolationSide": "primary",
-                    "wire": "Round 0.35 - Grade 1"
+                    "wire": "Round 0.355 - Grade 1"
                 },
                 {
                     "name": "Secondary",
                     "numberTurns": 6,
                     "numberParallels": 3,
                     "isolationSide": "secondary",
-                    "wire": "Litz 60x0.1 - Grade 1"
+                    "wire": "Litz 60x0.1 - Grade 1 - Unserved"
                 }
             ]
         }

@@ -114,21 +114,21 @@
             }
         },
         "coil": {
-            "bobbin": "RM 10",
+            "bobbin": "Bobbin RM 10",
             "functionalDescription": [
                 {
                     "name": "Primary",
                     "numberTurns": 66,
                     "numberParallels": 1,
                     "isolationSide": "primary",
-                    "wire": "Litz 20x0.1 - Grade 1"
+                    "wire": "Litz 20x0.1 - Grade 1 - Unserved"
                 },
                 {
                     "name": "Secondary",
                     "numberTurns": 2,
                     "numberParallels": 6,
                     "isolationSide": "secondary",
-                    "wire": "Litz 100x0.1 - Grade 1"
+                    "wire": "Litz 105x0.1 - Grade 1 - Unserved"
                 }
             ]
         }

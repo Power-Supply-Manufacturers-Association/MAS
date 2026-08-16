@@ -74,14 +74,14 @@
             }
         },
         "coil": {
-            "bobbin": "PQ 20/16",
+            "bobbin": "Bobbin PQ 20/16",
             "functionalDescription": [
                 {
                     "name": "Primary",
                     "numberTurns": 18,
                     "numberParallels": 2,
                     "isolationSide": "primary",
-                    "wire": "Litz 40x0.1 - Grade 1"
+                    "wire": "Litz 40x0.1 - Grade 1 - Unserved"
                 }
             ]
         }
