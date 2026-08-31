@@ -1,91 +1,95 @@
 {
-  "inputs": {
-    "designRequirements": {
-      "magnetizingInductance": {
-        "nominal": 0.0005
-      },
-      "turnsRatios": []
-    },
-    "operatingPoints": [
-      {
-        "name": "Operating Point 1",
-        "conditions": {
-          "ambientTemperature": 70
+    "inputs": {
+        "designRequirements": {
+            "magnetizingInductance": {
+                "nominal": 0.0005
+            },
+            "turnsRatios": []
         },
-        "excitationsPerWinding": [
-          {
-            "frequency": 20000,
-            "current": {
-              "processed": {
-                "label": "triangular",
-                "peakToPeak": 2.0,
-                "offset": 15.0,
-                "dutyCycle": 0.5
-              }
-            },
-            "voltage": {
-              "processed": {
-                "label": "rectangular",
-                "peakToPeak": 200,
-                "offset": 0,
-                "dutyCycle": 0.5
-              }
+        "operatingPoints": [
+            {
+                "name": "Operating Point 1",
+                "conditions": {
+                    "ambientTemperature": 70
+                },
+                "excitationsPerWinding": [
+                    {
+                        "frequency": 20000,
+                        "current": {
+                            "processed": {
+                                "label": "triangular",
+                                "peakToPeak": 2.0,
+                                "offset": 15.0,
+                                "dutyCycle": 0.5
+                            }
+                        },
+                        "voltage": {
+                            "processed": {
+                                "label": "rectangular",
+                                "peakToPeak": 200,
+                                "offset": 0,
+                                "dutyCycle": 0.5
+                            }
+                        }
+                    }
+                ]
             }
-          }
         ]
-      }
-    ]
-  },
-  "magnetic": {
-    "coil": {
-      "bobbin": "basic",
-      "functionalDescription": [
-        {
-          "name": "Primary",
-          "numberTurns": 30,
-          "numberParallels": 1,
-          "isolationSide": "primary",
-          "wire": {
-            "type": "rectangular",
-            "conductingWidth": {
-              "nominal": 0.005
-            },
-            "conductingHeight": {
-              "nominal": 0.001
-            },
-            "material": "copper",
-            "outerWidth": {
-              "nominal": 0.0051
-            },
-            "outerHeight": {
-              "nominal": 0.0011
-            }
-          }
-        }
-      ]
     },
-    "core": {
-      "functionalDescription": {
-        "type": "twoPieceSet",
-        "material": "N27",
-        "shape": "E 70/33/32",
-        "gapping": [
-          {
-            "type": "subtractive",
-            "length": 0.003
-          },
-          {
-            "type": "residual",
-            "length": 1e-05
-          },
-          {
-            "type": "residual",
-            "length": 1e-05
-          }
-        ],
-        "numberStacks": 2
-      }
-    }
-  },
-  "outputs": []
+    "magnetic": {
+        "coil": {
+            "bobbin": "basic",
+            "functionalDescription": [
+                {
+                    "name": "Primary",
+                    "numberTurns": 30,
+                    "numberParallels": 1,
+                    "isolationSide": "primary",
+                    "wire": {
+                        "type": "rectangular",
+                        "conductingWidth": {
+                            "nominal": 0.005
+                        },
+                        "conductingHeight": {
+                            "nominal": 0.001
+                        },
+                        "material": "copper",
+                        "outerWidth": {
+                            "nominal": 0.0051
+                        },
+                        "outerHeight": {
+                            "nominal": 0.0011
+                        },
+                        "coating": {
+                            "type": "enamelled",
+                            "grade": 1
+                        }
+                    }
+                }
+            ]
+        },
+        "core": {
+            "functionalDescription": {
+                "type": "twoPieceSet",
+                "material": "N27",
+                "shape": "E 70/33/32",
+                "gapping": [
+                    {
+                        "type": "subtractive",
+                        "length": 0.003
+                    },
+                    {
+                        "type": "residual",
+                        "length": 1e-05
+                    },
+                    {
+                        "type": "residual",
+                        "length": 1e-05
+                    }
+                ],
+                "numberStacks": 2
+            }
+        }
+    },
+    "outputs": []
 }
