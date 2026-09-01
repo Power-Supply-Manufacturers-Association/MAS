@@ -1,0 +1,38 @@
+{
+  "functionalDescription": [
+    {
+      "name": "P",
+      "numberTurns": 10,
+      "numberParallels": 1,
+      "isolationSide": "primary",
+      "wire": "Dummy",
+      "connections": [
+        {
+          "type": "pin",
+          "pinName": "1"
+        },
+        {
+          "type": "blind",
+          "pinName": "J1"
+        }
+      ]
+    },
+    {
+      "name": "S",
+      "numberTurns": 10,
+      "numberParallels": 1,
+      "isolationSide": "secondary",
+      "wire": "Dummy",
+      "connections": [
+        {
+          "type": "blind",
+          "pinName": "J1"
+        },
+        {
+          "type": "pin",
+          "pinName": "2"
+        }
+      ]
+    }
+  ]
+}
