@@ -431,6 +431,11 @@
                     "type": "number",
                     "exclusiveMinimum": 0
                 },
+                "cornerRadius": {
+                    "description": "Radius of the corners of the column cross-section, where a wire wound directly on the column bends around it. Only meaningful for rectangular and irregular columns: for a round column the radius is width / 2, and for an oblong one it is depth / 2. For a toroid it is the radius of the core cross-section edges (or of its coating, when coated), which is what the wire is pulled over",
+                    "type": "number",
+                    "minimum": 0
+                },
                 "height": {
                     "description": "Height of the column",
                     "type": "number",

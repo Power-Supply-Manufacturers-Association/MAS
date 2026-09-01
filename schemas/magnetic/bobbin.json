@@ -153,6 +153,11 @@
                 "columnShape": {
                     "$ref": "../utils.json#/$defs/columnShape"
                 },
+                "columnCornerRadius": {
+                    "description": "Radius of the corners of the central column, where the wire bends around it while being wound. Only meaningful for rectangular and irregular columns: for a round column the radius is columnWidth, and for an oblong one it is columnDepth / 2. Moulded bobbins always have a finite corner radius; a wire whose minimum bend radius exceeds this one cannot follow the corner and lifts off the flat faces instead",
+                    "type": "number",
+                    "minimum": 0
+                },
                 "windingWindows": {
                     "description": "List of winding windows, all elements in the list must be of the same type",
                     "title": "windingWindows",
