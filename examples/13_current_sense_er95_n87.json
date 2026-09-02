@@ -64,18 +64,18 @@
       "bobbin": "basic",
       "functionalDescription": [
         {
-          "name": "Primary",
-          "numberTurns": 1,
-          "numberParallels": 1,
-          "isolationSide": "primary",
-          "wire": "Round 0.5 - Grade 1"
-        },
-        {
           "name": "Secondary",
           "numberTurns": 80,
           "numberParallels": 1,
           "isolationSide": "secondary",
           "wire": "Round 0.1 - Grade 1"
+        },
+        {
+          "name": "Primary",
+          "numberTurns": 1,
+          "numberParallels": 1,
+          "isolationSide": "primary",
+          "wire": "Round 0.5 - Grade 1"
         }
       ]
     },
