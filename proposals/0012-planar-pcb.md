@@ -1,7 +1,7 @@
 # MAS-RFC 0012 — Native PCB (planar) manufacturing description: `group.pcb` and terminal details on `connection`
 
 - **Status:** Accepted (owner decision 2026-09-03; implementation in the same change set)
-- **Type:** Additive (non-breaking for wound magnetics; printed groups now require `pcb`)
+- **Type:** Additive, non-breaking (`pcb` is optional on printed groups; forbidden on non-printed ones)
 - **Author:** Alfonso Martínez
 - **Created:** 2026-09-03
 
@@ -31,8 +31,11 @@ hardcoded in `MVB++/src/FR4Builder.cpp` (`DEFAULT_BORDER_TO_WIRE_DISTANCE = 90 �
 
 ## 2. Proposed attachment point
 
-**`coil.groupsDescription[].pcb`** (optional object; MUST be present when `group.type ==
-"printed"`, forbidden otherwise — expressed with `if/then` in `coil.json#/$defs/group`).
+**`coil.groupsDescription[].pcb`** (optional object; forbidden when `group.type != "printed"`, expressed with
+`if/then` in `coil.json#/$defs/group`). It is deliberately NOT required on printed groups: only consumers that
+draw the board (MPB, MKF's planar real-winding placement) need it and they fail loudly without it; MKF's ideal
+winding, the advisers, the web viewer and existing planar documents are unaffected, and nobody has to invent
+fabrication data to stay schema-valid (decision 2026-09-03, superseding the first cut that made it required).
 
 Rationale: the `group` is already the container MAS documents as "used for PCB or different
 winding windows", its `type` is the `wiringTechnology` enum whose `printed` value *is* the PCB

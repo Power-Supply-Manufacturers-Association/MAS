@@ -365,7 +365,7 @@
                     "minimum": 0
                 },
                 "pcb": {
-                    "description": "PCB manufacturing description. Required when type is printed, forbidden otherwise.",
+                    "description": "PCB manufacturing description of the board that realises a printed group (MAS-RFC 0012). Optional: consumers that draw the board (PCB generation, planar real-winding placement) require it and fail without it; electromagnetic consumers ignore it. Forbidden on non-printed groups.",
                     "$ref": "#/$defs/pcb"
                 }
             },
@@ -379,21 +379,18 @@
             ],
             "additionalProperties": false,
             "if": {
-                "properties": {
-                    "type": {
-                        "const": "printed"
-                    }
-                },
-                "required": [
-                    "type"
-                ]
+                "not": {
+                    "properties": {
+                        "type": {
+                            "const": "printed"
+                        }
+                    },
+                    "required": [
+                        "type"
+                    ]
+                }
             },
             "then": {
-                "required": [
-                    "pcb"
-                ]
-            },
-            "else": {
                 "not": {
                     "required": [
                         "pcb"
@@ -877,7 +874,7 @@
             "additionalProperties": false
         },
         "pcb": {
-            "description": "Manufacturing description of the printed circuit board that realises a printed group. A printed group is one PCB; a stacked planar magnetic is one printed group per board. MAS-RFC 0012.",
+            "description": "Manufacturing description of the printed circuit board that realises a printed group. A printed group is one PCB; a stacked planar magnetic is one printed group per board. Optional on the group: only PCB-drawing consumers need it (MAS-RFC 0012).",
             "title": "pcb",
             "type": "object",
             "properties": {
