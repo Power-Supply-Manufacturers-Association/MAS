@@ -363,6 +363,10 @@
                     "description": "Index of the winding window (in the windingWindows list of the governing bobbin or core processed description) the sections of this group are placed in. If not present, the first winding window (index 0) is assumed. Overridable per section",
                     "type": "integer",
                     "minimum": 0
+                },
+                "pcb": {
+                    "description": "PCB manufacturing description. Required when type is printed, forbidden otherwise.",
+                    "$ref": "#/$defs/pcb"
                 }
             },
             "required": [
@@ -373,7 +377,29 @@
                 "dimensions",
                 "coordinates"
             ],
-            "additionalProperties": false
+            "additionalProperties": false,
+            "if": {
+                "properties": {
+                    "type": {
+                        "const": "printed"
+                    }
+                },
+                "required": [
+                    "type"
+                ]
+            },
+            "then": {
+                "required": [
+                    "pcb"
+                ]
+            },
+            "else": {
+                "not": {
+                    "required": [
+                        "pcb"
+                    ]
+                }
+            }
         },
         "section": {
             "description": "Data describing one section in a magnetic",
@@ -674,8 +700,205 @@
                 "length": {
                     "description": "Length of the connection, from the exit of the last turn to the terminal. Unit: m.",
                     "type": "number"
+                },
+                "footprint": {
+                    "description": "Library footprint realising this terminal on a PCB, as <library>:<footprint> (e.g. Connector_Pin:Pin_D1.0mm_L10.0mm). When absent the generator derives a footprint from type, diameter and metric.",
+                    "type": "string"
+                },
+                "diameter": {
+                    "description": "Pin diameter for pin terminals. Unit: m.",
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                },
+                "gender": {
+                    "description": "Terminal gender, for screw/press-fit terminal blocks.",
+                    "type": "string",
+                    "enum": [
+                        "male",
+                        "female"
+                    ]
+                },
+                "mounting": {
+                    "description": "Mounting of the terminal on the PCB.",
+                    "type": "string",
+                    "enum": [
+                        "throughHole",
+                        "blind",
+                        "castellated",
+                        "surface"
+                    ]
+                },
+                "padWidth": {
+                    "description": "For pcbPad terminals: pad extent along the board width. Unit: m.",
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                },
+                "padDepth": {
+                    "description": "For pcbPad terminals: pad extent along the board depth. Unit: m.",
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                },
+                "landPattern": {
+                    "description": "Recommended land pattern of the terminal (PEAS).",
+                    "$ref": "https://psma.com/peas/utils.json#/$defs/landPattern"
                 }
             },
+            "additionalProperties": false
+        },
+        "pcbVias": {
+            "description": "Via specification shared by every layer transition of the board.",
+            "title": "pcbVias",
+            "type": "object",
+            "properties": {
+                "diameter": {
+                    "description": "Outer (copper) diameter of the via. Unit: m.",
+                    "$ref": "../utils.json#/$defs/dimensionWithTolerance"
+                },
+                "drillDiameter": {
+                    "description": "Finished drill diameter of the via. Unit: m.",
+                    "$ref": "../utils.json#/$defs/dimensionWithTolerance"
+                },
+                "type": {
+                    "description": "Via construction.",
+                    "type": "string",
+                    "enum": [
+                        "through",
+                        "blind",
+                        "buried"
+                    ],
+                    "default": "through"
+                }
+            },
+            "required": [
+                "diameter",
+                "drillDiameter"
+            ],
+            "additionalProperties": false
+        },
+        "pcbDesignRules": {
+            "description": "Copper spacing rules the layout is drawn to. Unit: m. Minimums; the generator places copper at exactly these distances.",
+            "title": "pcbDesignRules",
+            "type": "object",
+            "properties": {
+                "trackToTrack": {
+                    "description": "Copper edge to copper edge between adjacent tracks (turn pitch minus track width).",
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                },
+                "coreToTrack": {
+                    "description": "Copper edge to the core cut-outs (central column and lateral legs). Also the copper-to-board-edge rule unless copperToEdge is given.",
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                },
+                "viaToVia": {
+                    "description": "Copper edge to copper edge between adjacent vias.",
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                },
+                "viaToTrack": {
+                    "description": "Copper edge between a via and a track of another net.",
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                },
+                "copperToEdge": {
+                    "description": "Copper edge to the board outline. Defaults to coreToTrack when absent (stated rule, not a fallback).",
+                    "type": "number",
+                    "minimum": 0
+                },
+                "holeToHole": {
+                    "description": "Drill edge to drill edge between any two holes (fabrication rule).",
+                    "type": "number",
+                    "minimum": 0
+                },
+                "holeToCopper": {
+                    "description": "Drill edge to copper of another net (fabrication rule).",
+                    "type": "number",
+                    "minimum": 0
+                }
+            },
+            "required": [
+                "trackToTrack",
+                "coreToTrack",
+                "viaToVia",
+                "viaToTrack"
+            ],
+            "additionalProperties": false
+        },
+        "pcbOutline": {
+            "description": "Board outline. The core cut-outs are derived from the core processed description, not stored here. Unit: m.",
+            "title": "pcbOutline",
+            "type": "object",
+            "properties": {
+                "width": {
+                    "description": "Board extent along the axis that crosses the winding window (terminal side to terminal side).",
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                },
+                "depth": {
+                    "description": "Board extent along the lateral legs axis.",
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                },
+                "cornerRadius": {
+                    "description": "Radius of the board corners. 0 or absent: square corners.",
+                    "type": "number",
+                    "minimum": 0
+                },
+                "coreCutoutClearance": {
+                    "description": "Gap between the core column faces and the cut-out edges. Defaults to coreToTrack when absent (stated rule).",
+                    "type": "number",
+                    "minimum": 0
+                }
+            },
+            "required": [
+                "width",
+                "depth"
+            ],
+            "additionalProperties": false
+        },
+        "pcbOuterDielectric": {
+            "description": "Dielectric above the top copper and below the bottom copper (prepreg, solder mask). Inter-layer dielectrics are the insulation layers of layersDescription. Unit: m.",
+            "title": "pcbOuterDielectric",
+            "type": "object",
+            "properties": {
+                "topThickness": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "bottomThickness": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "material": {
+                    "description": "Same vocabulary as layer.insulationMaterial (e.g. FR4).",
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false
+        },
+        "pcb": {
+            "description": "Manufacturing description of the printed circuit board that realises a printed group. A printed group is one PCB; a stacked planar magnetic is one printed group per board. MAS-RFC 0012.",
+            "title": "pcb",
+            "type": "object",
+            "properties": {
+                "vias": {
+                    "$ref": "#/$defs/pcbVias"
+                },
+                "designRules": {
+                    "$ref": "#/$defs/pcbDesignRules"
+                },
+                "outline": {
+                    "$ref": "#/$defs/pcbOutline"
+                },
+                "outerDielectric": {
+                    "$ref": "#/$defs/pcbOuterDielectric"
+                }
+            },
+            "required": [
+                "vias",
+                "designRules",
+                "outline"
+            ],
             "additionalProperties": false
         }
     }

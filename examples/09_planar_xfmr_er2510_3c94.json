@@ -488,7 +488,7 @@
               "nominal": 0.0010400000000000001
             },
             "material": "copper",
-            "name": "Planar 313.18 \u00b5m",
+            "name": "Planar 313.18 µm",
             "numberConductors": 1,
             "outerHeight": {
               "nominal": 0.00031318
@@ -517,7 +517,7 @@
               "nominal": 0.0013000000000000002
             },
             "material": "copper",
-            "name": "Planar 278.38 \u00b5m",
+            "name": "Planar 278.38 µm",
             "numberConductors": 1,
             "outerHeight": {
               "nominal": 0.00027838
@@ -560,7 +560,28 @@
             }
           ],
           "sectionsOrientation": "contiguous",
-          "type": "printed"
+          "type": "printed",
+          "pcb": {
+            "vias": {
+              "diameter": {
+                "nominal": 0.0004
+              },
+              "drillDiameter": {
+                "nominal": 0.0003
+              },
+              "type": "through"
+            },
+            "designRules": {
+              "trackToTrack": 9e-05,
+              "coreToTrack": 0.0003,
+              "viaToVia": 0.0003,
+              "viaToTrack": 0.0003
+            },
+            "outline": {
+              "width": 0.045,
+              "depth": 0.03
+            }
+          }
         }
       ],
       "layersDescription": [
