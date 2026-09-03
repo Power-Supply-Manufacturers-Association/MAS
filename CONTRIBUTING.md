@@ -68,6 +68,21 @@ fields scheduled to migrate from °C to K in a future MAJOR release.
   URL and (when known) datasheet revision date.
 - Removing or renaming a record is a **breaking change** and follows the
   MAJOR-change process.
+- **Regenerate `data/MANIFEST.sha256` in the same commit** that changes any
+  `data/*.ndjson`:
+
+      scripts/check-data-sync.py --write
+
+  The manifest is how a consumer tells a genuine copy of the component database
+  from a stale one. This database is duplicated into every consumer — as
+  submodules, bare clones, and compiled into engine binaries — and copies have
+  gone stale in four different ways that a revision or status check calls
+  healthy (see the script's header). A consumer verifies with:
+
+      scripts/check-data-sync.py --path <their/MAS> --canonical <canonical/MAS>
+
+  comparing against CANONICAL, not against the copy's own manifest: a stale copy
+  is perfectly self-consistent, because its manifest went stale with it.
 
 ## 7. Code generation
 
