@@ -730,6 +730,27 @@
                         "$ref": "#/$defs/magneticDatasheetImpedancePoint"
                     }
                 },
+                "differentialModeImpedancePoints": {
+                    "description": "Differential-mode impedance vs. frequency points. The counterpart of impedancePoints for the other mode; leakageInductance is a single scalar and does not describe this curve's shape or where it resonates.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/magneticDatasheetImpedancePoint"
+                    }
+                },
+                "commonModeInsertionLossPoints": {
+                    "description": "Common-mode insertion loss vs. frequency, in dB. The reference impedance the loss was measured in (50 ohm for this class) belongs in commonModeFilter.attenuationTestCondition, not on every point.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "./inputs/topologies/commonModeChoke.json#/$defs/insertionLossAtFrequency"
+                    }
+                },
+                "differentialModeInsertionLossPoints": {
+                    "description": "Differential-mode insertion loss vs. frequency, in dB. Uses the same point type as the common-mode curve: the structure of a (frequency, dB) pair does not change with the mode, and one field name for one physical quantity is worth more than matching each topology's local vocabulary.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "./inputs/topologies/commonModeChoke.json#/$defs/insertionLossAtFrequency"
+                    }
+                },
                 "commonModeFilter": {
                     "description": "Common-mode filter performance figures from the datasheet.",
                     "$ref": "#/$defs/magneticDatasheetCommonModeFilter"
