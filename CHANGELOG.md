@@ -19,6 +19,52 @@ MAJOR.
 
 ## [Unreleased]
 
+### Changed
+
+- **`resistivity` is no longer required on a core material.** It stays a defined,
+  documented property and every existing record keeps it; it is simply no longer
+  in the `required` list of `schemas/magnetic/core/material.json`.
+
+  Rationale (ABT #1039). Two facts made the requirement untenable. First, the
+  field is inert for the loss model most EMI-suppression ferrites use: in MKF,
+  core-material resistivity is read only by `CoreLossesRoshenModel`'s
+  eddy-current term and by `CoreMaterialCrossReferencer`'s similarity scoring,
+  never by the `lossFactor` path. Second, it cannot be estimated when a maker
+  does not publish it. Across NiZn grades at one permeability (mu_i 800-850) the
+  filed and published values span **five decades** — Ferroxcube 4A11 1e2 ohm-m,
+  Ferronics J 1e3, Meiwa J / ACME F80 / ACME M80 1e6, Fair-Rite 43 / Shinn Der
+  N4S / Encore N1 1e7 — because resistivity is set by Fe(II) content and
+  sintering, not by permeability. Requiring it therefore forced a fabricated
+  value, of the one property the material's own loss model would not read.
+
+  This unblocks real, shipping grades whose makers publish permeability,
+  saturation and a loss curve but no resistivity.
+
+  **Consumers of the generated bindings must regenerate and adapt.** The
+  quicktype type changes from `std::vector<ResistivityPoint>` to
+  `std::optional<std::vector<ResistivityPoint>>`, so call sites break at compile
+  time rather than silently. In MKF there are THREE, found by compiling rather
+  than by grepping — an early grep of mine was truncated and reported two:
+
+  - `ResistivityCoreMaterialModel::get_resistivity` — throw `MISSING_DATA` on a
+    disengaged optional, as it already does on empty data. No fallback.
+  - `CoreMaterialCrossReferencer::MagneticCoreFilterResistivity` — mirror the
+    Curie-temperature filter: no reference value skips the dimension, a candidate
+    without one is culled from that filter. Nothing substituted.
+  - `StrayCapacitance::core_image_factor` — the conduction-only branch is an
+    `else if`, so a material without resistivity falls through to the no-data case
+    already documented below it. Guard the optional, nothing else to decide.
+
+  Verified end to end on a clean `origin/main` worktree with this schema and those
+  three patches: MKF builds with 0 errors, and the catalogue plus one
+  resistivity-less material parses as 1079 records, 1078 with resistivity and 1
+  without. The same catalogue on the unpatched engine is rejected outright.
+
+  Until a consumer regenerates, it will REJECT a record that omits the field —
+  `nlohmann::json` raises `[json.exception.out_of_range.403] key 'resistivity'
+  not found` and, in MKF's case, the whole `load_core_materials` call fails, not
+  just that record. Land the regeneration before writing any record that omits it.
+
 ### Added
 
 - **Optional `permittivity` on core materials.** Adds a `permittivity` object to
