@@ -65,6 +65,23 @@ def sha256_of(path: Path) -> str:
     return digest.hexdigest()
 
 
+# AN UNFETCHED GIT-LFS FILE IS A 134-BYTE STUB THAT HASHES PERFECTLY WELL, and that is exactly
+# the failure this manifest exists to catch. data/advanced_core_materials.ndjson is stored in LFS;
+# on a checkout where it was never fetched, the pointer's own sha went into the manifest at
+# 198d44e and every run since has reported "in sync" while the file was a stub. A hash cannot tell
+# you WHAT it hashed, so the content has to be recognised. ABT #1019.
+_LFS_MAGIC = b"version https://git-lfs.github.com/spec/v1"
+
+
+def is_lfs_pointer(path: Path) -> bool:
+    """True if this file is an unfetched git-lfs pointer rather than the real content."""
+    try:
+        with path.open("rb") as handle:
+            return handle.read(len(_LFS_MAGIC)) == _LFS_MAGIC
+    except OSError:
+        return False
+
+
 def build_manifest(data_dir: Path) -> dict[str, str]:
     return {path.name: sha256_of(path) for path in data_files(data_dir)}
 
@@ -121,7 +138,18 @@ def main() -> int:
             candidate = candidate / "data" / MANIFEST_NAME
         manifest_path = candidate
 
+    pointers = sorted(p.name for p in data_files(data_dir) if is_lfs_pointer(p))
+
     if args.write:
+        # REFUSING IS THE POINT. Writing a pointer's sha teaches the manifest that a stub is
+        # genuine, and every later check then passes while the data is absent -- which is how
+        # 198d44e came to certify advanced_core_materials.ndjson. Fetch first.
+        if pointers:
+            print(f"error: refusing to write the manifest -- these are unfetched git-lfs pointers, "
+                  f"not data:\n    " + "\n    ".join(pointers) +
+                  "\n  Run `git lfs pull` first. Writing now would record the pointer's own hash "
+                  "and make every future check pass on a stub.", file=sys.stderr)
+            return 2
         write_manifest(manifest_path, actual)
         print(f"wrote {manifest_path} ({len(actual)} files)")
         return 0
@@ -140,6 +168,18 @@ def main() -> int:
     missing = sorted(set(expected) - set(actual))
     extra = sorted(set(actual) - set(expected))
     changed = sorted(name for name in set(expected) & set(actual) if expected[name] != actual[name])
+
+    if pointers and not (missing or extra or changed):
+        # The hashes agree, so the copy is self-consistent -- with a stub. Say so plainly rather
+        # than "in sync", which is what this script was doing before ABT #1019.
+        print(f"NOT USABLE in {args.path}", file=sys.stderr)
+        for name in pointers:
+            print(f"  unfetched git-lfs pointer: {name} "
+                  f"({(data_dir / name).stat().st_size} bytes, not the real content)", file=sys.stderr)
+        print("\nThe manifest matches, because the pointer's own hash was recorded in it. "
+              "Run `git lfs pull`, then re-run with --write to record the real content.",
+              file=sys.stderr)
+        return 1
 
     if not (missing or extra or changed):
         if not args.quiet:

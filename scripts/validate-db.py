@@ -33,9 +33,23 @@ def validate_advanced_core_materials(reg):
         r=json.loads(line)
         base[r['name']]=r
     n=bad=0; first=None
-    for line in open('data/advanced_core_materials.ndjson'):
+    # AN UNFETCHED GIT-LFS FILE IS A THREE-LINE STUB, and the old guard only skipped the first of
+    # them ('version https://...'), so the second ('oid sha256:...') reached json.loads and came
+    # back as a raw JSONDecodeError with no hint of the real cause. Detect the stub itself and say
+    # what is wrong. ABT #1019.
+    adv = 'data/advanced_core_materials.ndjson'
+    with open(adv, 'rb') as fh:
+        if fh.read(42) == b'version https://git-lfs.github.com/spec/v1':
+            # 0, not 1: the data is ABSENT, not invalid, and failing the whole run because an
+            # LFS file was never fetched would be noise. But the line is deliberately loud --
+            # a validation that silently reports nothing is indistinguishable from one that
+            # passed, which is the trap this script fell into for the caller above.
+            print(f"SKIP {adv}: unfetched git-lfs pointer, not data -- the advanced materials "
+                  f"were NOT validated. Run `git lfs pull` to check them.")
+            return 0
+    for line in open(adv):
         line=line.strip()
-        if not line or line.startswith('version https'): continue
+        if not line: continue
         n+=1
         patch=json.loads(line)
         b=base.get(patch.get('name'))
