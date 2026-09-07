@@ -35,7 +35,7 @@ MAP = {
 
 def load_registry():
     resources = []
-    for repo in ("MAS", "PEAS", "CAS", "SAS", "RAS", "AAS", "CTAS", "CONAS", "TDAS"):
+    for repo in ("MAS", "PEAS", "CAS", "SAS", "RAS", "AAS", "CTAS", "CONAS", "TDAS", "EMAS"):
         for f in glob.glob(os.path.join(PSMA, repo, "schemas", "**", "*.json"), recursive=True):
             try:
                 doc = json.load(open(f))
