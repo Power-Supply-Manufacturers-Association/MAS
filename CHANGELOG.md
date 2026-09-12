@@ -61,19 +61,11 @@ becomes invalid.
   pick sleeve stock instead of tape, and `cti`, the measured comparative tracking
   index per IEC 60112 in volts (the material *group* of the same name in insulation
   coordination follows from it per IEC 60664-1; neither is renamed).
-  `outputs.json#/$defs/insulationCoordination` gains `leadCreepage[]` (`winding`,
-  `end`, `creepageDistance`, `sleeved`), reported per terminated end because a lead
-  runs outside the winding where the section-interface coordination does not apply.
-
-  **Caveat, unresolved by design:** that `$defs/insulationCoordination` is currently
-  referenced by nothing — `outputs.json#/properties/insulationCoordination` points at
-  the PEAS mirror `https://psma.com/peas/outputs/insulationCoordination.json`, so a
-  document's `insulationCoordination` is validated by PEAS's copy and the generated
-  binding takes its members from there. `leadCreepage` is therefore valid but
-  unreachable from a MAS document until either that property is re-pointed at the
-  local definition or the field is added to the PEAS mirror. Both are out of the
-  approved delta's scope and are flagged, not worked around. Documented in
-  `docs/magnetic/coil.md` and `docs/glossary.md`.
+  The RFC's `leadCreepage[]` output field was landed and then **withdrawn the same day**
+  (Alf, 2026-09-13): the local `outputs.json#/$defs/insulationCoordination` it was added to is
+  referenced by nothing (the `insulationCoordination` property points at the PEAS mirror), so the
+  field was unreachable; per-lead creepage is reported by MKF's insulation-coordination result
+  instead, with no schema field.
 
 - **Magnetic shunts (MAS-RFC 0015, ABT #1180).** `magnetic.json` gains `shunts[]`, the
   pieces of permeable material — a ferrite plate, a ferrite-polymer or flexible-ferrite

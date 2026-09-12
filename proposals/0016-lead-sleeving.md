@@ -1,4 +1,4 @@
-# MAS-RFC 0016 — Lead sleeving: `connection.sleeve`, insulation-material `form` / `cti`, `leadCreepage`
+# MAS-RFC 0016 — Lead sleeving: `connection.sleeve`, insulation-material `form` / `cti`
 
 - **Status:** Accepted (owner decision 2026-09-12, approved by Alf; implementation in the same change set)
 - **Type:** Additive (non-breaking) schema change
@@ -66,7 +66,12 @@ distance.
 > The two live in different schemas and the field's `description` states which is which; this
 > RFC does not rename either.
 
-### 3. `outputs.json` `insulationCoordinationOutput` — `leadCreepage`
+### 3. `outputs.json` `insulationCoordinationOutput` — `leadCreepage` (WITHDRAWN 2026-09-13)
+
+> Withdrawn by Alf on 2026-09-13 after landing: the definition it was added to is unreachable
+> (the property references the PEAS mirror) and the value is a report, not an input. MKF's
+> insulation-coordination result carries per-lead creepage and the sleeved flag instead; no
+> schema field. The text below is kept for the record.
 
 ```jsonc
 "leadCreepage": {

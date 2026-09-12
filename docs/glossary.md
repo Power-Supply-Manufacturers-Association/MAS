@@ -159,7 +159,6 @@ names that are not literal property keys are written in plain prose.
 | `form` | The form an insulation material is supplied in: `tape`, `film`, `sleeve` or `varnish`. It is what lets a coordinator pick sleeve stock rather than tape. |
 | `cti` (insulation material) | The measured comparative tracking index per IEC 60112, in V, from which the material group above follows per IEC 60664-1. |
 | `sleeve` | Insulating tube slid over a lead, from its terminal back into the winding; recorded on a coil `connection` with its material, wall thickness, inner diameter, overlap into the winding and number of layers. |
-| `leadCreepage` | Creepage reported per terminated winding end, along the lead, where the section-to-section coordination does not apply. |
 | `meltingPoint` | Temperature at which the insulation material melts, in degrees Celsius. |
 | `interlayerInsulation` | Insulation barrier placed between adjacent layers of a winding. |
 | `marginInfo` | Margin tape at the extremes of a section, used to enforce creepage. |

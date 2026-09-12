@@ -39,4 +39,4 @@ before any schema or code lands.
 | [0013](0013-pin-assignment.md) | Lead-to-pin assignment: `connection.end` / `connection.parallel`, `pin.removable` | **Accepted** | 1.1.0 |
 | [0014](0014-bobbin-dividers-and-toroid-base.md) | Multi-chamber bobbins (`dividers`, `numberChambers`) and the toroid `base` | **Accepted** | 1.1.0 |
 | [0015](0015-magnetic-shunts.md) | Magnetic shunts as `magnetic.shunts[]` | **Accepted** | 1.1.0 |
-| [0016](0016-lead-sleeving.md) | Lead sleeving: `connection.sleeve`, insulation-material `form` / `cti`, `leadCreepage` | **Accepted** | 1.1.0 |
+| [0016](0016-lead-sleeving.md) | Lead sleeving: `connection.sleeve`, insulation-material `form` / `cti` (`leadCreepage` withdrawn 2026-09-13) | **Accepted** | 1.1.0 |
