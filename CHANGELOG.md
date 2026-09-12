@@ -67,6 +67,65 @@ MAJOR.
 
 ### Added
 
+- **Seven bobbin plastics in `data/insulation_materials.ndjson`** (ABT #1164), so a
+  bobbin's `functionalDescription.material` resolves to a record carrying a
+  `relativePermittivity`. Every `material` value used by `data/bobbins.ndjson` now
+  names a record: `PA66`, `PBT`, `PPS`, `A3X2G10`, `x2g5`, `Zen.6130L` and
+  `SKYT.5220FR` (`PET` was already present). All eight are NORWE coil-former
+  materials; the vendor short codes are resolved to their grade and base polymer
+  through NORWE's published material list, and each permittivity is taken from that
+  grade's own datasheet:
+
+  | record | grade | polymer | eps_r (1 MHz) |
+  | --- | --- | --- | --- |
+  | `PA66` | Envalior Durethan AKV30H2.0 | PA66-GF30 | 4.0 |
+  | `PBT` | Envalior Pocan B4225 | PBT-GF20 FR(17) | 3.6 |
+  | `PPS` | Toray Torelina A504X90 | PPS-GF40 | 4.2 |
+  | `A3X2G10` | BASF Ultramid A3X2G10 | PA66-GF50 FR(52) | 3.6 (dry) |
+  | `x2g5` | BASF Ultramid A3X2G5 | PA66-GF25 FR(52) | 3.7 (dry) |
+  | `Zen.6130L` | Celanese Zenite 6130L | LCP-GF30 | 4.0 |
+  | `SKYT.5220FR` | SK Chemicals Skytra 5220FR | PET-GF30 FR | 4.7 |
+
+  These are the GLASS-FILLED values, which is what a bobbin is moulded from; the
+  neat polymer is materially lower. The two BASF polyamides publish a dry and a
+  conditioned figure (3.6/5 and 3.7/5) and the dry, as-moulded figure is recorded —
+  PA66 is hygroscopic and its permittivity drifts with humidity, so the recorded
+  value is the lower bound of its range.
+
+  `SKYT.5220FR` is the one record whose permittivity is not from its own maker's
+  datasheet: SK Chemicals publishes no dielectric data for the grade. Its value is
+  that of Rynite FR530L NC010, the PET-GF30 FR grade NORWE replaced with it
+  (NORWE material-change note 09/2022) and which SK Chemicals states the grade
+  corresponds to in mechanical and electrical properties. The substitution is
+  recorded in the record's `manufacturerInfo.description`.
+
+  Consumers that counted the bobbin wall as air in a winding-to-core dielectric
+  stack can now read `t / eps_r` for it instead.
+
+- **Seven bobbin plastics get a relative permittivity**, so a bobbin wall can enter a
+  dielectric stack as `t/eps_r` instead of being counted as air (requested by MKF, ABT #1164):
+  `PA66`, `PBT`, `PPS`, `A3X2G10`, `x2g5`, `Zen.6130L` and `SKYT.5220FR`. Every
+  `functionalDescription.material` in `data/bobbins.ndjson` now resolves under an exact-name
+  lookup; previously only `PET` did. Values are the glass-filled grades' own, from the
+  manufacturers' datasheets, with the NORWE material number, grade reference and datasheet URL
+  recorded on each.
+
+  Two sourcing decisions are called out because they are judgement, not datasheet:
+  - The two BASF polyamides (`A3X2G10`, `x2g5`) carry their **conditioned** permittivity of 5.0
+    at 23 C / 50% r.h., not their dry as-moulded 3.6 and 3.7. PA66 is hygroscopic and a bobbin in
+    service equilibrates toward the conditioned figure; the dry value would under-state
+    winding-to-core capacitance and so over-state the predicted self-resonant frequency. The dry
+    figure is recorded in each record's description.
+  - `SKYT.5220FR` (SK Chemicals Skytra 5220FR, 131 bobbins) carries **4.7, which is Rynite
+    FR530L NC010's value, not its own** — SK Chemicals publishes no dielectric data for the
+    grade. It is carried across on NORWE's material-change note 09/2022, which records 5220FR
+    replacing Rynite FR530L in the same bobbins, and on SK Chemicals' statement that the grade
+    corresponds to that DuPont PET-GF30 FR grade in mechanical and electrical properties. The
+    substitution and both sources are written into the record's description.
+
+  `PA66` was also removed from `Nylon 6.6`'s aliases: it now names a record of its own, and the
+  wire-serving polyamide at 3.4 is a different material from the glass-filled bobbin resin.
+
 - **Optional `coreElectricalReference` on `magnetic`.** Records how the core is
   referenced electrically in the assembled component: `floating` (not bonded),
   `grounded` (bonded to a circuit reference, with an optional `isolationSide`
