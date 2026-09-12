@@ -694,6 +694,20 @@
                         "output"
                     ]
                 },
+                "end": {
+                    "description": "Which end of the winding this connection terminates: start is the dot end (the first turn wound), finish the last turn wound, tap an intermediate junction shared with a series section.",
+                    "type": "string",
+                    "enum": [
+                        "start",
+                        "finish",
+                        "tap"
+                    ]
+                },
+                "parallel": {
+                    "description": "Index of the parallel strand of the winding that terminates here; absent means every parallel of the winding terminates together on this terminal.",
+                    "type": "integer",
+                    "minimum": 0
+                },
                 "length": {
                     "description": "Length of the connection, from the exit of the last turn to the terminal. Unit: m.",
                     "type": "number"

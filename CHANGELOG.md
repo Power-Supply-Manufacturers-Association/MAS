@@ -19,6 +19,24 @@ MAJOR.
 
 ## [Unreleased]
 
+The next release is a MINOR one: everything below is additive (new optional
+fields and new records), with one requirement relaxed. No existing document
+becomes invalid.
+
+### Added
+
+- **Lead-to-pin assignment (MAS-RFC 0013, ABT #1178).** Two optional fields on
+  `coil.json#/$defs/connection` — `end` (`start` | `finish` | `tap`, which end of the
+  winding terminates on this terminal; `start` is the dot end, a series junction is a
+  `tap` on both sections) and `parallel` (integer >= 0, which parallel strand
+  terminates here; absent means all of them together) — and one on
+  `bobbin.json#/$defs/pin`: `removable` (boolean, default false), for the corner pins
+  bobbin makers offer cut off to open up creepage. The RFC also fixes the default pin
+  numbering used when a bobbin brings no pin names of its own: counter-clockwise from
+  row 0, seen from the mounting side (owner decision 2026-09-12). Documented in
+  `docs/magnetic/coil.md`, including the industry assignment rule (rows are isolation
+  groups, start and finish adjacent, taps shared).
+
 ### Changed
 
 - **`resistivity` is no longer required on a core material.** It stays a defined,

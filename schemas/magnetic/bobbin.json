@@ -257,6 +257,11 @@
                 "coordinates": {
                     "description": "The coordinates of the center of the pin, referred to the center of the main column",
                     "$ref": "../utils.json#/$defs/coordinates"
+                },
+                "removable": {
+                    "description": "Whether the pin may be cut off or omitted by the winder to open up creepage, as bobbin makers offer for corner pins.",
+                    "type": "boolean",
+                    "default": false
                 }
             },
             "required": [
