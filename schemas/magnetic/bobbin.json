@@ -96,6 +96,70 @@
                     "description": "Variant name of the bobbin (e.g. flanged, foot-print)",
                     "type": "string"
                 },
+                "numberChambers": {
+                    "description": "Number of winding chambers the former is divided into by interior dividers; 1 (or absent) is a plain two-flange former.",
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "base": {
+                    "description": "Mounting base of the bobbin, the mechanical body that carries the wound part and its pins. Only meaningful for family t, where the base plays the former's role for a toroid.",
+                    "title": "bobbinBase",
+                    "type": "object",
+                    "properties": {
+                        "mounting": {
+                            "description": "How the wound part sits on the base: horizontal lays the ring flat in a pocket, vertical stands it on edge in a boat.",
+                            "type": "string",
+                            "enum": [
+                                "horizontal",
+                                "vertical"
+                            ]
+                        },
+                        "length": {
+                            "description": "Overall length of the base, along the longer side of its footprint. Unit: m.",
+                            "$ref": "../utils.json#/$defs/dimensionWithTolerance"
+                        },
+                        "width": {
+                            "description": "Overall width of the base, across its footprint. Unit: m.",
+                            "$ref": "../utils.json#/$defs/dimensionWithTolerance"
+                        },
+                        "height": {
+                            "description": "Overall height of the base, from the seating plane to its top face. Unit: m.",
+                            "$ref": "../utils.json#/$defs/dimensionWithTolerance"
+                        },
+                        "standoff": {
+                            "description": "Distance the base holds the wound part above the mounting surface. Unit: m.",
+                            "$ref": "../utils.json#/$defs/dimensionWithTolerance"
+                        },
+                        "pocketInnerDiameter": {
+                            "description": "Inner diameter of the pocket that receives the wound ring, for a horizontal base. Unit: m.",
+                            "$ref": "../utils.json#/$defs/dimensionWithTolerance"
+                        },
+                        "pocketDepth": {
+                            "description": "Depth of the pocket that receives the wound ring, for a horizontal base. Unit: m.",
+                            "$ref": "../utils.json#/$defs/dimensionWithTolerance"
+                        },
+                        "boatWidth": {
+                            "description": "Width of the slot that holds the wound ring on edge, for a vertical base. Unit: m.",
+                            "$ref": "../utils.json#/$defs/dimensionWithTolerance"
+                        },
+                        "maximumCoreOuterDiameter": {
+                            "description": "Largest wound-core outer diameter the base accepts. Unit: m.",
+                            "type": "number"
+                        },
+                        "maximumCoreHeight": {
+                            "description": "Largest wound-core height the base accepts. Unit: m.",
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "mounting",
+                        "length",
+                        "width",
+                        "height",
+                        "standoff"
+                    ],
+                    "additionalProperties": false
+                },
                 "connections": {
                     "description": "List of connections between windings and pins",
                     "type": "array",
@@ -190,6 +254,56 @@
                     },
                     "minItems": 0,
                     "uniqueItems": true
+                },
+                "dividers": {
+                    "description": "Interior walls that split the winding area into chambers, in the order they appear along the column.",
+                    "type": "array",
+                    "items": {
+                        "title": "bobbinDivider",
+                        "description": "One interior wall of a multi-chamber former.",
+                        "type": "object",
+                        "properties": {
+                            "thickness": {
+                                "description": "Thickness of the divider wall, measured along the column axis. Unit: m.",
+                                "type": "number",
+                                "exclusiveMinimum": 0
+                            },
+                            "coordinates": {
+                                "description": "The coordinates of the centre of the divider, referred to the centre of the main column.",
+                                "$ref": "../utils.json#/$defs/coordinates"
+                            },
+                            "height": {
+                                "description": "Radial reach of the divider from the column surface outwards; absent means it reaches as far as the flanges. Unit: m.",
+                                "type": "number"
+                            },
+                            "crossingSlot": {
+                                "description": "Notch cut in the divider through which a wire crosses from one chamber to the next.",
+                                "title": "dividerCrossingSlot",
+                                "type": "object",
+                                "properties": {
+                                    "width": {
+                                        "description": "Width of the slot, measured along the divider rim. Unit: m.",
+                                        "type": "number"
+                                    },
+                                    "depth": {
+                                        "description": "Depth of the slot, measured radially inwards from the divider rim. Unit: m.",
+                                        "type": "number"
+                                    },
+                                    "angle": {
+                                        "description": "Angular position of the slot around the column, from the positive x axis. Unit: degree.",
+                                        "type": "number"
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        },
+                        "required": [
+                            "thickness",
+                            "coordinates"
+                        ],
+                        "additionalProperties": false
+                    },
+                    "minItems": 0
                 },
                 "coordinates": {
                     "description": "The coordinates of the center of the bobbin central wall, where the wires are wound, referred to the center of the main column.",

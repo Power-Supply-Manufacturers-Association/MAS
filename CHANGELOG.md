@@ -37,6 +37,21 @@ becomes invalid.
   `docs/magnetic/coil.md`, including the industry assignment rule (rows are isolation
   groups, start and finish adjacent, taps shared).
 
+- **Multi-chamber bobbins and toroid bases (MAS-RFC 0014, ABT #1179).** Four optional
+  fields on `bobbin.json`. `processedDescription.dividers[]` describes the interior
+  walls of a split former — `thickness` along the column axis and `coordinates` are
+  required, `height` (radial reach; absent = as far as the flanges) and `crossingSlot`
+  (`width`, `depth`, `angle`) are optional — and `functionalDescription.numberChambers`
+  (integer >= 1) is the count a catalogue row can state before anybody has transcribed
+  the wall drawing. `functionalDescription.base` describes the moulded base a wound
+  toroid is mounted on, which is a bobbin of family `t` (decision D1 of the 2026-09-12
+  survey, so it reuses `pinout` / `pins[]` / `connections[]` rather than inventing a
+  second pin vocabulary): `mounting` (`horizontal` | `vertical`), `length`, `width`,
+  `height` and `standoff` required, `pocketInnerDiameter`, `pocketDepth`, `boatWidth`
+  and the selection limits `maximumCoreOuterDiameter` / `maximumCoreHeight` optional.
+  The bobbin's existing `orientation` is unchanged and keeps its former meaning.
+  Documented in `docs/magnetic/coil.md`.
+
 ### Changed
 
 - **`resistivity` is no longer required on a core material.** It stays a defined,
