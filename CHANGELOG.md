@@ -67,6 +67,21 @@ MAJOR.
 
 ### Added
 
+- **Optional `coreElectricalReference` on `magnetic`.** Records how the core is
+  referenced electrically in the assembled component: `floating` (not bonded),
+  `grounded` (bonded to a circuit reference, with an optional `isolationSide`
+  naming whose local ground; absent = protective earth / chassis), or
+  `tiedToWinding` (bonded to the `start` or `end` `terminal` of a named
+  `winding`). A ferrite or powder core has no terminal of its own and follows
+  the conductors around it unless a mounting clip, copper strap / flux band or
+  conductive tape bonds it. The choice sets how the winding-to-core
+  capacitances appear at the terminals (C0/12 floating vs C0/3 tied to a
+  winding end, for a linear potential ramp) and whether the
+  primary→core→secondary common-mode path closes through the core or is
+  diverted. **Absent means floating**, which is what every model assumed before
+  the field existed, so no existing document or result moves. Non-breaking.
+  Requested by MKF (ABT #1167) after the stray-capacitance review of
+  2026-09-12; `examples/02_flyback_efd25_3c95.json` shows it in use.
 - **Optional `permittivity` on core materials.** Adds a `permittivity` object to
   the core material schema with a `complex` part (ε′ + j·ε″, same sign
   convention as complex permeability — the imaginary part is a positive loss

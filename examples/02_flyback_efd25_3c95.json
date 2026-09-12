@@ -101,6 +101,10 @@
         ],
         "numberStacks": 1
       }
+    },
+    "coreElectricalReference": {
+      "type": "grounded",
+      "isolationSide": "primary"
     }
   },
   "outputs": []

@@ -45,6 +45,60 @@
         "rotation": {
             "description": "The rotation of the magnetic, by default the winding column goes vertical",
             "$ref": "./utils.json#/$defs/rotation"
+        },
+        "coreElectricalReference": {
+            "description": "How the core is referenced electrically in the assembled component. A ferrite or powder core has no terminal of its own: it sits at whatever potential the surrounding conductors impose on it, unless it is deliberately bonded, through a mounting clip, a copper strap or flux band, or conductive tape, to a circuit reference or to one end of a winding. The choice decides how the winding-to-core capacitances appear at the terminals (a charge-balanced floating node gives C0/12 of a winding's distributed capacitance for a linear potential ramp; a core tied to either end of that winding gives C0/3; the live end innermost against a bonded core approaches C0) and whether the primary-to-core-to-secondary common-mode path is closed through the core or diverted to the reference. Absent means floating: a core with no clip, strap or tape, which is also the assumption every model made before this field existed.",
+            "title": "coreElectricalReference",
+            "type": "object",
+            "properties": {
+                "type": {
+                    "description": "floating: the core is not bonded to anything and takes the charge-balanced potential of the conductors around it. grounded: the core is bonded to a reference node with no potential swing relative to the circuit reference of the side given by isolationSide (its local ground), or to protective earth or chassis when isolationSide is absent. tiedToWinding: the core is bonded to one end of a named winding and follows that node's potential.",
+                    "title": "coreElectricalReferenceType",
+                    "type": "string",
+                    "enum": [
+                        "floating",
+                        "grounded",
+                        "tiedToWinding"
+                    ]
+                },
+                "isolationSide": {
+                    "description": "For type grounded: the isolation side whose local reference the core is bonded to (primary ground, secondary ground, ...), matching the isolationSide of the windings on that side. Absent means protective earth or chassis, a reference common to every side.",
+                    "$ref": "./utils.json#/$defs/isolationSide"
+                },
+                "winding": {
+                    "description": "For type tiedToWinding: the name of the winding the core is bonded to, matching coil.functionalDescription[].name. Required when type is tiedToWinding.",
+                    "type": "string"
+                },
+                "terminal": {
+                    "description": "For type tiedToWinding: which end of that winding the core is bonded to. start is the end where the first turn of the winding is wound, end is where the last turn finishes. Required when type is tiedToWinding.",
+                    "title": "windingTerminal",
+                    "type": "string",
+                    "enum": [
+                        "start",
+                        "end"
+                    ]
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "additionalProperties": false,
+            "if": {
+                "properties": {
+                    "type": {
+                        "const": "tiedToWinding"
+                    }
+                },
+                "required": [
+                    "type"
+                ]
+            },
+            "then": {
+                "required": [
+                    "winding",
+                    "terminal"
+                ]
+            }
         }
     },
     "required": [],
@@ -913,7 +967,12 @@
                 "mountingForm": {
                     "description": "How the core is fitted to the cable: a closed 'solidRing' the cable is threaded through at build, a hinged 'snapOn' clip that opens for retrofit, a two-piece 'split' core, or a 'screwable' housing. Distinguishes retrofit-installable clamps from build-time rings.",
                     "type": "string",
-                    "enum": ["solidRing", "snapOn", "split", "screwable"]
+                    "enum": [
+                        "solidRing",
+                        "snapOn",
+                        "split",
+                        "screwable"
+                    ]
                 },
                 "maximumCableOuterDiameter": {
                     "description": "Largest cable / bundle outer diameter in metres that fits through the core (the inner-diameter fit limit) — a primary selection parameter for a cable core.",
