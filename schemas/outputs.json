@@ -806,6 +806,39 @@
                 "withstandVoltageDuration": {
                     "description": "Duration of the voltage test. Unit: s. Absent if the test specification does not require a fixed duration.",
                     "type": "number"
+                },
+                "leadCreepage": {
+                    "description": "Creepage assessed along the leads, one entry per terminated winding end, reported separately because a lead runs outside the winding where the section-to-section coordination does not apply.",
+                    "type": "array",
+                    "items": {
+                        "title": "leadCreepageOutput",
+                        "description": "Creepage of one lead and whether it is sleeved.",
+                        "type": "object",
+                        "properties": {
+                            "winding": {
+                                "description": "Name of the winding this lead belongs to, matching coil.functionalDescription[].name.",
+                                "type": "string"
+                            },
+                            "end": {
+                                "description": "Which end of the winding this lead terminates, matching the end of its connection.",
+                                "type": "string",
+                                "enum": [
+                                    "start",
+                                    "finish",
+                                    "tap"
+                                ]
+                            },
+                            "creepageDistance": {
+                                "description": "Creepage distance available along this lead. Unit: m.",
+                                "type": "number"
+                            },
+                            "sleeved": {
+                                "description": "Whether the lead is fitted with an insulating sleeve.",
+                                "type": "boolean"
+                            }
+                        },
+                        "additionalProperties": false
+                    }
                 }
             },
             "required": [

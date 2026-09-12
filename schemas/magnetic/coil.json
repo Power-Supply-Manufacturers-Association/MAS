@@ -752,6 +752,52 @@
                 "landPattern": {
                     "description": "Recommended land pattern of the terminal (PEAS).",
                     "$ref": "https://psma.com/peas/utils.json#/$defs/landPattern"
+                },
+                "sleeve": {
+                    "description": "Insulating sleeve fitted over this lead, from the terminal back into the winding, where the bare or enamelled lead alone does not provide the required insulation.",
+                    "title": "connectionSleeve",
+                    "type": "object",
+                    "properties": {
+                        "material": {
+                            "description": "Sleeve stock the lead is insulated with, either the full insulation material or the name of one.",
+                            "oneOf": [
+                                {
+                                    "$ref": "./insulation/material.json"
+                                },
+                                {
+                                    "description": "Name of the sleeve material",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "wallThickness": {
+                            "description": "Wall thickness of the sleeve. Unit: m.",
+                            "type": "number",
+                            "exclusiveMinimum": 0
+                        },
+                        "innerDiameter": {
+                            "description": "Inner diameter of the sleeve, which fits over the lead. Unit: m.",
+                            "type": "number",
+                            "exclusiveMinimum": 0
+                        },
+                        "overlapIntoWinding": {
+                            "description": "Length by which the sleeve reaches past the point where the lead leaves the winding, back over the wound part. Unit: m.",
+                            "type": "number",
+                            "minimum": 0
+                        },
+                        "numberLayers": {
+                            "description": "Number of sleeve layers fitted over the lead, one inside the next.",
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1
+                        }
+                    },
+                    "required": [
+                        "material",
+                        "wallThickness",
+                        "innerDiameter"
+                    ],
+                    "additionalProperties": false
                 }
             },
             "additionalProperties": false

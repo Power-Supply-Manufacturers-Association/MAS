@@ -93,6 +93,20 @@
             },
             "minItems": 1,
             "uniqueItems": true
+        },
+        "form": {
+            "description": "The form the material is supplied in, which decides where it can be used: tape is wound on, film is placed as a sheet, sleeve is slid over a lead, varnish is impregnated.",
+            "type": "string",
+            "enum": [
+                "tape",
+                "film",
+                "sleeve",
+                "varnish"
+            ]
+        },
+        "cti": {
+            "description": "Comparative tracking index of the material per IEC 60112, the voltage at which it withstands 50 drops of test solution without tracking. Unit: V. The material group used in insulation coordination (I, II, IIIA, IIIB) follows from it per IEC 60664-1.",
+            "type": "number"
         }
     },
     "required": [

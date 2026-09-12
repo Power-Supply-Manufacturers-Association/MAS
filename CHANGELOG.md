@@ -52,6 +52,29 @@ becomes invalid.
   The bobbin's existing `orientation` is unchanged and keeps its former meaning.
   Documented in `docs/magnetic/coil.md`.
 
+- **Lead sleeving (MAS-RFC 0016, ABT #1181).** `coil.json#/$defs/connection` gains
+  `sleeve` — `material` (an insulation-material record or the name of one),
+  `wallThickness` and `innerDiameter` required, `overlapIntoWinding` and
+  `numberLayers` (default 1) optional — so the sleeve a winding shop slides over a
+  lead is data rather than shop practice. `magnetic/insulation/material.json` gains
+  `form` (`tape` | `film` | `sleeve` | `varnish`), which is what lets a coordinator
+  pick sleeve stock instead of tape, and `cti`, the measured comparative tracking
+  index per IEC 60112 in volts (the material *group* of the same name in insulation
+  coordination follows from it per IEC 60664-1; neither is renamed).
+  `outputs.json#/$defs/insulationCoordination` gains `leadCreepage[]` (`winding`,
+  `end`, `creepageDistance`, `sleeved`), reported per terminated end because a lead
+  runs outside the winding where the section-interface coordination does not apply.
+
+  **Caveat, unresolved by design:** that `$defs/insulationCoordination` is currently
+  referenced by nothing — `outputs.json#/properties/insulationCoordination` points at
+  the PEAS mirror `https://psma.com/peas/outputs/insulationCoordination.json`, so a
+  document's `insulationCoordination` is validated by PEAS's copy and the generated
+  binding takes its members from there. `leadCreepage` is therefore valid but
+  unreachable from a MAS document until either that property is re-pointed at the
+  local definition or the field is added to the PEAS mirror. Both are out of the
+  approved delta's scope and are flagged, not worked around. Documented in
+  `docs/magnetic/coil.md` and `docs/glossary.md`.
+
 ### Changed
 
 - **`resistivity` is no longer required on a core material.** It stays a defined,
