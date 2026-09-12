@@ -99,6 +99,95 @@
                     "terminal"
                 ]
             }
+        },
+        "shunts": {
+            "description": "Magnetic shunts fitted to the assembled component: pieces of permeable material placed in or beside the winding window to carry leakage flux deliberately, as an integrated leakage transformer needs. They belong to neither the core nor the coil, and are listed here in the order they are assembled.",
+            "type": "array",
+            "items": {
+                "title": "magneticShunt",
+                "description": "One magnetic shunt.",
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "description": "Name given to the shunt, used to refer to it from outputs and geometry.",
+                        "type": "string"
+                    },
+                    "placement": {
+                        "description": "Where the shunt sits: inWindow anywhere inside the winding window, betweenSections in the insulation gap between two sections, onColumn wrapped on or against a column so that it also carries main flux, outsideWindow outside the window against the core.",
+                        "title": "magneticShuntPlacement",
+                        "type": "string",
+                        "enum": [
+                            "inWindow",
+                            "betweenSections",
+                            "onColumn",
+                            "outsideWindow"
+                        ]
+                    },
+                    "coordinates": {
+                        "description": "The coordinates of the centre of the shunt, referred to the centre of the main column.",
+                        "$ref": "./utils.json#/$defs/coordinates"
+                    },
+                    "dimensions": {
+                        "description": "Dimensions of the box enclosing the shunt: width radially, height along the column axis (the sheet thickness of a flat shunt), depth across the window.",
+                        "$ref": "./utils.json#/$defs/dimensions"
+                    },
+                    "gapToColumns": {
+                        "description": "Air gaps left between the shunt and the columns it bridges.",
+                        "title": "magneticShuntGapToColumns",
+                        "type": "object",
+                        "properties": {
+                            "inner": {
+                                "description": "Gap between the shunt and the inner (central) column. Unit: m.",
+                                "type": "number"
+                            },
+                            "outer": {
+                                "description": "Gap between the shunt and the outer (lateral) column. Unit: m.",
+                                "type": "number"
+                            }
+                        },
+                        "additionalProperties": false
+                    },
+                    "segments": {
+                        "description": "Segmentation of the shunt along its length, when it is built from several pieces separated by gaps instead of one continuous piece.",
+                        "type": "array",
+                        "items": {
+                            "title": "magneticShuntSegment",
+                            "description": "One piece of a segmented shunt and the gap that follows it.",
+                            "type": "object",
+                            "properties": {
+                                "length": {
+                                    "description": "Length of the shunt piece. Unit: m.",
+                                    "type": "number"
+                                },
+                                "gap": {
+                                    "description": "Gap between this piece and the next. Unit: m.",
+                                    "type": "number"
+                                }
+                            },
+                            "additionalProperties": false
+                        }
+                    },
+                    "material": {
+                        "description": "Material of the shunt, either the full core-material record or the name of one. Ferrite-polymer and flexible-ferrite sheets are described as core materials like any other permeable material.",
+                        "oneOf": [
+                            {
+                                "$ref": "./magnetic/core/material.json"
+                            },
+                            {
+                                "description": "Name of the shunt material",
+                                "type": "string"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "placement",
+                    "coordinates",
+                    "dimensions",
+                    "material"
+                ],
+                "additionalProperties": false
+            }
         }
     },
     "required": [],

@@ -75,6 +75,29 @@ becomes invalid.
   approved delta's scope and are flagged, not worked around. Documented in
   `docs/magnetic/coil.md` and `docs/glossary.md`.
 
+- **Magnetic shunts (MAS-RFC 0015, ABT #1180).** `magnetic.json` gains `shunts[]`, the
+  pieces of permeable material — a ferrite plate, a ferrite-polymer or flexible-ferrite
+  sheet — put deliberately where the leakage flux runs, which is how an
+  integrated-leakage transformer gets the leakage inductance it is designed for.
+  `placement` (`inWindow` | `betweenSections` | `onColumn` | `outsideWindow`),
+  `coordinates`, `dimensions` and `material` (a core-material record or the name of one)
+  are required; `name`, `gapToColumns` (`inner` / `outer`) and `segments[]`
+  (`length` / `gap`, for a shunt built from several pieces in series) are optional. A
+  shunt belongs to neither the core nor the coil — it is added at assembly — and
+  deliberately not to `core.geometricalDescription`, which is regenerated on autocomplete.
+  Documented in `docs/magnetic.md`.
+
+  **No new core-material records ship with it, and that is a finding, not an omission.**
+  The four sheet grades surveyed on 2026-09-12: TDK FPC film `C350` / `C351` are already
+  in `data/core_materials.ndjson` (µi 9 at 1 MHz, Bs 255 mT at H = 25 kA/m, both from the
+  FPC datasheet). TDK Flexield IFL04, Fair-Rite's flexible sheets M1…M6 and 3M EM15TF
+  cannot be filed: `core/material.json` requires `saturation` (Fair-Rite publishes no
+  material data sheet for the M grades at all, and 3M publishes no saturation figure) and
+  requires `permeability.initial`, while all three publish only µ′ at an RF measurement
+  frequency, which is a different quantity. Filing them would mean inventing a saturation
+  figure or a measurement condition. Relaxing either requirement is a separate,
+  owner-approved change.
+
 ### Changed
 
 - **`resistivity` is no longer required on a core material.** It stays a defined,
