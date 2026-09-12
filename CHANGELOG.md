@@ -197,6 +197,18 @@ Note: `scripts/migrate-to-1.0.py` still writes `masVersion` and is now obsolete.
 
 ### Fixed
 
+- **Nine core-shape aliases dropped by a25fec9 are restored.** Rewriting `PQ 27/15`,
+  `PQ 27/17`, `EQ 25` and `EP 14.5` to add their missing dimensions replaced the
+  whole record and lost `PQ 27.3/15A`, `PQ 27.3/14.5A`, `PQ27.3/18`, `PQ27A/17.4`,
+  `PQ27B/17.4`, `EQ 25/16`, `EQ 25/8/18`, `EP 14.4` and `EP 14.4/14.5`. Nine
+  Micrometals cores in `cores.ndjson` name `PQ 27.3/14.5A`, so every consumer
+  loading the catalogue failed with CORE_SHAPE_NOT_FOUND (ten MKF tests). The
+  schema could not see it: a core's `shape` is a free string. `scripts/validate-db.py`
+  now also checks that every core in `cores.ndjson` / `cores_stock.ndjson` resolves
+  its shape (name or alias) and material, and fails the run otherwise — verified to
+  fail on the pre-fix data and pass after it. `data/MANIFEST.sha256` regenerated; it
+  had also been recording the LFS pointer's hash for `advanced_core_materials.ndjson`
+  and a `core_materials.ndjson` hash three commits old.
 - **Non-physical Steinmetz ranges refitted (data, ABT #183):** 12 ranges that
   validated but were physically garbage (β≈0: DMR28/DMR50B/DMR52/DMR51W/DN15P/JNP95;
   α≈0: ACME P47/P5; overfits: SMP53/DMR51/PC200) refitted with the house pipeline

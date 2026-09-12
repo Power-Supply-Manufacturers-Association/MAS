@@ -101,4 +101,39 @@ for name,schema_rel in MAP.items():
     if bad: rc=1
     print(f'  {status} {name:18} {n-bad}/{n} valid' + (f'  e.g. {first}' if bad else ''))
 rc |= validate_advanced_core_materials(reg)
+
+def validate_core_references():
+    """Every catalogue core must resolve its shape and material by NAME OR ALIAS.
+
+    Schema validation cannot see this: a core's `shape` is a free string, so a record that
+    names a shape nobody defines is schema-valid and still unloadable. On 2026-09-10 commit
+    a25fec9 rewrote four shape records to add dimensions and dropped their nine aliases; nine
+    Micrometals cores in cores.ndjson kept naming one of them ('PQ 27.3/14.5A'), every
+    validator here stayed green, and MKF surfaced it as CORE_SHAPE_NOT_FOUND in ten tests two
+    days later. This is the check that would have failed in that commit."""
+    shapes=[json.loads(l) for l in open('data/core_shapes.ndjson') if l.strip()]
+    shape_names={s['name'] for s in shapes}|{a for s in shapes for a in (s.get('aliases') or [])}
+    material_names={json.loads(l)['name'] for l in open('data/core_materials.ndjson') if l.strip()}
+    rc=0
+    for name in ('cores','cores_stock'):
+        n=bad=0; first=None
+        for line in open(f'data/{name}.ndjson'):
+            line=line.strip()
+            if not line: continue
+            n+=1
+            fd=json.loads(line).get('functionalDescription',{})
+            shape=fd.get('shape'); material=fd.get('material')
+            problems=[]
+            if isinstance(shape,str) and shape not in shape_names:
+                problems.append(f"shape '{shape}' is neither a core_shapes name nor an alias")
+            if isinstance(material,str) and material not in material_names:
+                problems.append(f"material '{material}' is not in core_materials")
+            if problems:
+                bad+=1; first=first or f"'{json.loads(line).get('name')}': {problems[0]}"
+        status='OK ' if bad==0 else 'FAIL'
+        if bad: rc=1
+        print(f'  {status} {name+"(refs)":18} {n-bad}/{n} resolve' + (f'  e.g. {first}' if bad else ''))
+    return rc
+
+rc |= validate_core_references()
 sys.exit(rc)
