@@ -67,6 +67,27 @@ becomes invalid.
   field was unreachable; per-lead creepage is reported by MKF's insulation-coordination result
   instead, with no schema field.
 
+- **Two sleeve-stock records in `data/insulation_materials.ndjson`** (ABT #1174), the
+  first with `form: sleeve`, so an insulation coordinator can pick the tube a lead is
+  sleeved with instead of hard-coding a name:
+
+  | record | maker, family | walls recorded (m) | dielectric strength | temperature |
+  | --- | --- | --- | --- | --- |
+  | `PTFE extruded tubing` | Zeus, AWG tubing | the 9 nominal walls of the Standard/Thin/Lightweight classes, 1.3e-4 to 5.1e-4 | 457 V/mil (ASTM D149, lower bound of 457-483) | 260 C |
+  | `Polyolefin heat-shrink tubing` | Alpha Wire, FIT-221 (2:1) | the 10 nominal recovered walls, 4.1e-4 to 1.40e-3 | 500 V/mil | 135 C |
+
+  Both datasheets publish dielectric strength per mil with no specimen thickness, so the
+  one published value is recorded at each published wall; that pairing is stated in each
+  record's description. The walls are a list of what the maker sells, not of what fits a
+  given lead: which wall exists depends on the tube size (Zeus's 0.41 mm standard wall is
+  only offered from AWG 20 to 10), and nothing in the record ties a wall to a size.
+
+  Silicone-rubber-coated glass-fibre sleeving (UL 1441) was **not** added. Varflex,
+  Techflex and Omerin publish a grade breakdown voltage for the whole sleeve (e.g. Grade A
+  8 kV) but no dielectric strength per thickness, and Varflex and Techflex no wall either;
+  `dielectricStrength` is required, and dividing a grade voltage by a wall would be our
+  number, not theirs.
+
 - **Magnetic shunts (MAS-RFC 0015, ABT #1180).** `magnetic.json` gains `shunts[]`, the
   pieces of permeable material — a ferrite plate, a ferrite-polymer or flexible-ferrite
   sheet — put deliberately where the leakage flux runs, which is how an
