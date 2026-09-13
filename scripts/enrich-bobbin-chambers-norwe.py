@@ -37,10 +37,23 @@ WHAT IS NOT WRITTEN
   ("absent means it reaches as far as the flanges"). A sheet that drew a shorter wall would need
   a height label, and none is transcribed here.
 * a crossing slot. No transcribed sheet dimensions one.
-* the 104 chambered records whose drawing is no longer online (404 on 2026-09-13), and
-  ``Norwe 94803-181`` (EFD 20, variant "3-chamber"): its type code reads "1-3ks" and the side view
+* ``Norwe 94803-181`` (EFD 20, variant "3-chamber"): its type code reads "1-3ks" and the side view
   draws three hidden walls with "4x2.9" chambers, which does not state an unambiguous 3-chamber
-  geometry. Those records keep ``numberChambers`` only, and MKF refuses to split their window.
+  geometry; and the other 11 three-chamber records (this script transcribes two-chamber sheets).
+* the chambered records whose sheet does not state W, w and the equality unambiguously
+  (ABT #1246 re-read, every Norwe link reachable): the ten RM "45-degree ... 2-chamber" formers
+  (the centred label is 0.3 mm on RM 4..12 but 0.8 mm on RM 14 beside a 0.3 mm step, so which
+  line is the wall is not stated); EE 25 solder-tags 10112-024 (its sheet overlays the 2k and 3k
+  walls in one view); EE 20 N0105-106 (the sheet draws the one-chamber part, no equality mark);
+  EP 7 90083-087 (no equality mark, no identifiable winding length); EE 20 09931-024 and M 20
+  N0115-106 (no wall thickness printed); the "2-chamber-s" 09742-106 and 10751-024 (type code
+  "/2ks/", a different former than "/2k/"); ETD 59 N0013-186 (its sheet's text layer is
+  scrambled, so the "/2k/" line cannot be confirmed). Those records keep ``numberChambers``
+  only, and MKF refuses to split their window.
+
+On the vertical EE/M and the PQ sheets the equality marks and W are drawn rotated beside the
+winding space; on ETD and vertical sheets W is the inner of the two flange-spanning dimensions,
+not the overall one the marks happen to sit under.
 
 Usage:
     scripts/enrich-bobbin-chambers-norwe.py --pdf-dir DIR [--dry-run]
@@ -48,6 +61,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import re
 import subprocess
@@ -73,6 +87,82 @@ TRANSCRIPTIONS = {
     "10166-106": (15.6, 0.7),    # EE 25/2k/K12/7-8/5.08-ik
     "90832-186": (8.8, 1.0),     # PQ 32-20/2k/-8/lm
     "90833-186": (18.6, 1.0),    # PQ 32-30/2k/-8/lm
+    # ABT #1246
+    "00221-024": (10.8, 0.7),
+    "00223-024": (10.8, 0.7),
+    "N0100-106": (5.7, 0.5),
+    "09741-106": (7.1, 0.6),
+    "09751-047": (7.3, 0.55),
+    "09771-106": (7.5, 0.6),
+    "09824-106": (10.0, 0.6),
+    "09851-024": (9.9, 0.6),
+    "09868-106": (10.0, 0.6),
+    "09921-024": (12.3, 0.6),
+    "09951-024": (12.4, 0.6),
+    "09971-024": (11.8, 0.6),
+    "09977-106": (11.8, 0.6),
+    "09979-024": (11.8, 0.6),
+    "09986-106": (12.5, 0.6),
+    "10046-017": (12.4, 0.6),
+    "10051-106": (12.4, 0.6),
+    "10056-106": (12.4, 0.6),
+    "10173-024": (15.5, 0.8),
+    "10176-106": (15.6, 0.7),
+    "10186-024": (15.6, 0.6),
+    "10221-024": (15.5, 0.8),
+    "10227-024": (15.5, 0.7),
+    "10568-106": (20.1, 0.9),
+    "10752-024": (20.3, 1.0),
+    "92038-024": (12.4, 0.6),
+    "92183-106": (7.3, 0.6),
+    "N0098-106": (7.5, 0.6),
+    "N0102-106": (10.0, 0.6),
+    "N0104-106": (12.5, 0.6),
+    "N0137-106": (7.5, 0.6),
+    "N0139-106": (7.5, 0.6),
+    "N0241-024": (10.8, 1.0),
+    "90597-186": (19.0, 1.0),
+    "90598-186": (19.0, 1.0),
+    "90599-186": (21.0, 1.0),
+    "90600-186": (25.8, 1.0),
+    "90601-186": (29.6, 1.0),
+    "N0002-186": (16.4, 1.0),
+    "N0006-186": (19.0, 1.0),
+    "N0011-186": (37.0, 1.0),
+    "90063-087": (7.6, 1.0),
+    "N0200-087": (9.4, 1.0),
+    "90068-087": (9.4, 1.0),
+    "90085-087": (5.8, 1.0),
+    "N0201-087": (12.3, 1.1),
+    "90087-087": (12.3, 1.1),
+    "00161-024": (10.9, 0.7),
+    "00631-106": (17.5, 0.8),
+    "N0116-106": (17.4, 0.8),
+    "01421-024": (25.9, 1.0),
+    "09786-106": (7.5, 0.6),
+    "09841-024": (9.9, 0.5),
+    "09848-106": (10.0, 0.6),
+    "09947-106": (12.5, 0.6),
+    "09988-106": (12.5, 0.6),
+    "N0199-106": (12.5, 0.6),
+    "10162-024": (15.5, 0.8),
+    "10341-106": (15.5, 1.5),
+    "92246-106": (10.0, 0.5),
+    "N0176-106": (7.5, 0.6),
+    "N0197-106": (12.5, 0.6),
+    "N0203-106": (15.5, 0.8),
+    "N0501-186": (8.0, 0.8),
+    "N0502-186": (8.0, 0.8),
+    "N0503-186": (12.0, 1.0),
+    "N0504-186": (12.0, 1.0),
+    "N0505-186": (9.0, 1.0),
+    "N0506-186": (13.9, 1.0),
+    "N0508-186": (12.5, 1.0),
+    "N0509-186": (22.3, 1.0),
+    "N0510-186": (26.8, 1.0),
+    "N0511-186": (23.6, 1.1),
+    "N0512-186": (32.8, 1.1),
+    "N0513-186": (32.8, 1.1),
 }
 
 CHAMBERS = re.compile(r"(?:^|-)(\d+)-chamber(?:-|$)")
@@ -119,11 +209,12 @@ def main() -> int:
     parser.add_argument("--pdf-dir", type=Path, required=True,
                         help="directory holding the Norwe sheets under their URL basename")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--report", type=Path, help="CSV: every chambered record, what was done and why")
     args = parser.parse_args()
 
     records = [json.loads(line) for line in DATA.read_text().splitlines() if line.strip()]
     counts: dict[int, int] = {}
-    written, refused = [], []
+    written, refused, unchanged, report = [], [], [], []
     for record in records:
         functional = record["functionalDescription"]
         number = chamber_count(functional.get("variant"))
@@ -133,35 +224,58 @@ def main() -> int:
         functional["numberChambers"] = number
 
         reference = (record.get("manufacturerInfo") or {}).get("reference")
+        row = {"bobbin": record["name"], "numberChambers": number,
+               "datasheetUrl": (record.get("manufacturerInfo") or {}).get("datasheetUrl", "")}
+        report.append(row)
         if reference not in TRANSCRIPTIONS:
+            row["status"] = "numberChambers only: no transcription (see WHAT IS NOT WRITTEN)"
             continue
+        row["W_mm"], row["w_mm"] = TRANSCRIPTIONS[reference]
+        row["c_mm"] = round((row["W_mm"] - row["w_mm"]) / 2, 6)
         if number != 2:
             refused.append((record["name"], f"transcription is two-chamber, record says {number}"))
+            row["status"] = "refused: " + refused[-1][1]
             continue
         reason = verify(record, args.pdf_dir)
         if reason:
             refused.append((record["name"], reason))
+            row["status"] = "refused: " + reason
             continue
         winding_length, wall = TRANSCRIPTIONS[reference]
         chamber = (winding_length - wall) / 2
         dimensions = functional["dimensions"]
+        wanted = {"w1": round(wall * MM, 9), "c1": round(chamber * MM, 9), "c2": round(chamber * MM, 9)}
+        present = {key: dimensions[key] for key in wanted if key in dimensions}
+        if present == {key: {"nominal": value} for key, value in wanted.items()}:
+            unchanged.append(record["name"])       # an earlier run wrote exactly this
+            row["status"] = "already carries exactly this geometry"
+            continue
         for key in ("w1", "c1", "c2"):
             if key in dimensions:
-                refused.append((record["name"], f"already carries '{key}'"))
+                refused.append((record["name"], f"already carries a different '{key}'"))
+                row["status"] = "refused: " + refused[-1][1]
                 break
         else:
             dimensions["w1"] = {"nominal": round(wall * MM, 9)}
             dimensions["c1"] = {"nominal": round(chamber * MM, 9)}
             dimensions["c2"] = {"nominal": round(chamber * MM, 9)}
             written.append(record["name"])
+            row["status"] = "written"
 
     print("numberChambers:", ", ".join(f"{n} chambers x {c}" for n, c in sorted(counts.items())),
           f"({sum(counts.values())} records)")
     print(f"chamber geometry written for {len(written)} records:")
     for name in written:
         print("  +", name)
+    print(f"already carrying exactly this geometry: {len(unchanged)} records")
     for name, reason in refused:
         print("  -", name, "->", reason)
+    if args.report:
+        with args.report.open("w", newline="") as handle:
+            writer = csv.DictWriter(handle, ["bobbin", "numberChambers", "status", "W_mm", "w_mm",
+                                             "c_mm", "datasheetUrl"])
+            writer.writeheader()
+            writer.writerows(sorted(report, key=lambda r: (r["status"], r["bobbin"])))
     if refused:
         return 1
     if not args.dry_run:
