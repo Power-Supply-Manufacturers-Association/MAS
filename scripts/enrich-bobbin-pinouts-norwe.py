@@ -361,12 +361,16 @@ def read_pin_field(feat: dict):
 TYPE_LINE = re.compile(r"Coilformer:\s*(.+)")
 
 
-def type_code(feat):
-    for line in feat.get("typeLines", []):
-        m = TYPE_LINE.match(line)
-        if m:
-            return m.group(1)
-    return None
+def type_code(feat, order_code=None):
+    """The sheet's coilformer type code - the line carrying the record's own order code when
+    the sheet prints one per variant (n0001a01.pdf lists N0001-186 and N0002-186), else the
+    first coilformer line."""
+    codes = [m.group(1) for m in map(TYPE_LINE.match, feat.get("typeLines", [])) if m]
+    if order_code:
+        own = [c for c in codes if order_code in c]
+        if len(own) == 1:
+            return own[0]
+    return codes[0] if codes else None
 
 
 def stated_orientation(code):
@@ -466,12 +470,13 @@ def main() -> int:
                "pitch_mm": "", "centralPitch_mm": "", "typeCode": ""}
 
         feat = sheet(url, args.cache, args.pdf_dir, args.offline)
-        row["typeCode"] = type_code(feat) or ""
+        order_code = info.get("orderCode") or (re.search(r"Norwe ([0-9N]\d{4}-\d{3})", name) or [None, None])[1]
+        row["typeCode"] = type_code(feat, order_code) or ""
         geometry, why = read_pin_field(feat)
 
         # Orientation and chamber count, where Norwe's own type code on this sheet states
         # them and the record does not.  A contradiction is reported, never resolved here.
-        code = type_code(feat)
+        code = type_code(feat, order_code)
         orientation, coded_pins = stated_orientation(code)
         if orientation:
             have = functional.get("orientation")
