@@ -66,14 +66,32 @@ const json& select_datasheet_electrical(const json& electrical, size_t nsec,
                 && e->at("turnsRatios").size() == nsec)
                 narrowed.push_back(e);
         if (narrowed.size() == 1) return *narrowed[0];
+        auto label = [](const json* e) {
+            return e->contains("name") && e->at("name").is_string() ? e->at("name").get<std::string>()
+                                                                   : std::string("<unnamed>");
+        };
+        if (narrowed.empty()) {
+            // Several wirings, none with this many secondaries (e.g. a flyback transformer filed as
+            // "all windings" + "auxiliary windings open", bound into a circuit wanting neither count).
+            std::string configs;
+            for (const json* e : hits) {
+                if (!configs.empty()) configs += ", ";
+                configs += label(e) + " (" +
+                           (e->contains("turnsRatios") && e->at("turnsRatios").is_array()
+                                ? std::to_string(e->at("turnsRatios").size())
+                                : std::string("no turnsRatios")) + ")";
+            }
+            throw std::runtime_error("MAS DATASHEET: no wiring configuration of '" + name + "' has " +
+                                     std::to_string(nsec) + " secondary winding(s) — configurations: " +
+                                     configs);
+        }
         std::string names;
-        for (const json* e : hits) {
+        for (const json* e : narrowed) {
             if (!names.empty()) names += ", ";
-            names += e->contains("name") && e->at("name").is_string()
-                         ? e->at("name").get<std::string>() : std::string("<unnamed>");
+            names += label(e);
         }
         throw std::runtime_error("MAS DATASHEET: ambiguous datasheetInfo.electrical of '" + name +
-                                 "' — " + std::to_string(hits.size()) +
+                                 "' — " + std::to_string(narrowed.size()) +
                                  " qualifying configurations (" + names +
                                  "); the part data must disambiguate the wiring");
     }

@@ -161,6 +161,29 @@ TEST_CASE("MAS mas_to_cias DATASHEET origin (ABT #170)", "[mas]") {
         json::array({ json{{"nominal", 5.0}}, json{{"nominal", 2.0}} });
     CHECK_THROWS_MSG(MAS::mas_to_cias(mismatch, real), "ratio-count/wiring mismatch throws");
 
+    // Two wiring configurations of one flyback transformer (750811248 as the Midcom workbook files it:
+    // 40-turn primary, 10-turn secondary, 10-turn auxiliary). The circuit's winding count picks one.
+    json flyback = xfmr;
+    flyback["magnetic"]["manufacturerInfo"]["datasheetInfo"]["electrical"] = json::parse(R"([
+        { "subtype": "transformer", "name": "all windings", "inductance": { "nominal": 3e-4 },
+          "turnsRatios": [ { "nominal": 4.0 }, { "nominal": 4.0 } ], "leakageInductance": { "maximum": 6e-6 } },
+        { "subtype": "transformer", "name": "auxiliary windings open", "inductance": { "nominal": 3e-4 },
+          "turnsRatios": [ { "nominal": 4.0 } ], "leakageInductance": { "maximum": 6e-6 } } ])");
+    json oneSec = MAS::mas_to_cias(flyback, real);
+    CHECK_MSG(atom_dr(oneSec).at("turnsRatios").size() == 1, "1-secondary circuit binds the auxiliary-open wiring");
+    json twoSec = flyback;
+    twoSec["inputs"]["designRequirements"]["turnsRatios"] = json::array({ json{{"nominal", 4.0}}, json{{"nominal", 4.0}} });
+    json twoLeaf = MAS::mas_to_cias(twoSec, real);
+    CHECK_MSG(atom_dr(twoLeaf).at("turnsRatios").size() == 2,
+              "2-secondary circuit binds the all-windings wiring");
+    json threeSec = flyback;
+    threeSec["inputs"]["designRequirements"]["turnsRatios"] =
+        json::array({ json{{"nominal", 4.0}}, json{{"nominal", 4.0}}, json{{"nominal", 4.0}} });
+    std::string why;
+    try { MAS::mas_to_cias(threeSec, real); } catch (const std::exception& e) { why = e.what(); }
+    CHECK_MSG(why.find("no wiring configuration") != std::string::npos,
+              "no configuration with 3 secondaries names the mismatch, not ambiguity: " << why);
+
     json noL = xfmr;
     noL["magnetic"]["manufacturerInfo"]["datasheetInfo"]["electrical"][0].erase("inductance");
     CHECK_THROWS_MSG(MAS::mas_to_cias(noL, real), "missing inductance throws");
