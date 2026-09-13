@@ -2,7 +2,7 @@
 # Regenerate with scripts/check-data-sync.py --write in the same commit that
 # changes data/, so a consumer can always tell a genuine copy from a stale one.
 08a7af9b3e66c4d98a87c1aab5fa31e6196b049c2726cade6397f032e0cadb41  advanced_core_materials.ndjson
-37911e365fc883d26ff0dc29d20254a5e0a76adc58b6e116877ae590ac5f5f3c  bobbins.ndjson
+8b47534efca9d46ea0cf3979a3503301a0d08567abe781476c5836dd21f52e94  bobbins.ndjson
 d75952e9580b307570355ae487030be9b35f3b3a2cf7ed89573cbec4d1e2b470  core_materials.ndjson
 da9201fba15be5593ee3bacbe2201fd6ac4236bca1dd2f538a6463658beef048  core_shapes.ndjson
 2b92b3f19acad3c7b9a90905918ec8c60fcc1213a631bfd120c9c1f7524e6c66  cores.ndjson
