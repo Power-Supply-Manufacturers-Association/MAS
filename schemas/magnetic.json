@@ -782,6 +782,18 @@
                     "minimum": 0,
                     "maximum": 1
                 },
+                "saturationCurrentPeak": {
+                    "description": "Peak saturation current in Amperes (I_sat from datasheet), referred to the winding(s) the datasheet states it on (normally the primary). A single unqualified I_sat; when the datasheet states I_sat at explicit inductance-drop criteria, use saturationCurrents instead (or in addition).",
+                    "type": "number",
+                    "minimum": 0
+                },
+                "saturationCurrents": {
+                    "description": "Saturation-current table: I_sat at one or more inductance-drop criteria (|dL/L| %), referred to the winding(s) the datasheet states it on (normally the primary). Preferred over the single saturationCurrentPeak scalar because it carries the roll-off basis.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/magneticDatasheetSaturationCurrent"
+                    }
+                },
                 "selfResonantFrequency": {
                     "description": "Self-resonant frequency in Hz.",
                     "type": "number",

@@ -25,6 +25,12 @@ becomes invalid.
 
 ### Added
 
+- **Saturation current on datasheet transformers (MAS-RFC 0017).** Optional
+  `saturationCurrentPeak` and `saturationCurrents` on
+  `magnetic.json#/$defs/magneticDatasheetTransformerElectrical`, identical to the fields the
+  inductor and coupled-inductor variants already carry. Energy-storing (flyback) transformer
+  datasheets state I_sat on the primary; the closed variant had nowhere to put it.
+
 - **Lead-to-pin assignment (MAS-RFC 0013, ABT #1178).** Two optional fields on
   `coil.json#/$defs/connection` — `end` (`start` | `finish` | `tap`, which end of the
   winding terminates on this terminal; `start` is the dot end, a series junction is a
