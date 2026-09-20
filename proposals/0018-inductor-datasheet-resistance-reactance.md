@@ -1,6 +1,6 @@
 # MAS-RFC 0018 — Resistance and reactance vs. frequency on the datasheet `inductor` electrical variant
 
-- **Status:** Proposed (awaiting owner decision)
+- **Status:** Accepted (owner decision 2026-09-20, approved by Alf; implementation in the same change set)
 - **Type:** Additive (non-breaking) schema change.
 - **Author:** drafted 2026-09-20
 - **Created:** 2026-09-20
@@ -89,6 +89,23 @@ the fields ignore them, exactly as they do on the chip-bead variant today.
 
 ## Implementation
 
-One edit to `schemas/magnetic.json`, plus the matching entry in `docs/schema.md` and a fixture
-exercising an inductor with both curves. The 68 WE-RFI curves are harvested only after this RFC
-is accepted — nothing is written to the catalogue in advance of the decision.
+One edit to `schemas/magnetic.json` adding the two properties, plus a `CHANGELOG.md` entry under
+the next MINOR release.
+
+The draft said this would also add an entry to `docs/schema.md` and a fixture. Neither applies as
+written, and the claim is corrected rather than left standing: `docs/` describes MAS as class
+diagrams and does not enumerate the datasheet electrical variants at all — `impedancePoints`,
+`resistancePoints` and `reactancePoints` are undocumented there today — and
+`scripts/validate-fixtures.py` maps `samples/` directories to sub-schemas, with no mapping for a
+variant that lives inside `magnetic.json`. Adding either would mean inventing a documentation
+pattern this repo does not use.
+
+What was done instead is a stronger check than a fixture: a REAL WE-RFI record
+(`744760247A`) taken from the live catalogue, given `resistancePoints` and `reactancePoints`,
+validated against `magnetic.json` with the full sibling registry — valid after the change, and
+**invalid against the pre-change schema**, which is what proves the change is what admits it. A
+non-curve value in either field is still rejected. `validate-fixtures.py` (25/25) and
+`validate-samples.py` (8/8) both stay green, confirming no existing document is affected.
+
+The 68 WE-RFI curves are harvested only after this RFC is accepted — nothing is written to the
+catalogue in advance of the decision.

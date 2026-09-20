@@ -597,6 +597,20 @@
                         "$ref": "#/$defs/magneticDatasheetImpedancePoint"
                     }
                 },
+                "resistancePoints": {
+                    "description": "Resistance vs. frequency points, optionally parameterised by DC bias current.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/magneticDatasheetResistancePoint"
+                    }
+                },
+                "reactancePoints": {
+                    "description": "Reactance vs. frequency points, optionally parameterised by DC bias current.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/magneticDatasheetReactancePoint"
+                    }
+                },
                 "inductancePoints": {
                     "description": "Inductance vs. DC-bias current points (inductance roll-off / saturation curve), optionally per temperature.",
                     "type": "array",

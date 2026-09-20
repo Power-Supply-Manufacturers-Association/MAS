@@ -25,6 +25,15 @@ becomes invalid.
 
 ### Added
 
+- **Resistance and reactance vs. frequency on datasheet inductors (MAS-RFC 0018).** Optional
+  `resistancePoints` and `reactancePoints` on
+  `magnetic.json#/$defs/magneticDatasheetInductorElectrical`, identical to the fields the
+  chip-bead variant already carries. The variant already accepted `impedancePoints`, so MAS
+  admitted |Z|(f) for an inductor while refusing the two components it is composed of; the
+  closed variant had nowhere to put a measured R(f)/X(f) pair. Ferrite SMT inductors are
+  characterised by exactly that decomposition near and above self-resonance, and `dcResistance`
+  does not answer it for a part rated at 375 MHz.
+
 - **Saturation current on datasheet transformers (MAS-RFC 0017).** Optional
   `saturationCurrentPeak` and `saturationCurrents` on
   `magnetic.json#/$defs/magneticDatasheetTransformerElectrical`, identical to the fields the
