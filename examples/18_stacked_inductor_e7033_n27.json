@@ -38,7 +38,67 @@
     },
     "magnetic": {
         "coil": {
-            "bobbin": "basic",
+            "bobbin": {
+                "name": "Former E 70/33/32 x2",
+                "manufacturerInfo": {
+                    "name": "Custom",
+                    "provenance": [
+                        {
+                            "source": "derived",
+                            "retrievedDate": "2026-09-21",
+                            "fields": [
+                                "processedDescription.columnCornerRadius"
+                            ],
+                            "derivation": "Minimum corner radius the 5.0 x 1.0 mm rectangular copper wire (IEC 60317, grade 1, outer width 5.085000 mm per MKF) can be wound around ON EDGE. IEC 60317-0-2 Table 6 (mandrel winding, rectangular copper, width <= 10 mm): mandrel = 4 x conductor width = 4 x 5.000 mm = 20.000 mm. IEC 60851-3 5.1.1 winds the wire on the mandrel, so the minimum centreline bend radius is mandrel/2 + outer width/2 = 10.000 + 2.5425 = 12.542500 mm (MKF WireBend::get_minimum_bend_radius, FLEXIBILITY, EDGEWISE). The turn centreline stands 2.550000 mm off the former face (half the wire's declared 5.1 mm outer width; MKF Coil standoff). columnCornerRadius = 12.542500 mm - 2.550000 mm = 9.992500 mm, the minimum MKF's ABT #1290 check accepts; no margin added. Computed with MKF d1ee5b10 against MAS b294ba6."
+                        },
+                        {
+                            "source": "derived",
+                            "retrievedDate": "2026-09-21",
+                            "fields": [
+                                "processedDescription.columnThickness",
+                                "processedDescription.columnWidth",
+                                "processedDescription.columnDepth"
+                            ],
+                            "derivation": "Core column (MKF processed E 70/33/32, 2 stacks): width F = 21.650000 mm, depth 2 x C = 63.200000 mm, both nominal, sharp corners (MAS gives the E column no corner radius). t_q = 2.349681 mm is the column-wall thickness MKF Bobbin::create_quick_bobbin interpolates for this core window from the MAS bobbin catalogue, taken as the thinnest wall a moulded former of this size is shown to have. With a corner radius R on the outer winding surface and a square bore on the core column, the plastic between the core's corner and the rounded surface, measured on the diagonal, is R - sqrt(2) x (R - t). Requiring it to be at least t_q gives t >= R x (1 - 1/sqrt(2)) + t_q/sqrt(2) = 4.588211 mm, taken up to the next nanometre: columnThickness = 4.588211 mm. columnWidth = F/2 + t = 15.413211 mm; columnDepth = (2 x C)/2 + t = 36.188211 mm (MKF stores both as half-dimensions of the outer winding surface). R / half the smaller outer side = 0.6483 < 1, so the column stays a rectangle with rounded corners (10.841422 mm flat on the narrow face)."
+                        },
+                        {
+                            "source": "derived",
+                            "retrievedDate": "2026-09-21",
+                            "fields": [
+                                "processedDescription.wallThickness",
+                                "processedDescription.windingWindows"
+                            ],
+                            "derivation": "wallThickness (flanges) = 2.093000 mm, the value MKF Bobbin::create_quick_bobbin interpolates for this core window from the MAS bobbin catalogue (2.093000 mm unrounded). Winding window: width = core window width (E - F)/2 - columnThickness = 13.550000 mm - 4.588211 mm = 8.961789 mm; height = core window height 2 x D - 2 x wallThickness = 44.500000 mm - 4.186000 mm = 40.314000 mm; centred at x = columnWidth + width/2 = 19.894106 mm. Same construction as create_quick_bobbin."
+                        }
+                    ]
+                },
+                "processedDescription": {
+                    "columnShape": "rectangular",
+                    "columnThickness": 0.004588211,
+                    "wallThickness": 0.002093,
+                    "columnWidth": 0.015413211,
+                    "columnDepth": 0.036188211,
+                    "columnCornerRadius": 0.0099925,
+                    "windingWindows": [
+                        {
+                            "shape": "rectangular",
+                            "width": 0.008961789,
+                            "height": 0.040314,
+                            "area": 0.000361285561746,
+                            "coordinates": [
+                                0.019894106,
+                                0,
+                                0
+                            ]
+                        }
+                    ],
+                    "coordinates": [
+                        0,
+                        0,
+                        0
+                    ]
+                }
+            },
             "functionalDescription": [
                 {
                     "name": "Primary",
@@ -47,6 +107,7 @@
                     "isolationSide": "primary",
                     "wire": {
                         "type": "rectangular",
+                        "standard": "IEC 60317",
                         "conductingWidth": {
                             "nominal": 0.005
                         },
