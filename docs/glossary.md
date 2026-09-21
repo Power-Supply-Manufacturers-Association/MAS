@@ -210,6 +210,7 @@ names that are not literal property keys are written in plain prose.
 |------|------------|
 | `manufacturerInfo` | Manufacturer-supplied identification for a part. |
 | `distributorInfo` | Distributor-supplied identification, stocking, and price information for a part. |
+| `substituteInfo` | A replacement part: `{ partNumber, manufacturer, type, notes, source }`, listed in the magnetic's `substitutesInfo`. `type: successor` means this part is superseded by the named one, one hop, as the manufacturer states it; the other types (`drop-in`, `near-equivalent`, `functional`, `upgrade`, `downgrade`) are second sources. Shared PEAS type (PEAS-RFC 0002). |
 | `cost` | Monetary value with explicit currency: `{ value, currency }` where `currency` is an ISO 4217 three-letter code. |
 | `irdi` | International Registration Data Identifier per ISO/IEC 11179-6 / ISO 29002-5, in the form `RAI#DI#VI`. |
 | `datasheetInfo` | Catalogue-level data extracted directly from the manufacturer's datasheet. |

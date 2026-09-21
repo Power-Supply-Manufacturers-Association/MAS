@@ -25,6 +25,17 @@ becomes invalid.
 
 ### Added
 
+- **Successors and second sources on a magnetic part (PEAS-RFC 0002).** Optional root
+  `substitutesInfo[]` on `magnetic.json`, an array of the PEAS
+  `utils.json#/$defs/substituteInfo` type that CTAS `controller.json` and COAS `converter.json`
+  already use, and that every other PEAS part family gains in the same change. The closed root
+  had nowhere to record a manufacturer-published replacement: TDK names one for 2,769 of the
+  magnetics in the catalogue (947 of them obsolete), and the importer was reading it and
+  dropping it. `type: "successor"` means THIS part is superseded by the named one, one hop, as
+  the manufacturer states it; the evidence is an ordinary `datasheetInfo.provenance[]` entry
+  with `fields: ["substitutesInfo"]`. No record carries the field yet; no existing document is
+  affected.
+
 - **Resistance and reactance vs. frequency on datasheet inductors (MAS-RFC 0018).** Optional
   `resistancePoints` and `reactancePoints` on
   `magnetic.json#/$defs/magneticDatasheetInductorElectrical`, identical to the fields the
