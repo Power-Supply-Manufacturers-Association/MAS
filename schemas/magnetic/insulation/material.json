@@ -31,6 +31,14 @@
             },
             "minItems": 1
         },
+        "minimumBendRadius": {
+            "description": "Smallest centreline radius the material can be bent to, per size, for a material of form 'sleeve' (tubing over a lead). The bend radius of tubing depends on its size and wall -- Zeus measures its PTFE tubing at roughly ten times its outside diameter, and states it is governed by 'outside diameter (OD) of the tubing, wall thickness, and resin' -- so it is given per point rather than as one number. A consumer uses the point matching the sleeve it drew; with no matching point it has no rated value and must not invent one. Every point carries the provenance of the figure.",
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/minimumBendRadiusPoint"
+            },
+            "minItems": 1
+        },
         "relativePermittivity": {
             "description": "The dielectric constant of the insulation material",
             "type": "number",
@@ -141,6 +149,38 @@
             },
             "required": [
                 "value"
+            ],
+            "additionalProperties": false
+        },
+        "minimumBendRadiusPoint": {
+            "description": "One rated minimum bend radius of a tubing size",
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "Minimum centreline bend radius, in m",
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                },
+                "innerDiameter": {
+                    "description": "Inner diameter of the tubing size the value is for, in m",
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                },
+                "wallThickness": {
+                    "description": "Wall thickness of the tubing size the value is for, in m",
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                },
+                "provenance": {
+                    "description": "Where the value comes from: the manufacturer's measured or rated figure, never an estimate.",
+                    "$ref": "https://psma.com/peas/utils.json#/$defs/provenance"
+                }
+            },
+            "required": [
+                "value",
+                "innerDiameter",
+                "wallThickness",
+                "provenance"
             ],
             "additionalProperties": false
         }
