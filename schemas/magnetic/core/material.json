@@ -125,6 +125,10 @@
             "type": "number",
             "exclusiveMinimum": 0
         },
+        "laminationThickness": {
+            "description": "Thickness of the ribbon/lamination strip, according to manufacturer. This is the eddy-current-limiting dimension for tape-wound materials (nanocrystalline, amorphous, electrical steel) and is independent of the core's own macroscopic geometry; it does not apply to sintered/bulk materials (ferrite, powder). Unit: m.",
+            "$ref": "../../utils.json#/$defs/dimensionWithTolerance"
+        },
         "permeability": {
             "description": "Relative permeability of the magnetic material, broken down by which kind of permeability was measured. At minimum `initial` is required for materials that have one (essentially all ferrites and tape-wound alloys). Each entry uses permeabilityPoint, which pins frequency, temperature, AC peak flux density and DC bias per measurement.",
             "title": "permeabilities",
