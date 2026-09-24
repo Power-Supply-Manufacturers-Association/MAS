@@ -8,7 +8,16 @@ What changes:
     per IEC 60664-1 (RFC 0008).
   * overvoltageCategory values "OVC-I" ... "OVC-IV" become bare
     "I" ... "IV" per IEC 60664-1 (RFC 0008).
-  * masVersion is set to "1.0.0" if missing or older.
+  * A top-level masVersion key (written by earlier versions of this script,
+    and rejected by MAS.json since 2.0.0) is removed.
+  * A document this script changed (any of the above) is stamped with a
+    top-level schemaVersion equal to the current MAS release, read from the
+    repository's VERSION file. An unstamped document is read as the LATEST MAS
+    release (PEAS utils.json#/$defs/schemaVersion), so the stamp records which
+    release a migrated document was brought to.
+  * A document already in the current shape is left alone: not stamped and
+    not rewritten (its file stays byte-identical). A document whose
+    schemaVersion is newer than VERSION is an error.
 
 This is an offline batch tool. For tools that need to keep accepting old
 files at load time, mirror the same MAPPING in your loading layer (see
@@ -22,6 +31,8 @@ import argparse
 import json
 import os
 import sys
+
+from mas_version import current_version, precedence
 
 # Single source of truth. Mirror in MKF mas_compat.hpp.
 MAPPING = {
@@ -156,8 +167,6 @@ MAPPING = {
     # nothing to map for these — values were already lowercase
 }
 
-TARGET_VERSION = "1.0.0"
-
 
 def remap(value):
     if isinstance(value, str) and value in MAPPING:
@@ -165,46 +174,59 @@ def remap(value):
     return value
 
 
+# Keys whose string value is free text, never an enum: a manufacturer or bobbin literally
+# named "Custom" must not become "custom". No MAS/PEAS schema declares an enum-typed `name`.
+FREE_TEXT_KEYS = {"name"}
+
+
 def walk(obj):
     if isinstance(obj, dict):
-        return {k: walk(v) for k, v in obj.items()}
+        return {k: (v if k in FREE_TEXT_KEYS and isinstance(v, str) else walk(v)) for k, v in obj.items()}
     if isinstance(obj, list):
         return [walk(v) for v in obj]
     return remap(obj)
 
 
-def migrate_doc(doc: dict) -> dict:
+def migrate_doc(doc, target: str):
+    """Return (migrated document, changed?). `target` is the current MAS release.
+
+    Only a changed document is stamped: missing schemaVersion means latest, so an
+    untouched current-shape document must stay unstamped.
+    """
+    if not isinstance(doc, dict):
+        raise ValueError(f"a MAS document is a JSON object, got {type(doc).__name__}")
+    stamp = doc.get("schemaVersion")
+    if stamp is not None and precedence(stamp) > precedence(target):
+        raise ValueError(f"document schemaVersion {stamp} is newer than this repository's VERSION {target}")
     out = walk(doc)
-    if isinstance(out, dict):
-        ver = out.get("masVersion")
-        if not ver or _semver_lt(ver, TARGET_VERSION):
-            new = {"masVersion": TARGET_VERSION}
-            for k, v in out.items():
-                if k != "masVersion":
-                    new[k] = v
-            out = new
-    return out
+    changed = out != doc or "masVersion" in out
+    if not changed:
+        return doc, False
+    new = {"schemaVersion": target}
+    for k, v in out.items():
+        if k not in ("schemaVersion", "masVersion"):
+            new[k] = v
+    return new, True
 
 
-def _semver_lt(a: str, b: str) -> bool:
-    def parts(s):
-        s = s.split("-", 1)[0]
-        return tuple(int(x) for x in s.split("."))
-    try:
-        return parts(a) < parts(b)
-    except Exception:
-        return True
-
-
-def migrate_path(path: str, output: str | None) -> int:
-    with open(path) as fh:
-        doc = json.load(fh)
-    out = migrate_doc(doc)
-    target = output or path
-    with open(target, "w") as fh:
+def migrate_path(path: str, output: str | None, target: str) -> int:
+    with open(path, "rb") as fh:
+        raw = fh.read()
+    doc = json.loads(raw)
+    out, changed = migrate_doc(doc, target)
+    if not changed:
+        if output and os.path.abspath(output) != os.path.abspath(path):
+            with open(output, "wb") as fh:
+                fh.write(raw)  # verbatim: an unchanged document is not reformatted either
+            print(f"unchanged {path} (current shape, not stamped) -> {output}")
+        else:
+            print(f"unchanged {path} (current shape, not stamped)")
+        return 0
+    target_path = output or path
+    with open(target_path, "w") as fh:
         json.dump(out, fh, indent=4)
         fh.write("\n")
-    print(f"migrated {path} -> {target}")
+    print(f"migrated {path} -> {target_path} (schemaVersion {target})")
     return 0
 
 
@@ -213,6 +235,7 @@ def main() -> int:
     ap.add_argument("path", help="MAS document file or directory")
     ap.add_argument("-o", "--output", help="output file (file mode only)")
     args = ap.parse_args()
+    target = current_version()
 
     if os.path.isdir(args.path):
         if args.output:
@@ -223,9 +246,9 @@ def main() -> int:
             for f in files:
                 if f.endswith(".json"):
                     p = os.path.join(root, f)
-                    rc |= migrate_path(p, None)
+                    rc |= migrate_path(p, None, target)
         return rc
-    return migrate_path(args.path, args.output)
+    return migrate_path(args.path, args.output, target)
 
 
 if __name__ == "__main__":

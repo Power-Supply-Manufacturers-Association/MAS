@@ -6,6 +6,10 @@
     "description": "All the data structure used in the Magnetic Agnostic Structure",
     "type": "object",
     "properties": {
+        "schemaVersion": {
+            "description": "The MAS release this document conforms to. Optional; if absent, the latest MAS release is assumed.",
+            "$ref": "https://psma.com/peas/utils.json#/$defs/schemaVersion"
+        },
         "inputs": {
             "description": "The description of the inputs that can be used to design a Magnetic",
             "title": "Inputs",

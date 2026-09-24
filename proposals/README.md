@@ -36,8 +36,8 @@ before any schema or code lands.
 | [0010](0010-peas-pinout-landpattern.md) | Adopt shared PEAS `pinout` / `landPattern` for finished magnetics | Draft | — |
 | [0011](0011-data-provenance.md) | Machine-readable data provenance (adopt PEAS `provenance`) | Draft | 0.3.0 |
 | [0012](0012-planar-pcb.md) | Native PCB (planar) manufacturing description: `group.pcb`, terminal details on `connection` | **Accepted** | 0.3.0 |
-| [0013](0013-pin-assignment.md) | Lead-to-pin assignment: `connection.end` / `connection.parallel`, `pin.removable` | **Accepted** | 1.1.0 |
-| [0014](0014-bobbin-dividers-and-toroid-base.md) | Multi-chamber bobbins (`dividers`, `numberChambers`) and the toroid `base` | **Accepted** | 1.1.0 |
-| [0015](0015-magnetic-shunts.md) | Magnetic shunts as `magnetic.shunts[]` | **Accepted** | 1.1.0 |
-| [0016](0016-lead-sleeving.md) | Lead sleeving: `connection.sleeve`, insulation-material `form` / `cti` (`leadCreepage` withdrawn 2026-09-13) | **Accepted** | 1.1.0 |
-| [0017](0017-transformer-datasheet-saturation.md) | Saturation current on the datasheet `transformer` electrical variant | **Accepted** | 1.1.0 |
+| [0013](0013-pin-assignment.md) | Lead-to-pin assignment: `connection.end` / `connection.parallel`, `pin.removable` | **Accepted** | 2.0.0 |
+| [0014](0014-bobbin-dividers-and-toroid-base.md) | Multi-chamber bobbins (`dividers`, `numberChambers`) and the toroid `base` | **Accepted** | 2.0.0 |
+| [0015](0015-magnetic-shunts.md) | Magnetic shunts as `magnetic.shunts[]` | **Accepted** | 2.0.0 |
+| [0016](0016-lead-sleeving.md) | Lead sleeving: `connection.sleeve`, insulation-material `form` / `cti` (`leadCreepage` withdrawn 2026-09-13) | **Accepted** | 2.0.0 |
+| [0017](0017-transformer-datasheet-saturation.md) | Saturation current on the datasheet `transformer` electrical variant | **Accepted** | 2.0.0 |

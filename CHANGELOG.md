@@ -19,12 +19,24 @@ MAJOR.
 
 ## [Unreleased]
 
-The next release is a MINOR one: everything below is additive (new optional
-fields and new records), with one requirement relaxed. No existing document
-becomes invalid.
+The next release is **2.0.0**, a MAJOR one (`VERSION`): the *Breaking* block below removes the
+top-level `masVersion` and `masConformance` fields and renames/replaces material records
+(`TMFD`, `Metglas`, `Finemet`), so a document that uses any of them becomes invalid or stops
+resolving. Everything else below is additive (new optional fields and new records), with one
+requirement relaxed.
 
 ### Added
 
+- **Optional root `schemaVersion` on `MAS.json`.** The MAS release a document conforms to, as a
+  SemVer 2.0.0 string; `$ref`s the shared PEAS `utils.json#/$defs/schemaVersion` type that every
+  module root will carry under the same name. If absent, the latest MAS release is assumed, so
+  `scripts/migrate-to-1.0.py` now stamps every document it changes with `schemaVersion` equal to
+  the current release in `VERSION`, removes a stale top-level `masVersion` (`masVersion` itself
+  stays invalid), and leaves a document already in the current shape unstamped and
+  byte-identical. The current release number lives in `VERSION`;
+  `scripts/check-schema-version.py` (CI: `.github/workflows/schema-version.yml`) fails a pull
+  request that changes `schemas/` without raising `VERSION` above its value at the PR's merge
+  base, and a push to `main` that does so relative to the previous tip of `main`.
 - **Successors and second sources on a magnetic part (PEAS-RFC 0002).** Optional root
   `substitutesInfo[]` on `magnetic.json`, an array of the PEAS
   `utils.json#/$defs/substituteInfo` type that CTAS `controller.json` and COAS `converter.json`
@@ -306,7 +318,8 @@ becomes invalid.
   Additional grades (Metglas 2605S3A/2605HB1M/2714A, Finemet FT-3K50T, …) are
   added separately (MINOR).
 
-Note: `scripts/migrate-to-1.0.py` still writes `masVersion` and is now obsolete.
+Note: `scripts/migrate-to-1.0.py` no longer writes `masVersion`; it removes it and stamps
+`schemaVersion` instead (see *Added*).
 
 ### Added
 

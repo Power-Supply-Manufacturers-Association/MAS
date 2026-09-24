@@ -1,0 +1,41 @@
+# A change under schemas/ must come with a VERSION bump.
+# The rule lives in scripts/check-schema-version.py; VERSION is the single source of truth
+# for the release a document stamps in its optional top-level schemaVersion.
+#   pull_request: compared against the merge base of the PR's base branch and its head.
+#   push to main: compared against the event's `before` SHA (the previous tip of main).
+name: schema-version
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  version-bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history: the merge base / `before` commit must be present
+
+      - name: VERSION bumped against the PR's merge base
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          MERGE_BASE="$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
+          python3 scripts/check-schema-version.py --base "$MERGE_BASE" --head "$HEAD_SHA"
+
+      - name: VERSION bumped against the previous tip of main
+        if: github.event_name == 'push'
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          if [ "$BEFORE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            echo "FAIL: push event without a previous tip (before = zero SHA); nothing to compare against" >&2
+            exit 1
+          fi
+          python3 scripts/check-schema-version.py --base "$BEFORE_SHA" --head "$GITHUB_SHA"
