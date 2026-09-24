@@ -485,6 +485,16 @@ Magnetizing Current: Electromagnetic Parameter representing the part of the curr
 Magnetic Flux Density: Electromagnetic Parameter representing the magnetic flux density circulating through the magnetic core, induced by the magnetizing current.
 Magnetic Field Strength: Electromagnetic Parameter representing the magnetic field strength circulating through the magnetic core, induced by the magnetizing current.
 
+#### Sign convention of the excitations
+Every winding of a magnetic is linked by the same core flux, so the signs of its voltage and current waveforms must be stated relative to one common reference, or the relative sense of the windings, and with it the magnetizing current, cannot be recovered. The excitations of an operating point follow this convention:
+
+- **Reference winding.** The first winding (in `coil.functionalDescription` order) whose `isolationSide` is `primary`. Its number of turns is N_r and its magnetizing inductance is the design's magnetizing inductance.
+- **Voltages in the common dot reference.** The voltage of every winding is its terminal voltage signed so that, for an ideal transformer, v_k(t) = N_k dΦ/dt for one shared flux Φ: all winding voltages are positive together while the flux rises. A winding that conducts in the other half of the period (the second half of a push-pull primary or of a centre-tapped secondary, a forward converter's demagnetisation winding) is NOT given in its own "positive while conducting" reference: its voltage is in phase with the reference winding's, like every other winding's.
+- **Currents.** Windings on the `primary` isolation side, including demagnetisation or reset windings, use the PASSIVE convention: a positive current enters the dotted terminal. All other windings use the SOURCE convention: a positive current leaves the dotted terminal (the diode current of an output winding is positive).
+- **Magnetizing current.** With c_k = +1 for primary-side windings and -1 for the others, the magnetizing current referred to the reference winding is i_m(t) = Σ_k c_k N_k i_k(t) / N_r, and v_r(t) = L_m di_m/dt apart from the leakage and resistive drops.
+
+A consistent operating point satisfies these identities: at the fundamental, every winding's voltage phasor lies within a few degrees of the reference winding's, and |V_r| / (2π f |I_m|) equals the magnetizing inductance. Consumers that superpose the fields of several windings (proximity losses, leakage) use c_k times each winding's current, with the phase of every harmonic taken from the waveform: two windings are not in general in exact phase or antiphase (a flyback's primary and secondary fundamentals are about 135° apart).
+
 Wrapping up the inputs
 As happened with the magnetic, the MAS format for the inputs can include quite a lot of information, but it is designed so all that information can be calculated from a small specification file, perfectly understandable by humans and software.
 
