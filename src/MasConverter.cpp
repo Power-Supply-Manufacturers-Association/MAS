@@ -118,7 +118,7 @@ json datasheet_atom(const json& peas, size_t nsec, const std::string& name) {
         throw std::runtime_error(
             "MAS DATASHEET: manufacturerInfo.datasheetInfo missing on '" + name + "'" +
             (designed ? " — this is a designed (OpenMagnetics/MKF) magnetic, not a catalog part. "
-                        "Re-export it with its SPICE subcircuit (magnetic.modelOutputs."
+                        "Re-export it with its SPICE subcircuit (the component's outputs."
                         "spiceSubcircuit, MKF export_magnetic_as_subcircuit) to simulate the real "
                         "model, or select the ideal model for this component."
                       : ""));
@@ -240,8 +240,10 @@ json mas_to_cias(const json& peas, const PEAS::Fidelity& fidelity, const std::st
 
     // The single atom carries the magnetic model the CIAS emitter renders:
     //  - MKF_MODEL: the MKF-exported ngspice subcircuit (real Rdc + AC ladder + magnetizing L +
-    //    leakage coupling, from CircuitSimulatorExporter), carried in magnetic.modelOutputs.
-    //    spiceSubcircuit by the bind step. The emitter inlines the .subckt and instantiates
+    //    leakage coupling, from CircuitSimulatorExporter), carried in the component's PEAS
+    //    outputs.spiceSubcircuit by the bind step. (It used to be magnetic.modelOutputs, a key
+    //    the MAS magnetic schema forbids; CIAS moved to outputs in ABT #947 and now refuses the
+    //    old key, so reading and writing it here broke the whole MKF_MODEL path.) The emitter inlines the .subckt and instantiates
     //    X<...> with the winding terminals mapped to its P<i>+/- ports.
     //  - DATASHEET: a coupled-inductor (L + K) model from the bound catalog part's
     //    manufacturerInfo.datasheetInfo.electrical configuration entry.
@@ -249,14 +251,14 @@ json mas_to_cias(const json& peas, const PEAS::Fidelity& fidelity, const std::st
     json atomData;
     if (fidelity.origin == Origin::MKF_MODEL) {
         if (!peas.contains("magnetic") || !peas.at("magnetic").is_object()
-            || !peas.at("magnetic").contains("modelOutputs")
-            || !peas.at("magnetic").at("modelOutputs").contains("spiceSubcircuit"))
-            throw std::runtime_error("MAS MKF_MODEL: magnetic.modelOutputs.spiceSubcircuit missing "
+            || !peas.contains("outputs") || !peas.at("outputs").is_object()
+            || !peas.at("outputs").contains("spiceSubcircuit"))
+            throw std::runtime_error("MAS MKF_MODEL: outputs.spiceSubcircuit missing "
                                      "(bind step must run MKF export_magnetic_as_subcircuit)");
         json ratios = json::array();
         for (double n : turnsRatios) ratios.push_back(json{{"nominal", n}});
-        atomData["magnetic"]["modelOutputs"]["spiceSubcircuit"] =
-            peas.at("magnetic").at("modelOutputs").at("spiceSubcircuit");
+        atomData["magnetic"] = json::object();
+        atomData["outputs"]["spiceSubcircuit"] = peas.at("outputs").at("spiceSubcircuit");
         atomData["inputs"]["designRequirements"]["turnsRatios"] = ratios;
     } else if (fidelity.origin == Origin::DATASHEET) {
         if (!peas.contains("magnetic") || !peas.at("magnetic").is_object())

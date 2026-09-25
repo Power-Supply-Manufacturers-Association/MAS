@@ -9,7 +9,7 @@
 //       manufacturerInfo.datasheetInfo.electrical configuration entry (per-winding/magnetizing
 //       inductance, stated turnsRatios, leakage or coupling coefficient).
 //   MKF_MODEL           : full physical model via MKF export_magnetic_as_subcircuit, carried in
-//       magnetic.modelOutputs.spiceSubcircuit by the bind step.
+//       the component's outputs.spiceSubcircuit by the bind step (CIAS ABT #947).
 //
 // Per the CIAS rule, a transformer is ONE multi-winding component (coupling lives INSIDE its MAS
 // model, never as a CIAS edge). So the leaf has a single magnetic component "T" whose winding
