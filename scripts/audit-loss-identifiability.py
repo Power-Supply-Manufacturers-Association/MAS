@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Audit every Steinmetz loss model against the evidence MAS actually holds for it.
 
-scripts/check-loss-sanity.py asks whether a model is PHYSICALLY plausible. This asks the
+MKF's Magnetic Blade Runner (scripts/check-material-physics.py, run in CI) asks whether a model
+is PHYSICALLY plausible. This asks the
 different question of whether it is IDENTIFIABLE: given the measured points backing each
 frequency range, could the coefficients that range carries have been determined at all?
 A model can reproduce every point it was fitted to and still be arbitrary everywhere else.

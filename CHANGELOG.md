@@ -34,6 +34,17 @@ requirement relaxed.
   0.5 mm (IPC-2222 10.1.1: Table 6-1 + 0.4 mm). These are FUNCTIONAL-insulation defaults; reinforced insulation
   (IEC 62368-1 5.4.4.2: 0.4 mm DTI) must be stated explicitly. `trackToTrack`/`coreToTrack` stay required, so
   their `default` documents the recommended value; `layerToLayer` is optional and consumers apply its default.
+- **CI: `material-physics` workflow (Magnetic Blade Runner).** Every pull request or push to
+  `main` touching `data/core_materials.ndjson` or `data/advanced_core_materials.ndjson` is checked by MKF's
+  physics validator (`PyOpenMagnetics.validate_all_materials`, via
+  `scripts/check-material-physics.py`): core-loss evaluability, monotonicity in f and B, the
+  fitted span covering the class reference point, published class envelopes (cited per number in
+  MKF), temperature dependence, the hysteresis bound on low-frequency points, measured-point
+  consistency, saturation (pure-iron ceiling and class maxima), Curie temperature and initial
+  permeability. The job fails on ANY IMPOSSIBLE finding in the data, whether or not the change
+  introduced it; SUSPICIOUS findings are reported only. `scripts/check-loss-sanity.py`, which no
+  CI step ran, is removed in favour of it.
+
 - **Optional root `schemaVersion` on `MAS.json`.** The MAS release a document conforms to, as a
   SemVer 2.0.0 string; `$ref`s the shared PEAS `utils.json#/$defs/schemaVersion` type that every
   module root will carry under the same name. If absent, the latest MAS release is assumed, so

@@ -1,0 +1,40 @@
+# Magnetic Blade Runner: MKF's physics validator over the core-material data.
+# The job fails on ANY IMPOSSIBLE finding in the data, whether or not the change introduced it.
+# The rules, severities and the cited class envelopes live in MKF
+# (src/support/MaterialValidator*.cpp); scripts/check-material-physics.py is the gate.
+name: material-physics
+
+on:
+  pull_request:
+    paths:
+      - "data/core_materials.ndjson"
+      - "data/advanced_core_materials.ndjson"
+      - "scripts/check-material-physics.py"
+      - ".github/workflows/material-physics.yml"
+  push:
+    branches: [main]
+    paths:
+      - "data/core_materials.ndjson"
+      - "data/advanced_core_materials.ndjson"
+      - "scripts/check-material-physics.py"
+      - ".github/workflows/material-physics.yml"
+  workflow_dispatch:
+
+jobs:
+  blade-runner:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Latest PyOpenMagnetics, never capped; the floor is the first release with the validator.
+      - name: Install PyOpenMagnetics
+        run: python -m pip install --upgrade "PyOpenMagnetics>=1.7.24"
+
+      - name: Magnetic Blade Runner
+        run: python scripts/check-material-physics.py --data-dir data
