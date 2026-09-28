@@ -133,6 +133,9 @@ def find_boxes(subs, min_lines=4):
             rights = sorted(x for _, x in cl)
             hx1 = rights[len(rights) // 2]             # median right edge
             for (vy0, vy1), xs in ver.items():
+                # Two figures side by side at the same height share a vertical y-span, so
+                # keep only the verticals inside THIS figure's horizontal extent (3C94 p.3).
+                xs = [x for x in xs if hx0 - 2 <= x <= max(rights) + 2]
                 if len(xs) < min_lines:
                     continue
                 if abs(min(ys) - vy0) < 2 and abs(max(ys) - vy1) < 2 and abs(min(xs) - hx0) < 2:
@@ -150,7 +153,11 @@ def curves_in(subs, box, pad=2.0):
         dx, dy = max(xs) - min(xs), max(ys) - min(ys)
         # A curve crosses a real fraction of the plot. Absolute thresholds also admit the
         # little boxed part-number label Ferroxcube puts inside the top-right corner.
-        if dx < 0.10 * (x1 - x0) or dy < 0.10 * (y1 - y0):
+        # A flat Pv(T) curve (e.g. 3C90's 25 kHz / 200 mT one, 70-130 kW/m3 on a 0-800 axis)
+        # rises less than 10 % of the plot height, yet it runs across most of the plot width.
+        # Grid lines are 2-point subpaths, so a sampled multi-point path that wide is a curve.
+        flat_curve = len(sp) > 2 and dx >= 0.6 * (x1 - x0)
+        if not flat_curve and (dx < 0.10 * (x1 - x0) or dy < 0.10 * (y1 - y0)):
             continue
         out.append(sp)
     return out
@@ -185,6 +192,10 @@ def main():
     ap.add_argument('--box-index', type=int, default=None,
                     help='override automatic figure selection (see --list-boxes)')
     ap.add_argument('--list-boxes', action='store_true')
+    ap.add_argument('--line-samples', type=int, default=2,
+                    help='points emitted per straight Pv-B line (2 = its two drawn endpoints). The '
+                         'lines are straight in log-log, so extra samples are exact reads of the '
+                         'printed line; they give a figure with few frequencies enough points to fit')
     args = ap.parse_args()
 
     svg = page_svg(args.pdf, args.page)
@@ -217,6 +228,10 @@ def main():
     fy = log_map(by0, by1, box[3], box[2])
     cs.sort(key=lambda sp: min(p[0] for p in sp))       # leftmost = highest frequency
     for f, sp in zip(freqs, cs):
+        if len(sp) == 2 and args.line_samples > 2:
+            (x0, y0), (x1, y1) = sp
+            n = args.line_samples - 1
+            sp = [(x0 + (x1 - x0) * i / n, y0 + (y1 - y0) * i / n) for i in range(n + 1)]
         for x, y in sp:
             points.append({'f': f, 'B': fx(x) / 1000.0, 'T': Tb, 'Pv': fy(y) * 1000.0})
 

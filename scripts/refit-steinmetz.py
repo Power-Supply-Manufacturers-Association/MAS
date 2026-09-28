@@ -33,6 +33,14 @@ Usage:  python3 scripts/refit-steinmetz.py --list
         python3 scripts/refit-steinmetz.py --material N88 [--material 3C99 ...] [--apply]
         python3 scripts/refit-steinmetz.py --failing [--apply]      # everything failing a gate
         python3 scripts/refit-steinmetz.py --narrow-ranges [--apply]  # bounds only, no refit
+        python3 scripts/refit-steinmetz.py --material 3C90 --below-span manufacturer \
+            --cap-at-published [--apply]   # MagNet governs its band; the maker's MDS curves add
+                                            # a range below MagNet's 50 kHz, joined to it with no
+                                            # step; the model ends at the last point
+        python3 scripts/refit-steinmetz.py --material 3F4 --range-origin 2=manufacturer ...
+                                            # refit range 2 only, joined to unchanged neighbours
+        python3 scripts/refit-steinmetz.py --material ML27D --cap-at 1e6 [--apply]
+                                            # no points in MAS: end at the maker's last frequency
 Without --apply nothing is written; the fit and its error are printed for review.
 """
 import argparse, json, math, sys
@@ -46,6 +54,9 @@ ALPHA_LO, ALPHA_HI = 0.5, 3.5
 BETA_LO, BETA_HI = 1.0, 4.5
 OPERATING_TSPAN = (-40, 140)
 MIN_POINTS = 8          # below this a 3-parameter power law is not identifiable
+MIN_POINTS_JOINED = 4   # a range joined to a fixed neighbour: the edge pins k/alpha/beta at the
+                        # edge frequency over B, so one maker curve (>= 3 flux densities) at
+                        # another frequency identifies alpha (3F4: one 25 kHz line at 100 C)
 REF_T = 25.0
 
 
@@ -55,7 +66,7 @@ def load_records(path):
     return lines, [json.loads(l) if l.strip() else None for l in lines]
 
 
-def loss_points(name, base_by_name, adv_by_name):
+def loss_points(name, base_by_name, adv_by_name, origin=None):
     """Measured Pv points for a material: [(f, B, T, Pv)], preferring MagNet where mixed.
 
     Points arrive in either of the two forms the schema defines: `volumetricLosses` in W/m^3 and
@@ -85,7 +96,10 @@ def loss_points(name, base_by_name, adv_by_name):
                                      f"{DATA} — cannot convert to the volumetric W/m^3 the "
                                      f"Steinmetz model is fitted in")
                 raw.extend((p, scale) for p in method)
-    if any(p.get('origin') == 'MagNet' for p, _ in raw):
+    if origin is not None:
+        # An explicit source (--range-origin) is taken as asked, without the MagNet preference.
+        raw = [(p, s) for p, s in raw if p.get('origin') == origin]
+    elif any(p.get('origin') == 'MagNet' for p, _ in raw):
         raw = [(p, s) for p, s in raw if p.get('origin') == 'MagNet']
     out = []
     for p, scale in raw:
@@ -229,8 +243,226 @@ def gates(c):
 
 
 # ---------------------------------------------------------------- per material
-def refit_material(rec, points, narrow_only=False):
-    """Return (new_method, report_lines) or (None, report_lines) if nothing should change."""
+def _cap_to_published(ranges, fmax, report):
+    out = [dict(r) for r in ranges]
+    while len(out) > 1 and out[-1]['minimumFrequency'] >= fmax:
+        r = out.pop()
+        report.append(f"    range {len(out)} [{r['minimumFrequency']:.4g},{r['maximumFrequency']:.4g}] Hz"
+                      f" dropped: it lies above the last published point ({fmax:.4g} Hz)")
+    if out[-1]['maximumFrequency'] > fmax:
+        report.append(f"    range {len(out) - 1}: maximumFrequency {out[-1]['maximumFrequency']:.4g} ->"
+                      f" {fmax:.4g} Hz (last published point)")
+        out[-1]['maximumFrequency'] = fmax
+    if out[-1]['maximumFrequency'] <= out[-1]['minimumFrequency']:
+        raise ValueError(f"capping collapses range {len(out) - 1} to zero width")
+    return out
+
+
+SEAM_T = (0.0, 25.0, 50.0, 70.0, 90.0, 100.0, 120.0)
+SEAM_WEIGHT = 10.0
+
+
+def _log10_model(c, f, B, T):
+    scale = ct_scale(c, T)
+    if scale <= 0:
+        return 50.0
+    return math.log10(c['k']) + c['alpha'] * math.log10(f) + c['beta'] * math.log10(B) + math.log10(scale)
+
+
+def fit_range_seamed(points, seams, held_ct=None, weight=SEAM_WEIGHT):
+    """Fit one range to its points AND to its fixed neighbours at the shared edges.
+
+    seams: [(f_edge, neighbour coefficients, B grid)]. The neighbour is not refitted: it is the
+    better-sourced model (MagNet's measurements) and governs its own band. The residual is the
+    log10 error on the points plus, at every edge, the log10 difference between this range and
+    the neighbour at f_edge over the B grid and the SEAM_T temperatures, weighted so that the
+    edge counts `weight` times the points' RMS (scripts in the style of the triage joint fit).
+    Independently fitted ranges disagree at their shared edge, which is a step in loss vs f.
+
+    ct: a parabola when the points carry >= 3 temperatures; otherwise the neighbour's ct shape
+    (held_ct) is kept and only k/alpha/beta move. Returns (coefficients, mean |rel err|,
+    worst |step| at the edges over the grid)."""
+    f = np.array([p[0] for p in points], float)
+    B = np.array([p[1] for p in points], float)
+    T = np.array([p[2] for p in points], float)
+    P = np.array([p[3] for p in points], float)
+    y = np.log10(P)
+    free_ct = len(set(T.tolist())) >= 3
+    if not free_ct and held_ct is None:
+        raise ValueError("fewer than 3 temperatures and no neighbour ct shape to hold")
+    grid = [(fe, nb, Bs, Ts) for fe, nb, Bgrid in seams for Bs in Bgrid for Ts in SEAM_T]
+    ws = weight * math.sqrt(len(points) / max(1, len(grid)))
+
+    def coeffs(q):
+        if free_ct:
+            log_k, alpha, beta, a, h, log_m = q
+            m = math.exp(log_m)
+            c25 = _ct(REF_T, a, h, m)
+            a_, m_ = a / c25, m / c25
+            return {'k': 10 ** log_k * c25, 'alpha': alpha, 'beta': beta,
+                    'ct0': a_ * h * h + m_, 'ct1': 2 * a_ * h, 'ct2': a_}
+        log_k, alpha, beta = q
+        return dict({'k': 10 ** log_k, 'alpha': alpha, 'beta': beta},
+                    **{kk: held_ct[kk] for kk in ('ct0', 'ct1', 'ct2')})
+
+    def res(q):
+        c = coeffs(q)
+        r = [_log10_model(c, fi, Bi, Ti) - yi for fi, Bi, Ti, yi in zip(f, B, T, y)]
+        r += [ws * (_log10_model(c, fe, Bs, Ts) - _log10_model(nb, fe, Bs, Ts)) for fe, nb, Bs, Ts in grid]
+        return r
+
+    A = np.column_stack([np.ones(len(f)), np.log10(f), np.log10(B)])
+    (lk, al, be), *_ = np.linalg.lstsq(A, y, rcond=None)
+    al = min(max(al, ALPHA_LO + .01), ALPHA_HI - .01)
+    be = min(max(be, BETA_LO + .01), BETA_HI - .01)
+    if free_ct:
+        q0, lo, hi = [lk, al, be, 1e-4, 80.0, 0.0], [-40, ALPHA_LO, BETA_LO, 0, -50, -8], [40, ALPHA_HI, BETA_HI, 1, 250, 8]
+    else:
+        lk -= float(np.mean(np.log10([ct_scale(held_ct, t) for t in T])))
+        q0, lo, hi = [lk, al, be], [-40, ALPHA_LO, BETA_LO], [40, ALPHA_HI, BETA_HI]
+    c = coeffs(least_squares(res, q0, bounds=(lo, hi)).x)
+    c = {kk: float(v) for kk, v in c.items()}
+    err = float(np.mean([abs(10 ** _log10_model(c, *p[:3]) / p[3] - 1) for p in points]))
+    step = max((abs(10 ** (_log10_model(c, fe, Bs, Ts) - _log10_model(nb, fe, Bs, Ts)) - 1)
+                for fe, nb, Bs, Ts in grid), default=0.0)
+    return c, err, step
+
+
+def _seam_B_grid(points_a, points_b):
+    """5 flux densities inside the B span both sides were measured at (the whole span if the
+    two do not overlap)."""
+    ba = [p[1] for p in points_a]
+    bb = [p[1] for p in points_b]
+    lo, hi = max(min(ba), min(bb)), min(max(ba), max(bb))
+    if hi <= lo:
+        lo, hi = min(ba + bb), max(ba + bb)
+    return list(np.geomspace(lo, hi, 5))
+
+
+def _refit_overrides(rec, points, overrides, cap_published, below=None):
+    report = []
+    method = next(m for m in rec['volumetricLosses']['default']
+                  if isinstance(m, dict) and m.get('method') == 'steinmetz')
+    old_ranges = method['ranges']
+    new_ranges = [dict(r) for r in old_ranges]
+    measured = points  # the governing (MagNet-preferred) points of the unchanged ranges
+
+    def in_range(pts, r):
+        return [p for p in pts if r['minimumFrequency'] <= p[0] <= r['maximumFrequency']]
+
+    for i, sub_all in sorted(overrides.items()):
+        if i >= len(old_ranges):
+            raise ValueError(f"range {i} does not exist ({len(old_ranges)} ranges)")
+        nr = new_ranges[i]
+        fs = [p[0] for p in sub_all]
+        if i == 0 and min(fs) < nr['minimumFrequency']:
+            report.append(f"    range 0: minimumFrequency {nr['minimumFrequency']:.4g} -> {min(fs):.4g} Hz"
+                          f" (first override point)")
+            nr['minimumFrequency'] = min(fs)
+        if i == len(old_ranges) - 1 and max(fs) < nr['maximumFrequency']:
+            report.append(f"    range {i}: maximumFrequency {nr['maximumFrequency']:.4g} -> {max(fs):.4g} Hz"
+                          f" (last override point)")
+            nr['maximumFrequency'] = max(fs)
+        sub = [p for p in sub_all if nr['minimumFrequency'] <= p[0] <= nr['maximumFrequency']]
+        if len(sub) < MIN_POINTS:
+            raise ValueError(f"range {i}: only {len(sub)} override points")
+        # Neighbours that are not refitted here govern their band; this range joins them.
+        seams = []
+        for j, edge in ((i - 1, 'minimumFrequency'), (i + 1, 'maximumFrequency')):
+            if 0 <= j < len(old_ranges) and j not in overrides:
+                nb_pts = in_range(measured, old_ranges[j])
+                if nb_pts:
+                    seams.append((nr[edge], old_ranges[j], _seam_B_grid(sub, nb_pts)))
+        temps = sorted({p[2] for p in sub})
+        if seams:
+            held = old_ranges[i] if all(k in old_ranges[i] for k in ('ct0', 'ct1', 'ct2')) else None
+            new, err, step = fit_range_seamed(sub, seams, held_ct=held)
+            bad = gates(new)
+            if bad:
+                raise ValueError(f"range {i}: seamed refit fails the gates: {'; '.join(bad)}")
+            old_err = None if ct_dead_in_band(old_ranges[i]) else model_error(old_ranges[i], sub)
+            report.append(f"    range {i} [{nr['minimumFrequency']:.4g},{nr['maximumFrequency']:.4g}] "
+                          f"n={len(sub)} T={temps[0]:g}..{temps[-1]:g}: k={new['k']:.4g} a={new['alpha']:.3f} "
+                          f"b={new['beta']:.3f} | err on these points "
+                          f"{'n/a' if old_err is None else f'{old_err*100:.1f}%'} -> {err*100:.1f}%"
+                          f" | joined to the neighbour(s) at {', '.join(f'{s[0]:.4g}' for s in seams)} Hz,"
+                          f" worst step {step*100:.2f}%")
+            for key in ('ct0', 'ct1', 'ct2'):
+                nr.pop(key, None)
+            nr.update(new)
+            continue
+        new, err = fit_range(sub)
+        note = ''
+        if 'ct0' not in new and all(k in old_ranges[i] for k in ('ct0', 'ct1', 'ct2')):
+            # The override curves sit at one temperature (Ferroxcube draws Pv-B at 100 C and its
+            # Pv-T curves may all lie in another range). Keep the range's existing ct(T) SHAPE,
+            # fitted on the measured points it had, and set k so that the model reproduces the
+            # override curves at their temperature.
+            c_ref = ct_scale(old_ranges[i], temps[0])
+            new = dict(new, k=new['k'] / c_ref,
+                       ct0=old_ranges[i]['ct0'], ct1=old_ranges[i]['ct1'], ct2=old_ranges[i]['ct2'])
+            note = f" ct shape kept from the previous fit, anchored at {temps[0]:g} C"
+        bad = gates(new)
+        if bad:
+            raise ValueError(f"range {i}: refit fails the gates: {'; '.join(bad)}")
+        old_err = None if ct_dead_in_band(old_ranges[i]) else model_error(old_ranges[i], sub)
+        report.append(f"    range {i} [{nr['minimumFrequency']:.4g},{nr['maximumFrequency']:.4g}] "
+                      f"n={len(sub)} T={temps[0]:g}..{temps[-1]:g}: k={new['k']:.4g} a={new['alpha']:.3f} "
+                      f"b={new['beta']:.3f} | err on these points "
+                      f"{'n/a' if old_err is None else f'{old_err*100:.1f}%'} -> {err*100:.1f}%{note}")
+        for key in ('ct0', 'ct1', 'ct2'):
+            nr.pop(key, None)
+        nr.update(new)
+    if below:
+        # The better source (MagNet) governs every frequency it measured; the maker's curves
+        # extend the model only below its first range, with a new range that joins range 0.
+        r0 = new_ranges[0]
+        f0 = r0['minimumFrequency']
+        sub = [p for p in below if p[0] <= f0]
+        if len(sub) < MIN_POINTS_JOINED or len({round(p[1], 6) for p in sub}) < 3:
+            raise ValueError(f"only {len(sub)} points below {f0:.4g} Hz to extend the model with")
+        nb_pts = in_range(measured, r0)
+        if not nb_pts:
+            raise ValueError(f"range 0 has no governing points to join the new range to")
+        held = r0 if all(k in r0 for k in ('ct0', 'ct1', 'ct2')) else None
+        new, err, step = fit_range_seamed(sub, [(f0, r0, _seam_B_grid(sub, nb_pts))], held_ct=held)
+        bad = gates(new)
+        if bad:
+            raise ValueError(f"new range below {f0:.4g} Hz fails the gates: {'; '.join(bad)}")
+        fmin = min(p[0] for p in sub)
+        temps = sorted({p[2] for p in sub})
+        report.append(f"    new range 0 [{fmin:.4g},{f0:.4g}] n={len(sub)} T={temps[0]:g}..{temps[-1]:g}:"
+                      f" k={new['k']:.4g} a={new['alpha']:.3f} b={new['beta']:.3f} | err on these points"
+                      f" {err*100:.1f}% | joined to range 0 at {f0:.4g} Hz, worst step {step*100:.2f}%")
+        new_ranges.insert(0, dict(new, minimumFrequency=float(fmin), maximumFrequency=float(f0)))
+    # Contiguity: an extended first range must not overlap into nothing; interior edges stay.
+    if cap_published:
+        fmax = max([p[0] for p in points] + [p[0] for v in overrides.values() for p in v]
+                   + [p[0] for p in (below or [])])
+        new_ranges = _cap_to_published(new_ranges, fmax, report)
+    out = dict(method)
+    out['ranges'] = new_ranges
+    return out, report
+
+
+def refit_material(rec, points, narrow_only=False, overrides=None, cap_published=False, below=None):
+    """Return (new_method, report_lines) or (None, report_lines) if nothing should change.
+
+    overrides:     {range index: points} — refit ONLY these ranges, each from its own points
+                   (--range-origin; e.g. the maker's datasheet curves where MagNet measured a
+                   narrower band). The first range's lower edge moves out to the first override
+                   point and the last range's upper edge to the last one: the maker's own curves
+                   are measured ground. Every other range is left exactly as it is.
+    below:         points of another source (--below-span) that extend the model below range 0
+                   with a new range joined continuously to it; range 0 and up are kept. This is
+                   how the maker's curves reach below MagNet's first frequency without
+                   overriding MagNet where it measured.
+    cap_published: the upper end of the model is the highest frequency any point covers. A
+                   trailing range that starts at or above it (the [1 MHz, 1 GHz] placeholders
+                   whose only reachable frequency is their lower edge, already covered by the
+                   range below) is dropped; the new last range ends at that frequency."""
+    if overrides or below:
+        return _refit_overrides(rec, points, overrides or {}, cap_published, below=below)
     vl = rec.get('volumetricLosses')
     report = []
     if not isinstance(vl, dict):
@@ -333,6 +565,17 @@ def main():
     ap.add_argument('--narrow-ranges', action='store_true',
                     help='only pull declared range bounds back to the measured span')
     ap.add_argument('--apply', action='store_true')
+    ap.add_argument('--range-origin', action='append', default=[], metavar='IDX=ORIGIN',
+                    help='refit only range IDX, from the points of this origin (with --material)')
+    ap.add_argument('--below-span', default=None, metavar='ORIGIN',
+                    help='extend the model below range 0 with a new range fitted to the points of '
+                         'this origin under range 0\'s lower edge, joined to range 0 (which is kept)')
+    ap.add_argument('--cap-at-published', action='store_true',
+                    help='end the model at the last point; drop trailing ranges above it')
+    ap.add_argument('--cap-at', type=float, default=None, metavar='HZ',
+                    help='end the model at HZ, the highest frequency the maker publishes loss for '
+                         '(read off its datasheet; for records with no points in MAS). Trailing '
+                         'ranges starting at or above it are dropped. Coefficients are not touched')
     args = ap.parse_args()
 
     lines, recs = load_records(DATA)
@@ -366,11 +609,43 @@ def main():
         if rec is None:
             print(f"{name}: not in {DATA}")
             continue
+        if args.cap_at is not None:
+            method = next(m for m in rec['volumetricLosses']['default']
+                          if isinstance(m, dict) and m.get('method') == 'steinmetz')
+            report = []
+            capped = _cap_to_published(method['ranges'], args.cap_at, report)
+            print(name)
+            for line in report:
+                print(line)
+            if capped != method['ranges']:
+                new = dict(method, ranges=capped)
+                rec['volumetricLosses']['default'] = [
+                    new if (isinstance(m, dict) and m.get('method') == 'steinmetz') else m
+                    for m in rec['volumetricLosses']['default']]
+                idx = next(i for i, r in enumerate(recs) if r is rec)
+                lines[idx] = json.dumps(rec, ensure_ascii=False)
+                changed += 1
+            continue
         points = loss_points(name, base_by_name, adv_by_name)
         if len(points) < MIN_POINTS:
             skipped_no_points.append(name)
             continue
-        new, report = refit_material(rec, points, narrow_only=args.narrow_ranges)
+        overrides = {}
+        for spec in args.range_origin:
+            idx, _, origin = spec.partition('=')
+            overrides[int(idx)] = loss_points(name, base_by_name, adv_by_name, origin=origin)
+        below = (loss_points(name, base_by_name, adv_by_name, origin=args.below_span)
+                 if args.below_span else None)
+        if args.cap_at_published and not overrides and not below:
+            method = next(m for m in rec['volumetricLosses']['default']
+                          if isinstance(m, dict) and m.get('method') == 'steinmetz')
+            report = []
+            capped = _cap_to_published(method['ranges'], max(p[0] for p in points), report)
+            new = None if capped == method['ranges'] else dict(method, ranges=capped)
+        else:
+            new, report = refit_material(rec, points, narrow_only=args.narrow_ranges,
+                                         overrides=overrides, cap_published=args.cap_at_published,
+                                         below=below)
         if not report:
             continue
         print(f"{name} ({len(points)} points)")
