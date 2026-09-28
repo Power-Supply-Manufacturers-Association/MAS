@@ -24,9 +24,13 @@ jobs:
   blade-runner:
     runs-on: ubuntu-latest
     steps:
+      # Not `lfs: true`: checkout's LFS fetch goes to GitHub's LFS store and ignores .lfsconfig. The
+      # objects live at the .lfsconfig endpoint (openmagnetics.com, anonymous reads), which
+      # `git lfs pull` in the checked-out tree does honour.
       - uses: actions/checkout@v4
-        with:
-          lfs: true
+
+      - name: Fetch the advanced core-material data (git LFS)
+        run: git lfs pull --include "data/advanced_core_materials.ndjson"
 
       - uses: actions/setup-python@v5
         with:
