@@ -838,14 +838,22 @@
             "type": "object",
             "properties": {
                 "trackToTrack": {
-                    "description": "Copper edge to copper edge between adjacent tracks (turn pitch minus track width).",
+                    "description": "Copper edge to copper edge between adjacent tracks (turn pitch minus track width). Default 0.1 mm: IPC-2221B Table 6-1, column B1 (internal conductors), 31-100 V. This default is for FUNCTIONAL insulation in the 31-100 V band only; basic, supplementary or reinforced (safety) insulation must be stated explicitly (reinforced through a PCB: 0.4 mm distance through insulation, IEC 62368-1 5.4.4.2).",
                     "type": "number",
-                    "exclusiveMinimum": 0
+                    "exclusiveMinimum": 0,
+                    "default": 0.0001
                 },
                 "coreToTrack": {
-                    "description": "Copper edge to the core cut-outs (central column and lateral legs). Also the copper-to-board-edge rule unless copperToEdge is given.",
+                    "description": "Copper edge to the core cut-outs (central column and lateral legs). Also the copper-to-board-edge rule unless copperToEdge is given. Default 0.5 mm: IPC-2222 10.1.1 edge spacing, the IPC-2221B Table 6-1 value (B1, 31-100 V: 0.1 mm) plus 0.4 mm; the core cut-outs are routed board edges. This default is for FUNCTIONAL insulation in the 31-100 V band only; basic, supplementary or reinforced (safety) insulation must be stated explicitly (reinforced through a PCB: 0.4 mm distance through insulation, IEC 62368-1 5.4.4.2).",
                     "type": "number",
-                    "exclusiveMinimum": 0
+                    "exclusiveMinimum": 0,
+                    "default": 0.0005
+                },
+                "layerToLayer": {
+                    "description": "Dielectric thickness between two adjacent copper layers (copper face to copper face, z-axis). Used for every pair of adjacent copper layers whose insulation layer the stack-up (layersDescription) does not state; a stated insulation layer takes precedence. Default 0.1 mm: IPC-2221B clause 6.3 applies Table 6-1 to layer-to-layer (z-axis) spacing, column B1 (internal conductors), 31-100 V = 0.1 mm, which is above the 90 um minimum dielectric IPC-6012E assumes when the drawing does not specify one. This default is for FUNCTIONAL insulation in the 31-100 V band only; basic, supplementary or reinforced (safety) insulation must be stated explicitly (reinforced through a PCB: 0.4 mm distance through insulation, IEC 62368-1 5.4.4.2).",
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "default": 0.0001
                 },
                 "viaToVia": {
                     "description": "Copper edge to copper edge between adjacent vias.",

@@ -125,6 +125,15 @@ Open questions, resolved 2026-09-03:
   `banana`/`redcube`/`castellated`. Decided: **extend `connection`**; PEAS `connectionType` is not touched: pin -> `pin`, RedCube -> `screw` (+`metric`, `gender`, `mounting`), pad grid -> `pcbPad` (+`padWidth`/`padDepth`), banana -> `tht` with an explicit `footprint`; `mounting: castellated` replaces the legacy boolean.
 - `copperToEdge` default. Decided: optional, with the stated rule 'absent = coreToTrack' (a documented semantic, not a silent fallback).
 
+### Amendment 2026-09-28: `layerToLayer` and design-rule defaults (owner approval 2026-09-28)
+
+- `designRules.layerToLayer` (optional, m): dielectric between adjacent copper layers when the stack-up does
+  not state the insulation layer; a stated insulation layer wins. Default 0.1 mm.
+- `default` keywords: `trackToTrack` 0.1 mm, `coreToTrack` 0.5 mm, `layerToLayer` 0.1 mm. Sources: IPC-2221B
+  Table 6-1 column B1 (31-100 V) and clause 6.3 (z-axis), above the IPC-6012E 90 um unspecified-dielectric floor;
+  IPC-2222 10.1.1 (Table 6-1 + 0.4 mm) for the border. FUNCTIONAL insulation only; reinforced insulation
+  (IEC 62368-1 5.4.4.2, 0.4 mm DTI) must be stated explicitly. `trackToTrack` and `coreToTrack` remain required.
+
 ### Notes from the MPB implementation (2026-09-03)
 
 - KiCad polygonises circular cut-outs for DRC with `max_error` (5 µm) biased outward; copper placed exactly at

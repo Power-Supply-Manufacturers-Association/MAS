@@ -19,7 +19,7 @@ MAJOR.
 
 ## [Unreleased]
 
-The next release is **2.0.0**, a MAJOR one (`VERSION`): the *Breaking* block below removes the
+The next release is **2.1.0** (`VERSION`; 2.0.0 was never tagged, and the additive `pcbDesignRules.layerToLayer` below raised it), a MAJOR one relative to 1.0.0: the *Breaking* block below removes the
 top-level `masVersion` and `masConformance` fields and renames/replaces material records
 (`TMFD`, `Metglas`, `Finemet`), so a document that uses any of them becomes invalid or stops
 resolving. Everything else below is additive (new optional fields and new records), with one
@@ -27,6 +27,13 @@ requirement relaxed.
 
 ### Added
 
+- **`pcbDesignRules.layerToLayer` and documented defaults for the planar design rules (MAS-RFC 0012 amendment).**
+  `layerToLayer` is the dielectric between two adjacent copper layers, used wherever the stack-up does not
+  state the insulation layer. `default` keywords: `layerToLayer` 0.1 mm and `trackToTrack` 0.1 mm (IPC-2221B
+  Table 6-1 B1, 31-100 V; clause 6.3 applies it to the z-axis; above the IPC-6012E 90 um floor), `coreToTrack`
+  0.5 mm (IPC-2222 10.1.1: Table 6-1 + 0.4 mm). These are FUNCTIONAL-insulation defaults; reinforced insulation
+  (IEC 62368-1 5.4.4.2: 0.4 mm DTI) must be stated explicitly. `trackToTrack`/`coreToTrack` stay required, so
+  their `default` documents the recommended value; `layerToLayer` is optional and consumers apply its default.
 - **Optional root `schemaVersion` on `MAS.json`.** The MAS release a document conforms to, as a
   SemVer 2.0.0 string; `$ref`s the shared PEAS `utils.json#/$defs/schemaVersion` type that every
   module root will carry under the same name. If absent, the latest MAS release is assumed, so
