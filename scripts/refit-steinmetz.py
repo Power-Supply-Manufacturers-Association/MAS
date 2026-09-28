@@ -2,8 +2,9 @@
 """Refit MAS Steinmetz loss models from the measured points, with a ct(T) that cannot go negative.
 
 MKF evaluates  P = k*f^alpha*B^beta * ct(T),  ct(T) = ct2*T^2 - ct1*T + ct0  (CoreLosses.h sign
-convention), and SKIPS the ct factor entirely when ct(T) <= 0 — so a fit whose ct dips negative
-anywhere in the operating band silently loses its temperature dependence there. The unconstrained
+convention). A missing ct0/ct1/ct2 takes its schema default (ct0=1, ct1=0, ct2=0; ABT #1456), and
+MKF THROWS when ct(T) <= 0 (it used to skip the ct factor silently) — so a fit whose ct dips
+negative anywhere in the operating band makes MKF refuse to evaluate the material there. The unconstrained
 6-parameter fits in MKF2/src/tools/steinmetz.py produce exactly that: a k<->ct0 scale degeneracy
 lets the optimiser settle on a DOWNWARD parabola (ct2 < 0), which always crosses zero.
 
@@ -180,29 +181,38 @@ def fit_range(points):
              'ct0': float(ct0), 'ct1': float(ct1), 'ct2': float(ct2)}, err)
 
 
+def ct_scale(coeffs, T):
+    """MKF's temperature factor (CoreLosses.h, ABT #1456): each missing ct coefficient takes its
+    schema default (ct0=1, ct1=0, ct2=0), and a non-positive factor is an error, not something to
+    drop — MKF throws there, so this does too."""
+    ct0 = coeffs.get('ct0')
+    ct1 = coeffs.get('ct1')
+    ct2 = coeffs.get('ct2')
+    ct0 = 1.0 if ct0 is None else ct0
+    ct1 = 0.0 if ct1 is None else ct1
+    ct2 = 0.0 if ct2 is None else ct2
+    return ct2 * T * T - ct1 * T + ct0
+
+
 def model_error(coeffs, points):
     """Mean |relative error| of an existing coefficient set over the same points, MKF semantics."""
     if not points:
         return None
-    # MKF applies the temperature term only when all three coefficients are present
-    # (CoreLosses.h apply_temperature_coefficients), and only when it comes out positive.
-    has_ct = all(coeffs.get(key) is not None for key in ('ct0', 'ct1', 'ct2'))
     tot = 0.0
     for f, B, T, P in points:
-        p = coeffs['k'] * f ** coeffs['alpha'] * B ** coeffs['beta']
-        if has_ct:
-            scale = coeffs['ct2'] * T * T - coeffs['ct1'] * T + coeffs['ct0']
-            if scale > 0:
-                p *= scale
+        scale = ct_scale(coeffs, T)
+        if scale <= 0:
+            raise ValueError(f"ct(T={T} C) = {scale:.4g} <= 0 for range "
+                             f"[{coeffs.get('minimumFrequency')}, {coeffs.get('maximumFrequency')}] Hz"
+                             f" — MKF throws on this; the range must be refitted")
+        p = coeffs['k'] * f ** coeffs['alpha'] * B ** coeffs['beta'] * scale
         tot += abs(p - P) / P
     return tot / len(points)
 
 
 def ct_dead_in_band(c):
-    if any(c.get(key) is None for key in ('ct0', 'ct1', 'ct2')):
-        return False           # a range with no ct simply has no temperature scaling to lose
     for T in range(OPERATING_TSPAN[0], OPERATING_TSPAN[1] + 1, 5):
-        if c['ct2'] * T * T - c['ct1'] * T + c['ct0'] <= 0:
+        if ct_scale(c, T) <= 0:
             return True
     return False
 
@@ -260,25 +270,28 @@ def refit_material(rec, points, narrow_only=False):
                               f"{nr['maximumFrequency']:.4g}]: only {len(sub)} points, kept as-is")
             else:
                 new, err = fit_range(sub)
-                old_err = model_error(r, sub)
+                # A range whose old ct is dead in the operating band makes MKF throw there, so it
+                # has no error to compare against (model_error raises on it, as MKF does).
+                was_broken = ct_dead_in_band(r)
+                old_err = None if was_broken else model_error(r, sub)
                 bad = gates(new)
                 ct_tag = ('no ct (single-temperature data)' if 'ct0' not in new else
                           f"ct(25)=1 ct(100)={new['ct2']*1e4 - new['ct1']*100 + new['ct0']:.3f}")
                 tag = (f"    range {i} [{nr['minimumFrequency']:.4g},{nr['maximumFrequency']:.4g}] "
                        f"n={len(sub)}: k={new['k']:.4g} a={new['alpha']:.3f} b={new['beta']:.3f} "
-                       f"{ct_tag} | err {old_err*100:.1f}% -> {err*100:.1f}%")
-                # A range whose old ct was dead in the operating band was structurally broken —
-                # its apparent error was measured with the temperature scaling dropped, so it is
-                # not a bar the replacement has to clear. Anywhere else, refuse to trade accuracy
-                # on the measured points for tidier coefficients.
-                was_broken = ct_dead_in_band(r)
+                       f"{ct_tag} | err "
+                       f"{'n/a (old ct dead in band)' if old_err is None else f'{old_err*100:.1f}%'}"
+                       f" -> {err*100:.1f}%")
+                # A range whose old ct was dead in the operating band was structurally broken, so
+                # it is not a bar the replacement has to clear. Anywhere else, refuse to trade
+                # accuracy on the measured points for tidier coefficients.
                 worse = old_err is not None and err > max(old_err * 1.25, old_err + 0.02)
                 if bad:
                     report.append(tag + f"  REJECTED ({'; '.join(bad)})")
                 elif worse and not was_broken:
                     report.append(tag + "  REJECTED (fits the measured points worse)")
                 else:
-                    report.append(tag + ("  (old ct was dead in band)" if was_broken and worse else ""))
+                    report.append(tag + ("  (old ct was dead in band)" if was_broken else ""))
                     if 'ct0' not in new:
                         # An old ct must not outlive the fit it belonged to: left in place next to
                         # new k/alpha/beta it would scale a curve it was never fitted against.
