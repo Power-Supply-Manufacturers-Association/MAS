@@ -51,35 +51,17 @@
     },
     "magnetic": {
         "core": {
-            "name": "Toroid T 10/6/5 High Flux 60",
+            "name": "Toroid T 10.0/6.0/4.5 High Flux 60",
             "functionalDescription": {
                 "type": "toroidal",
                 "material": "High Flux 60",
-                "shape": "T 10/6/5",
+                "shape": "T 10/6/4",
                 "gapping": [],
                 "numberStacks": 1
             }
         },
         "coil": {
-            "bobbin": {
-                "processedDescription": {
-                    "wallThickness": 0,
-                    "columnThickness": 0,
-                    "columnDepth": 0.0045,
-                    "columnShape": "round",
-                    "windingWindows": [
-                        {
-                            "height": 0.0045,
-                            "width": 0.002,
-                            "coordinates": [
-                                0.004,
-                                0,
-                                0
-                            ]
-                        }
-                    ]
-                }
-            },
+            "bobbin": "Basic",
             "functionalDescription": [
                 {
                     "name": "Primary",
@@ -91,5 +73,6 @@
             ]
         }
     },
-    "outputs": []
+    "outputs": [],
+    "schemaVersion": "2.0.0"
 }

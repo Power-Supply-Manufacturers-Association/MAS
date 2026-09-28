@@ -1,126 +1,109 @@
 {
-    "inputs": {
-        "designRequirements": {
-            "name": "Common Mode Choke 10A",
-            "magnetizingInductance": {
-                "nominal": 0.0022,
-                "minimum": 0.0018
-            },
-            "turnsRatios": [
-                {
-                    "nominal": 1.0,
-                    "minimum": 0.98,
-                    "maximum": 1.02
-                }
-            ],
-            "operatingTemperature": {
-                "maximum": 85
-            },
-            "maximumDimensions": {
-                "width": 0.035,
-                "height": 0.035,
-                "depth": 0.02
-            }
-        },
-        "operatingPoints": [
-            {
-                "name": "Rated Current",
-                "conditions": {
-                    "ambientTemperature": 25
-                },
-                "excitationsPerWinding": [
-                    {
-                        "name": "Winding 1",
-                        "frequency": 150000,
-                        "current": {
-                            "processed": {
-                                "label": "sinusoidal",
-                                "peakToPeak": 0.1,
-                                "offset": 10.0,
-                                "dutyCycle": 0.5
-                            }
-                        },
-                        "voltage": {
-                            "processed": {
-                                "label": "sinusoidal",
-                                "peakToPeak": 1.0,
-                                "offset": 0,
-                                "dutyCycle": 0.5
-                            }
-                        }
-                    },
-                    {
-                        "name": "Winding 2",
-                        "frequency": 150000,
-                        "current": {
-                            "processed": {
-                                "label": "sinusoidal",
-                                "peakToPeak": 0.1,
-                                "offset": 10.0,
-                                "dutyCycle": 0.5
-                            }
-                        },
-                        "voltage": {
-                            "processed": {
-                                "label": "sinusoidal",
-                                "peakToPeak": 1.0,
-                                "offset": 0,
-                                "dutyCycle": 0.5
-                            }
-                        }
-                    }
-                ]
-            }
-        ]
-    },
-    "magnetic": {
-        "core": {
-            "name": "Toroid T 25.3/14.8/10 N30",
-            "functionalDescription": {
-                "type": "toroidal",
-                "material": "N30",
-                "shape": "T 25.3/14.8/10",
-                "gapping": [],
-                "numberStacks": 1
-            }
-        },
-        "coil": {
-            "bobbin": {
-                "processedDescription": {
-                    "wallThickness": 0,
-                    "columnThickness": 0,
-                    "columnDepth": 0.01,
-                    "columnShape": "round",
-                    "windingWindows": [
-                        {
-                            "height": 0.01,
-                            "width": 0.00525,
-                            "coordinates": [
-                                0.00987,
-                                0,
-                                0
-                            ]
-                        }
-                    ]
-                }
-            },
-            "functionalDescription": [
-                {
-                    "name": "Winding 1",
-                    "numberTurns": 15,
-                    "numberParallels": 1,
-                    "isolationSide": "primary",
-                    "wire": "Round 1.25 - Grade 1"
-                },
-                {
-                    "name": "Winding 2",
-                    "numberTurns": 15,
-                    "numberParallels": 1,
-                    "isolationSide": "primary",
-                    "wire": "Round 1.25 - Grade 1"
-                }
-            ]
+  "inputs": {
+    "designRequirements": {
+      "name": "Common Mode Choke 10A",
+      "magnetizingInductance": {
+        "nominal": 0.0022,
+        "minimum": 0.0018
+      },
+      "turnsRatios": [
+        {
+          "nominal": 1.0,
+          "minimum": 0.98,
+          "maximum": 1.02
         }
+      ],
+      "operatingTemperature": {
+        "maximum": 85
+      },
+      "maximumDimensions": {
+        "width": 0.035,
+        "height": 0.035,
+        "depth": 0.02
+      }
     },
-    "outputs": []
+    "operatingPoints": [
+      {
+        "name": "Rated Current",
+        "conditions": {
+          "ambientTemperature": 25
+        },
+        "excitationsPerWinding": [
+          {
+            "name": "Winding 1",
+            "frequency": 150000,
+            "current": {
+              "processed": {
+                "label": "sinusoidal",
+                "peakToPeak": 0.1,
+                "offset": 10.0,
+                "dutyCycle": 0.5
+              }
+            },
+            "voltage": {
+              "processed": {
+                "label": "sinusoidal",
+                "peakToPeak": 1.0,
+                "offset": 0,
+                "dutyCycle": 0.5
+              }
+            }
+          },
+          {
+            "name": "Winding 2",
+            "frequency": 150000,
+            "current": {
+              "processed": {
+                "label": "sinusoidal",
+                "peakToPeak": 0.1,
+                "offset": -10.0,
+                "dutyCycle": 0.5
+              }
+            },
+            "voltage": {
+              "processed": {
+                "label": "sinusoidal",
+                "peakToPeak": 1.0,
+                "offset": 0,
+                "dutyCycle": 0.5
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "magnetic": {
+    "core": {
+      "name": "Toroid T 25.3/14.8/10 N30",
+      "functionalDescription": {
+        "type": "toroidal",
+        "material": "N30",
+        "shape": "T 25.3/14.8/10",
+        "gapping": [],
+        "numberStacks": 1
+      }
+    },
+    "coil": {
+      "bobbin": "Basic",
+      "functionalDescription": [
+        {
+          "name": "Winding 1",
+          "numberTurns": 15,
+          "numberParallels": 1,
+          "isolationSide": "primary",
+          "wire": "Round 1.25 - Grade 1"
+        },
+        {
+          "name": "Winding 2",
+          "numberTurns": 15,
+          "numberParallels": 1,
+          "isolationSide": "primary",
+          "wire": "Round 1.25 - Grade 1"
+        }
+      ]
+    }
+  },
+  "outputs": [],
+  "schemaVersion": "2.0.0"
 }

@@ -1,0 +1,94 @@
+{
+ "inputs": {
+  "designRequirements": {
+   "name": "SMD drum inductor 5.8x4.5 mm, 4.7 uH, buck 12 V -> 3.3 V",
+   "magnetizingInductance": {
+    "nominal": 4.7e-06,
+    "minimum": 3.76e-06,
+    "maximum": 5.64e-06
+   },
+   "turnsRatios": [],
+   "topology": "buckConverter"
+  },
+  "operatingPoints": [
+   {
+    "name": "Full load",
+    "conditions": {
+     "ambientTemperature": 40
+    },
+    "excitationsPerWinding": [
+     {
+      "name": "Primary",
+      "frequency": 1000000.0,
+      "current": {
+       "processed": {
+        "label": "triangular",
+        "peakToPeak": 0.509,
+        "offset": 1.8,
+        "dutyCycle": 0.275
+       }
+      },
+      "voltage": {
+       "processed": {
+        "label": "rectangular",
+        "peakToPeak": 12,
+        "offset": 0,
+        "dutyCycle": 0.275
+       }
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "magnetic": {
+  "core": {
+   "functionalDescription": {
+    "type": "openShape",
+    "material": "43",
+    "shape": {
+     "magneticCircuit": "open",
+     "type": "custom",
+     "family": "drum",
+     "aliases": [],
+     "name": "Custom drum 5.8x4.5 thin flange",
+     "dimensions": {
+      "A": {
+       "nominal": 0.0058
+      },
+      "B": {
+       "nominal": 0.0045
+      },
+      "C": {
+       "nominal": 0.0024
+      },
+      "D": {
+       "nominal": 0.0007
+      },
+      "E": {
+       "nominal": 0.0031
+      },
+      "F": {
+       "nominal": 0.0007
+      }
+     }
+    },
+    "gapping": [],
+    "numberStacks": 1
+   }
+  },
+  "coil": {
+   "bobbin": "Basic",
+   "functionalDescription": [
+    {
+     "name": "Primary",
+     "numberTurns": 15,
+     "numberParallels": 1,
+     "isolationSide": "primary",
+     "wire": "Round 0.3 - Grade 1"
+    }
+   ]
+  }
+ },
+ "outputs": []
+}

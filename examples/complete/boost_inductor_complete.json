@@ -13,9 +13,9 @@
                 "maximum": 100
             },
             "maximumDimensions": {
-                "width": 0.025,
-                "height": 0.02,
-                "depth": 0.015
+                "width": 0.028,
+                "height": 0.026,
+                "depth": 0.02
             }
         },
         "operatingPoints": [
@@ -55,7 +55,7 @@
             "functionalDescription": {
                 "type": "twoPieceSet",
                 "material": "N97",
-                "shape": "PQ 20/16",
+                "shape": "PQ 26/25",
                 "gapping": [
                     {
                         "type": "subtractive",
@@ -74,17 +74,18 @@
             }
         },
         "coil": {
-            "bobbin": "Bobbin PQ 20/16",
+            "bobbin": "Bobbin PQ 26/25",
             "functionalDescription": [
                 {
                     "name": "Primary",
-                    "numberTurns": 18,
+                    "numberTurns": 13,
                     "numberParallels": 2,
                     "isolationSide": "primary",
-                    "wire": "Litz 40x0.1 - Grade 1 - Unserved"
+                    "wire": "Litz 40x0.1 - Grade 1 - Single Served"
                 }
             ]
         }
     },
-    "outputs": []
+    "outputs": [],
+    "schemaVersion": "2.0.0"
 }
