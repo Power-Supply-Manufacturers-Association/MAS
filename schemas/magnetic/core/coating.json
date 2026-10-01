@@ -19,9 +19,8 @@
             ]
         },
         "thickness": {
-            "description": "Thickness of the coating, in m",
-            "type": "number",
-            "exclusiveMinimum": 0
+            "description": "Thickness of the coating, in m. A dimensionWithTolerance, because sources usually bound it rather than state a nominal (e.g. a 0.6 mm maximum, or a minimum per ring size), so give only the bounds that are known. A thickness of 0 means the core is bare: a coating object with zero thickness records that the core was checked and has no coating.",
+            "$ref": "../../utils.json#/$defs/dimensionWithTolerance"
         },
         "material": {
             "description": "Material of the coating, providing its relative permittivity and dielectric strength",
