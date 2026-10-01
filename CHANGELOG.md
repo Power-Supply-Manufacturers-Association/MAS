@@ -28,6 +28,15 @@ requirement relaxed.
 
 ### Added
 
+- **Insulation material `PBT GF30 (Nan Ya 1403G6)`** in `data/insulation_materials.ndjson`: a
+  flame-retarded 30 % glass-fibre PBT moulding grade, the plastic of cased (boxed) toroidal cores.
+  Relative permittivity 3.0 and dissipation factor 0.01 at 1 MHz (ASTM D150), dielectric strength
+  20 kV/mm on a 3.2 mm bar (ASTM D149), volume resistivity 1e14 ohm m (ASTM D257), melting point
+  224 C, all at 23 C / 50 % r.h., from Nan Ya's FR-PBT material specification. A core coating names
+  it through `material` (by name) and leaves the optional `type` out: the `coatingType` enum has no
+  value for a moulded case, and none is needed to reference the material. The existing `PBT` record
+  (Pocan B4225) is a GF20 grade with permittivity 3.6 and stays as it is.
+
 - **Bobbin family `ei`.** `bobbin.json` `functionalDescription.family` gains `ei`, the core shape
   family MAS gives the ET 20 and ET 35 cores (`data/core_shapes.ndjson`). Until now a former for those
   cores could not state a `functionalDescription`, and so could not state its material, without
