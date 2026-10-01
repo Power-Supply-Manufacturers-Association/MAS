@@ -19,7 +19,7 @@ MAJOR.
 
 ## [Unreleased]
 
-The next release is **2.1.0** (`VERSION`; 2.0.0 was never tagged, and the additive `pcbDesignRules.layerToLayer` below raised it), a MAJOR one relative to 1.0.0: the *Breaking* block below removes the
+The next release is **2.2.0** (`VERSION`; 2.0.0 was never tagged, the additive `pcbDesignRules.layerToLayer` below raised it to 2.1.0, and the additive bobbin family `ei` to 2.2.0), a MAJOR one relative to 1.0.0: the *Breaking* block below removes the
 top-level `masVersion` and `masConformance` fields and renames/replaces material records
 (`TMFD`, `Metglas`, `Finemet`), so a document that uses any of them becomes invalid or stops
 resolving. Everything else below is additive (new optional fields and new records), with one
@@ -27,6 +27,13 @@ requirement relaxed.
 
 ### Added
 
+- **Bobbin family `ei`.** `bobbin.json` `functionalDescription.family` gains `ei`, the core shape
+  family MAS gives the ET 20 and ET 35 cores (`data/core_shapes.ndjson`). Until now a former for those
+  cores could not state a `functionalDescription`, and so could not state its material, without
+  claiming another family. The core shape family enum has no `et`, so the bobbin enum follows the
+  core's `ei` rather than introducing a name the shapes do not use. Additive: existing documents
+  validate unchanged. Generated C++ (MKF's quicktype command): `BobbinFamily` gains `EI` and its
+  two json conversions; nothing else in `MAS.hpp` changes.
 - **`pcbDesignRules.layerToLayer` and documented defaults for the planar design rules (MAS-RFC 0012 amendment).**
   `layerToLayer` is the dielectric between two adjacent copper layers, used wherever the stack-up does not
   state the insulation layer. `default` keywords: `layerToLayer` 0.1 mm and `trackToTrack` 0.1 mm (IPC-2221B
