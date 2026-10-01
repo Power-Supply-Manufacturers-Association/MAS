@@ -20,8 +20,9 @@ MAJOR.
 ## [Unreleased]
 
 The next release is **2.2.0** (`VERSION`; 2.0.0 was never tagged, the additive `pcbDesignRules.layerToLayer` below raised it to 2.1.0, and the additive bobbin family `ei` to 2.2.0), a MAJOR one relative to 1.0.0: the *Breaking* block below removes the
-top-level `masVersion` and `masConformance` fields and renames/replaces material records
-(`TMFD`, `Metglas`, `Finemet`), so a document that uses any of them becomes invalid or stops
+top-level `masVersion` and `masConformance` fields, renames/replaces material records
+(`TMFD`, `Metglas`, `Finemet`) and turns the core coating thickness from a number into a
+`dimensionWithTolerance`, so a document that uses any of them becomes invalid or stops
 resolving. Everything else below is additive (new optional fields and new records), with one
 requirement relaxed.
 
@@ -316,6 +317,18 @@ requirement relaxed.
 
 ### Breaking
 
+- **Core coating `thickness` is a `dimensionWithTolerance`, no longer a number.**
+  `schemas/magnetic/core/coating.json` `thickness` now `$ref`s the shared PEAS
+  `dimensionWithTolerance` (through the MAS `utils.json` alias), because sources bound a core
+  coating rather than state a nominal (an epoxy "0.6 mm max", a List-of-Parts minimum per ring
+  size): give only the bounds that are known. `thickness` stays required, and a thickness of 0
+  now explicitly means a bare core (a coating object recording that the core was checked and has
+  none). A document with the old scalar form, `"thickness": 0.0006`, no longer validates;
+  migrate it to `{"nominal": 0.0006}`, or to the bound the source actually states
+  (`{"maximum": 0.0006}`). Name-only coatings (`"epoxy"`, `"parylene"`) are unchanged; no MAS
+  data file, sample or example held a coating object, so no data moved. Generated C++ (MKF's
+  quicktype command): `CoreCoating::get_thickness()` returns `DimensionWithTolerance` instead of
+  `double`; nothing else in `MAS.hpp` changes. MKF resolves it with `resolve_dimensional_values`.
 - **Removed `masVersion` and `masConformance` top-level fields.** MAS documents
   are the polymorphic payload of the shared PEAS container, and the PEAS root
   object was closed (`additionalProperties: false`) to reject junk keys. Rather
