@@ -14,7 +14,7 @@
                 },
                 "excitationsPerWinding": [
                     {
-                        "frequency": 20000,
+                        "frequency": 25000,
                         "current": {
                             "processed": {
                                 "label": "triangular",
@@ -26,7 +26,7 @@
                         "voltage": {
                             "processed": {
                                 "label": "rectangular",
-                                "peakToPeak": 200,
+                                "peakToPeak": 250,
                                 "offset": 0,
                                 "dutyCycle": 0.5
                             }
