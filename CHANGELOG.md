@@ -19,7 +19,7 @@ MAJOR.
 
 ## [Unreleased]
 
-The next release is **2.3.0** (`VERSION`; 2.0.0 was never tagged, the additive `pcbDesignRules.layerToLayer` below raised it to 2.1.0, the additive bobbin family `ei` to 2.2.0, and the additive material `density`/`provenance` to 2.3.0), a MAJOR one relative to 1.0.0: the *Breaking* block below removes the
+The next release is **2.4.0** (`VERSION`; 2.0.0 was never tagged, the additive `pcbDesignRules.layerToLayer` below raised it to 2.1.0, the additive bobbin family `ei` to 2.2.0, the additive material `density`/`provenance` to 2.3.0, and the additive wire-material `specificHeat` to 2.4.0), a MAJOR one relative to 1.0.0: the *Breaking* block below removes the
 top-level `masVersion` and `masConformance` fields, renames/replaces material records
 (`TMFD`, `Metglas`, `Finemet`) and turns the core coating thickness from a number into a
 `dimensionWithTolerance`, so a document that uses any of them becomes invalid or stops
@@ -28,6 +28,11 @@ requirement relaxed.
 
 ### Added
 
+- **Wire material `specificHeat`.** `wire/material.json` gains an optional `specificHeat`
+  (J/(kg K), > 0), the same shape insulation materials have, at the temperature its provenance
+  states. A conductor's thermal capacity (density x specific heat) and a mesh export's thermal
+  material card (Nastran MAT4 CP) need it. Additive. Generated C++: `WireMaterial` gains
+  `specific_heat` with its json conversions.
 - **Material `density` and `provenance`.** `wire/material.json` and `insulation/material.json`
   gain an optional `density` (kg/m3, > 0), the same shape core materials already have, and all
   three material records (core, wire, insulation) gain an optional `provenance`, the PEAS trail
