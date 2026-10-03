@@ -19,7 +19,7 @@ MAJOR.
 
 ## [Unreleased]
 
-The next release is **2.2.0** (`VERSION`; 2.0.0 was never tagged, the additive `pcbDesignRules.layerToLayer` below raised it to 2.1.0, and the additive bobbin family `ei` to 2.2.0), a MAJOR one relative to 1.0.0: the *Breaking* block below removes the
+The next release is **2.3.0** (`VERSION`; 2.0.0 was never tagged, the additive `pcbDesignRules.layerToLayer` below raised it to 2.1.0, the additive bobbin family `ei` to 2.2.0, and the additive material `density`/`provenance` to 2.3.0), a MAJOR one relative to 1.0.0: the *Breaking* block below removes the
 top-level `masVersion` and `masConformance` fields, renames/replaces material records
 (`TMFD`, `Metglas`, `Finemet`) and turns the core coating thickness from a number into a
 `dimensionWithTolerance`, so a document that uses any of them becomes invalid or stops
@@ -28,6 +28,15 @@ requirement relaxed.
 
 ### Added
 
+- **Material `density` and `provenance`.** `wire/material.json` and `insulation/material.json`
+  gain an optional `density` (kg/m3, > 0), the same shape core materials already have, and all
+  three material records (core, wire, insulation) gain an optional `provenance`, the PEAS trail
+  `utils.json` already aliases. Until now a conductor or insulation material could not state its
+  density, which a mass, a thermal capacity (density x specific heat) or a mesh export's material
+  card needs, and no material could say where any of its values came from. Additive: existing
+  documents validate unchanged. Generated C++ (MKF's quicktype 23.0.170 command): `WireMaterial`
+  and `InsulationMaterial` gain `density`, all three gain `provenance` (the existing `Provenance`
+  type), with their json conversions; nothing else in `MAS.hpp` changes.
 - **Insulation material `PBT GF30 (Nan Ya 1403G6)`** in `data/insulation_materials.ndjson`: a
   flame-retarded 30 % glass-fibre PBT moulding grade, the plastic of cased (boxed) toroidal cores.
   Relative permittivity 3.0 and dissipation factor 0.01 at 1 MHz (ASTM D150), dielectric strength

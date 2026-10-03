@@ -24,6 +24,15 @@
                 "$ref": "#/$defs/thermalConductivityPoint"
             },
             "minItems": 1
+        },
+        "density": {
+            "description": "Density of the conductor material, in kg/m3.",
+            "type": "number",
+            "exclusiveMinimum": 0
+        },
+        "provenance": {
+            "description": "Where this record's values come from, per field: the document, its URL and retrieval date, and how far the values were checked against it. Optional; a value without an entry here has no stated source.",
+            "$ref": "../../utils.json#/$defs/provenance"
         }
     },
     "required": [

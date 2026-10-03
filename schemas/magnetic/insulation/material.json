@@ -115,6 +115,15 @@
         "cti": {
             "description": "Comparative tracking index of the material per IEC 60112, the voltage at which it withstands 50 drops of test solution without tracking. Unit: V. The material group used in insulation coordination (I, II, IIIA, IIIB) follows from it per IEC 60664-1.",
             "type": "number"
+        },
+        "density": {
+            "description": "Density of the insulation material, in kg/m3.",
+            "type": "number",
+            "exclusiveMinimum": 0
+        },
+        "provenance": {
+            "description": "Where this record's values come from, per field: the document, its URL and retrieval date, and how far the values were checked against it. Optional; a value without an entry here has no stated source.",
+            "$ref": "../../utils.json#/$defs/provenance"
         }
     },
     "required": [
