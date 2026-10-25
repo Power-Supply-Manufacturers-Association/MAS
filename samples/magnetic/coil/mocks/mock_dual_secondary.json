@@ -1,0 +1,55 @@
+{
+  "functionalDescription": [
+    {
+      "name": "P",
+      "numberTurns": 10,
+      "numberParallels": 1,
+      "isolationSide": "primary",
+      "wire": "Dummy",
+      "connections": [
+        {
+          "type": "pin",
+          "pinName": "1"
+        },
+        {
+          "type": "pin",
+          "pinName": "2"
+        }
+      ]
+    },
+    {
+      "name": "S1",
+      "numberTurns": 10,
+      "numberParallels": 1,
+      "isolationSide": "secondary",
+      "wire": "Dummy",
+      "connections": [
+        {
+          "type": "pin",
+          "pinName": "3"
+        },
+        {
+          "type": "pin",
+          "pinName": "4"
+        }
+      ]
+    },
+    {
+      "name": "S2",
+      "numberTurns": 10,
+      "numberParallels": 1,
+      "isolationSide": "tertiary",
+      "wire": "Dummy",
+      "connections": [
+        {
+          "type": "pin",
+          "pinName": "5"
+        },
+        {
+          "type": "pin",
+          "pinName": "6"
+        }
+      ]
+    }
+  ]
+}
