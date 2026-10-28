@@ -1,9 +1,9 @@
 # sha256 of every data/*.ndjson at this revision.
 # Regenerate with scripts/check-data-sync.py --write in the same commit that
 # changes data/, so a consumer can always tell a genuine copy from a stale one.
-c85e190d4fee7ace7f497abac0a6587cd60482aebc176829fd17553bb524ecaf  advanced_core_materials.ndjson
+9303f6ef00ede00e186725561c684f37374a7f4e63e82b8c9a1fb6b6e322eed6  advanced_core_materials.ndjson
 a4fcc44415166ff37ac678d2eee8bc20f92140d57f8dcd9cfd032d042aa5f3a6  bobbins.ndjson
-07a39f9c247c061b579309996d7cd10665e22eab006ee11b005f34fcc17af85a  core_materials.ndjson
+2f6c5148f458b38db767a4261e79bc7fba4439a8907c0ffbb7382fb0e31ed71d  core_materials.ndjson
 02febd4420fdb169140d4dc0a1b6d4c8623c01997ff3ae31a748c5cd280796c8  core_shapes.ndjson
 6fb6142385c5541477bbf99bab4d2c6ade4a87bbb9470002bdcdad72ff1cd81e  cores.ndjson
 9a76f5b586f5f0c48aacac997a30527576a26665ecd2b4ebfe3887a93248c259  cores_stock.ndjson
