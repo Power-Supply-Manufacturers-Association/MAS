@@ -81,7 +81,7 @@ CFG = {
 CHARTS = {
     'DMR52': dict(
         page=2,
-        table={(3e6, 0.010, 100): 100, (3e6, 0.030, 100): 900},  # page-3 typical-value table, mW/cm3
+        table={(3e6, 0.010, 100): 100, (3e6, 0.030, 100): 900},  # page-1 typical-value table, mW/cm3
         charts=[
             dict(name='Pv-T', box=(195, 335, 420, 505), sweep='T', x=('lin', 0, 20), y=('lin', 0, 100),
                  curves={(0.0, 0.0, 0.0): (3e6, 0.030), (1.0, 0.0, 0.0): (3e6, 0.020),
