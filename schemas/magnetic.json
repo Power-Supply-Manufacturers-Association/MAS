@@ -462,9 +462,8 @@
             "type": "object",
             "properties": {
                 "reactance": {
-                    "description": "Reactance value in Ohms.",
-                    "type": "number",
-                    "minimum": 0
+                    "description": "Reactance X = Im(Z) in Ohms: positive when the part is inductive, negative when capacitive (above self-resonance).",
+                    "type": "number"
                 },
                 "frequency": {
                     "description": "Frequency in Hz.",

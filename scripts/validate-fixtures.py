@@ -30,6 +30,8 @@ MAP = {
     "magnetic/wire/material":           "schemas/magnetic/wire/material.json",
     # wire fixtures validate against the UNION so the oneOf discriminator is exercised
     "magnetic/wire":                    "schemas/magnetic/wire.json",
+    # one datasheet curve point; a "#" ref is wrapped as {"$ref": ...}
+    "magnetic/datasheet/reactancePoint": "https://psma.com/mas/magnetic.json#/$defs/magneticDatasheetReactancePoint",
 }
 
 
@@ -53,7 +55,9 @@ def main() -> int:
 
     def validator_for(ref: str) -> Draft202012Validator:
         if ref not in validators:
-            if ref.startswith("https://"):
+            if "#" in ref:
+                schema = {"$schema": "https://json-schema.org/draft/2020-12/schema", "$ref": ref}
+            elif ref.startswith("https://"):
                 schema = registry.get_or_retrieve(ref).value.contents
             else:
                 schema = json.load(open(ref))

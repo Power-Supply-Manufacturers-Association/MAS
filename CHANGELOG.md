@@ -19,7 +19,7 @@ MAJOR.
 
 ## [Unreleased]
 
-The next release is **2.6.0** (`VERSION`; 2.0.0 was never tagged, the additive `pcbDesignRules.layerToLayer` below raised it to 2.1.0, the additive bobbin family `ei` to 2.2.0, the additive material `density`/`provenance` to 2.3.0, the additive wire-material `specificHeat` to 2.4.0, the relaxed core/winding loss bounds to 2.5.0, and the additive connection `leadConductor`/`exit` to 2.6.0), a MAJOR one relative to 1.0.0: the *Breaking* block below removes the
+The next release is **2.7.0** (`VERSION`; 2.0.0 was never tagged, the additive `pcbDesignRules.layerToLayer` below raised it to 2.1.0, the additive bobbin family `ei` to 2.2.0, the additive material `density`/`provenance` to 2.3.0, the additive wire-material `specificHeat` to 2.4.0, the relaxed core/winding loss bounds to 2.5.0, the additive connection `leadConductor`/`exit` to 2.6.0, and the relaxed datasheet reactance sign to 2.7.0), a MAJOR one relative to 1.0.0: the *Breaking* block below removes the
 top-level `masVersion` and `masConformance` fields, renames/replaces material records
 (`TMFD`, `Metglas`, `Finemet`) and turns the core coating thickness from a number into a
 `dimensionWithTolerance`, so a document that uses any of them becomes invalid or stops
@@ -210,6 +210,14 @@ requirement relaxed.
   owner-approved change.
 
 ### Changed
+
+- **Datasheet reactance is signed (MAS-RFC 0019).** `magneticDatasheetReactancePoint.reactance`
+  in `schemas/magnetic.json` loses its `minimum: 0`: X = Im(Z) is positive while the part is
+  inductive and negative once it is capacitive above self-resonance, and manufacturers publish
+  that negative branch as measured data (495 TDK chip-bead X(f) series, 2026-11-03). Without the
+  sign, Z = R + jX cannot be rebuilt. Resistance points keep `minimum: 0`. Relaxing: every
+  document valid before stays valid. Fixture:
+  `samples/magnetic/datasheet/reactancePoint/capacitive_above_self_resonance.json`.
 
 - **Core and winding losses may be 0.** `coreLosses`, `volumetricLosses` and `massLosses` in
   `schemas/outputs/coreLossesOutput.json`, and `windingLosses` in `schemas/outputs.json`, are
