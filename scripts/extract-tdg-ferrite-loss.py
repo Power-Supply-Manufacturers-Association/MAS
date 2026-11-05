@@ -67,6 +67,9 @@ Method -- pixels, calibrated on the gridlines
       printed table at the figure's temperature when the table prints it; otherwise against the
       ACCEPTED Pv-T curve at that temperature ("via Pv-T"); with neither, the figure is not
       checkable and is dropped.
+   With --table-is-maximum (Alf, 2026-11-05: TDG's printed Pcv are maxima) a check against a
+   printed value fails only above 1 + TABLE_TOL; a "via Pv-T" check stays two-sided (it compares
+   two typical curves).
    A failing curve is rejected with its whole figure (all curves share the calibration); nothing
    is rescaled. A grade left with < 4 points is not emitted (MAS minItems 4 on a points list).
 7. Points: Pv-B at the standard Bm grid B_GRID inside each curve's drawn span (an endpoint
@@ -127,6 +130,17 @@ SOURCES = {   # name: (file id, bytes, sha256), read 2026-11-05
 }
 
 TABLE_TOL = 0.10
+TABLE_IS_MAXIMUM = False   # --table-is-maximum: printed Pcv is a maximum; only ratio > 1 + TABLE_TOL fails
+
+
+def fails(c):
+    """A check fails when the curve is off its reference by more than TABLE_TOL. With
+    --table-is-maximum a check against a PRINTED table value fails only above it (ratio >
+    1 + TABLE_TOL); a check "via Pv-T" compares two typical curves and stays two-sided."""
+    r = c["ratio"]
+    if TABLE_IS_MAXIMUM and c.get("via", "table") == "table":
+        return r > 1 + TABLE_TOL
+    return abs(r - 1) > TABLE_TOL
 GRID_COVER = 0.50   # fraction of the frame span a gridline row/column must be inked over
 SNAP = 3.0          # px (at 220 dpi), detected gridline -> expected gridline
 FIT_TOL = 1.5       # px (at 220 dpi), max straight-scale residual
@@ -595,7 +609,11 @@ def main():
     ap.add_argument("--json", required=True)
     ap.add_argument("--report")
     ap.add_argument("--debug")
+    ap.add_argument("--table-is-maximum", action="store_true",
+                    help="printed Pcv tables are maxima: reject only curves reading > 10 %% above them")
     a = ap.parse_args()
+    global TABLE_IS_MAXIMUM
+    TABLE_IS_MAXIMUM = a.table_is_maximum
     records, report = [], {}
     for g, cfg in GRADES.items():
         rep = report.setdefault(g, {})
@@ -631,7 +649,7 @@ def main():
                     else:
                         chk.append(dict(T=T, table=v, curve=None, note="outside the drawn span"))
                 cr = r.setdefault("curves", {})[key] = dict(span_C=[round(t0, 1), round(t1, 1)], table=chk)
-                bad = [c for c in chk if c.get("ratio") and abs(c["ratio"] - 1) > TABLE_TOL]
+                bad = [c for c in chk if c.get("ratio") and fails(c)]
                 if not [c for c in chk if c.get("ratio")]:
                     cr["REJECTED"] = "no printed table temperature inside the curve"
                 elif bad:
@@ -682,7 +700,7 @@ def main():
                 r["check"] = checks
                 if not checks:
                     raise SystemExit(f"{g} Pv-B {T}C: no checkable curve (table or accepted Pv-T)")
-                bad = [c for c in checks if abs(c["ratio"] - 1) > TABLE_TOL]
+                bad = [c for c in checks if fails(c)]
                 if bad:
                     raise SystemExit(f"{g} Pv-B {T}C: " + "; ".join(
                         f"{c['cond']} reads {c['curve']} vs {c['ref']} {c['via']} ({c['ratio']})" for c in bad))

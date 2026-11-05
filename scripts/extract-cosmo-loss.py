@@ -79,6 +79,9 @@ The embedded image is read at its native resolution (PyMuPDF extract, no re-rend
    plain (typical) value at a frequency no curve covers.
    Where a Pv-T sample and a Pv-B marker give the same condition (100 kHz/200 mT -- CF249: 1 MHz/50 mT
    -- at 25 and 100 C) only the marker is output; both readings are in the report.
+   --accept-curve GRADE:F:B keeps a Pv-T curve that fails the table (a user decision, recorded as
+   ACCEPTED_BY_USER in the report). 2026-11-05: Alf accepted CF249 500 kHz/50 mT (0.897 of its <= 90 limit):
+       --accept-curve CF249:500e3:0.05 --only CF249
 5. Accepted figures of different grades that read identically are reported (_same_chart_on_two_sheets):
    CF296's 25 C Pv-B chart is CF295's (same pixels in a wider frame); both kept, flagged.
 6. CF138/CF139: their figures are byte-identical to CF297's (sha256 of the embedded images), and
@@ -559,7 +562,14 @@ def main():
     ap.add_argument("--json", required=True)
     ap.add_argument("--report")
     ap.add_argument("--overlay-dir")
+    ap.add_argument("--accept-curve", action="append", default=[], metavar="GRADE:F_HZ:B_T",
+                    help="keep a Pv-T curve that fails the table check (user decision), e.g. CF249:500e3:0.05")
+    ap.add_argument("--only", nargs="*", help="emit only these grades' records")
     a_ = ap.parse_args()
+    accepted_overrides = set()
+    for spec in a_.accept_curve:
+        g, f, B = spec.split(":")
+        accepted_overrides.add((g, float(f), float(B)))
     report, records, hashes = {}, [], {}
     order = ["CF124", "CF130", "CF138", "CF139", "CF297", "CF297A", "CF292", "CF295", "CF296", "CF296A", "CF249"]
     for mat in order:
@@ -618,6 +628,12 @@ def main():
                 print(f"{name}: REJECTED {fr['REJECTED']}")
                 continue
             bad = {cid(c["f"], c["B"]) for c in chk if abs(c["ratio"] - 1) > TABLE_TOL}
+            over = {cid(c["f"], c["B"]) for c in chk if cid(c["f"], c["B"]) in bad and fig["kind"] == "pvt"
+                    and (mat, c["f"], c["B"]) in accepted_overrides}
+            if over:
+                fr["ACCEPTED_BY_USER"] = [c for c in chk if cid(c["f"], c["B"]) in over]
+                print(f"{name}: curve(s) failing the table ACCEPTED by user override: {sorted(over)}")
+                bad -= over
             good = {cid(c["f"], c["B"]) for c in chk} - bad
             if bad:
                 fr["REJECTED_CURVES"] = "; ".join(
@@ -697,6 +713,8 @@ def main():
     report["_same_chart_on_two_sheets"] = same
     for a, b in same:
         print(f"NOTE: {a} and {b} read identically (same chart on two sheets)")
+    if a_.only:
+        records = [r for r in records if r["name"] in a_.only]
     json.dump(records, open(a_.json, "w"), indent=1)
     if a_.report:
         json.dump(report, open(a_.report, "w"), indent=1)
