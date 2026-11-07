@@ -236,6 +236,12 @@
                     "description": "This is the product of the effective length by the effective area, and represents the equivalent volume that is magnetized by the field",
                     "type": "number",
                     "exclusiveMinimum": 0
+                },
+                "fillFactor": {
+                    "description": "Fraction of the gross cross-section that is magnetic material: the stacking or lamination factor of a tape-wound or laminated core (MAS-RFC 0020). effectiveArea, minimumArea and effectiveVolume already include it, so it must not be applied to them again; the gross area is effectiveArea / fillFactor. Absent for solid cores (ferrite, powder), where it is 1 by construction.",
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "maximum": 1
                 }
             },
             "required": [

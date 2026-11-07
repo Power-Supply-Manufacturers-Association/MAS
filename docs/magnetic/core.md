@@ -711,6 +711,7 @@ class EffectiveParameters {
     -Double effectiveArea
     -Double effectiveLength
     -Double effectiveVolume
+    -Double fillFactor
     -Double minimumArea
     
     +get_*()

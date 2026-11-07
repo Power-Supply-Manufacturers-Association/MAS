@@ -42,4 +42,4 @@ before any schema or code lands.
 | [0016](0016-lead-sleeving.md) | Lead sleeving: `connection.sleeve`, insulation-material `form` / `cti` (`leadCreepage` withdrawn 2026-09-13) | **Accepted** | 2.0.0 |
 | [0017](0017-transformer-datasheet-saturation.md) | Saturation current on the datasheet `transformer` electrical variant | **Accepted** | 2.0.0 |
 | [0019](0019-signed-datasheet-reactance.md) | Signed reactance in `magneticDatasheetReactancePoint` | **Accepted** | 2.7.0 |
-| [0020](0020-core-fill-factor.md) | Fill factor of the core in `effectiveParameters` | Draft | — |
+| [0020](0020-core-fill-factor.md) | Fill factor of the core in `effectiveParameters` | **Accepted** | 2.8.0 |

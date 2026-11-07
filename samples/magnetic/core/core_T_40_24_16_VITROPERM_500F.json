@@ -1,0 +1,48 @@
+{
+    "name": "core_T_40_24_16_VITROPERM_500F",
+    "functionalDescription": {
+        "type": "toroidal",
+        "material": "VITROPERM 500F",
+        "shape": "T 40/24/16",
+        "gapping": [],
+        "numberStacks": 1
+    },
+    "processedDescription": {
+        "columns": [
+            {
+                "area": 0.000128,
+                "coordinates": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "depth": 0.016,
+                "height": 0.10053096491487339,
+                "shape": "rectangular",
+                "type": "central",
+                "width": 0.008
+            }
+        ],
+        "depth": 0.016,
+        "effectiveParameters": {
+            "effectiveArea": 8.892931233892735e-05,
+            "effectiveLength": 0.09628836161331963,
+            "effectiveVolume": 8.562857784514484e-06,
+            "minimumArea": 9.088e-05,
+            "fillFactor": 0.71
+        },
+        "height": 0.04,
+        "width": 0.04,
+        "windingWindows": [
+            {
+                "angle": 360.0,
+                "area": 0.0004523893421169302,
+                "coordinates": [
+                    0.008,
+                    0.0
+                ],
+                "radialHeight": 0.012
+            }
+        ]
+    }
+}

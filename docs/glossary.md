@@ -72,6 +72,7 @@ names that are not literal property keys are written in plain prose.
 | `effectiveArea` | Equivalent cross-sectional area perpendicular to the flux path per IEC 60205 / IEC 63182. |
 | `effectiveVolume` | Product of effective length and effective area; the magnetised volume. |
 | `minimumArea` | Minimum cross-sectional area along the flux path. |
+| `fillFactor` | Fraction of the gross cross-section that is magnetic material (stacking/lamination factor of a tape-wound or laminated core); already included in `effectiveArea`, `minimumArea` and `effectiveVolume`. |
 
 ## Electrical and Waveform
 

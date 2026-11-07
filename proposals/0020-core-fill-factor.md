@@ -1,6 +1,6 @@
 # MAS-RFC 0020 — Fill factor of the core in `effectiveParameters`
 
-- **Status:** Draft
+- **Status:** Accepted (owner decision 2026-11-07, approved by Alf as the committee; implementation in the same change set)
 - **Type:** Additive (one new optional property; every document valid today stays valid).
 - **Author:** drafted 2026-11-07
 - **Created:** 2026-11-07

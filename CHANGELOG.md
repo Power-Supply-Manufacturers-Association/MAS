@@ -19,7 +19,7 @@ MAJOR.
 
 ## [Unreleased]
 
-The next release is **2.7.0** (`VERSION`; 2.0.0 was never tagged, the additive `pcbDesignRules.layerToLayer` below raised it to 2.1.0, the additive bobbin family `ei` to 2.2.0, the additive material `density`/`provenance` to 2.3.0, the additive wire-material `specificHeat` to 2.4.0, the relaxed core/winding loss bounds to 2.5.0, the additive connection `leadConductor`/`exit` to 2.6.0, and the relaxed datasheet reactance sign to 2.7.0), a MAJOR one relative to 1.0.0: the *Breaking* block below removes the
+The next release is **2.8.0** (`VERSION`; 2.0.0 was never tagged, the additive `pcbDesignRules.layerToLayer` below raised it to 2.1.0, the additive bobbin family `ei` to 2.2.0, the additive material `density`/`provenance` to 2.3.0, the additive wire-material `specificHeat` to 2.4.0, the relaxed core/winding loss bounds to 2.5.0, the additive connection `leadConductor`/`exit` to 2.6.0,, the relaxed datasheet reactance sign to 2.7.0, and the additive core `effectiveParameters.fillFactor` to 2.8.0), a MAJOR one relative to 1.0.0: the *Breaking* block below removes the
 top-level `masVersion` and `masConformance` fields, renames/replaces material records
 (`TMFD`, `Metglas`, `Finemet`) and turns the core coating thickness from a number into a
 `dimensionWithTolerance`, so a document that uses any of them becomes invalid or stops
@@ -27,6 +27,14 @@ resolving. Everything else below is additive (new optional fields and new record
 requirement relaxed.
 
 ### Added
+
+- **Core `effectiveParameters.fillFactor` (MAS-RFC 0020).** `core.json#/$defs/effectiveParameters`
+  gains an optional `fillFactor` (0 < k <= 1): the fraction of the gross cross-section that is
+  magnetic material, i.e. the stacking or lamination factor of a tape-wound or laminated core.
+  `effectiveArea`, `minimumArea` and `effectiveVolume` already include it; the field records the
+  factor that was applied, so a saved part can be audited (gross area = effectiveArea / fillFactor)
+  and a change in the factor's source is visible. Absent for solid cores. Additive. Generated
+  C++: `EffectiveParameters` gains `fill_factor` (`std::optional<double>`).
 
 - **Connection `leadConductor` and `exit`.** `coil.json#/$defs/connection` gains an optional
   `leadConductor` (a `wire.json` record or a catalogue wire name, like a winding's own `wire`: the separate conductor that carries this end to its
