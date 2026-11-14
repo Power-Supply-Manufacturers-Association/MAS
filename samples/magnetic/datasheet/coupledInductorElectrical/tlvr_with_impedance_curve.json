@@ -1,0 +1,49 @@
+{
+    "subtype": "coupledInductor",
+    "inductance": {
+        "nominal": 7e-08
+    },
+    "dcResistances": [
+        {
+            "nominal": 0.000125,
+            "maximum": 0.0001375
+        }
+    ],
+    "inductancePoints": [
+        {
+            "inductance": 7e-08,
+            "current": 0,
+            "temperature": 20
+        },
+        {
+            "inductance": 6.909999999999999e-08,
+            "current": 84.4,
+            "temperature": 20
+        },
+        {
+            "inductance": 6.687999999999999e-08,
+            "current": 127,
+            "temperature": 20
+        }
+    ],
+    "impedancePoints": [
+        {
+            "impedance": {
+                "magnitude": 0.0042
+            },
+            "frequency": 10000.0
+        },
+        {
+            "impedance": {
+                "magnitude": 0.00427
+            },
+            "frequency": 10200.0
+        },
+        {
+            "impedance": {
+                "magnitude": 0.00435
+            },
+            "frequency": 10400.0
+        }
+    ]
+}

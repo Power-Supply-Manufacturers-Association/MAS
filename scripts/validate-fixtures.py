@@ -32,6 +32,7 @@ MAP = {
     "magnetic/wire":                    "schemas/magnetic/wire.json",
     # one datasheet curve point; a "#" ref is wrapped as {"$ref": ...}
     "magnetic/datasheet/reactancePoint": "https://psma.com/mas/magnetic.json#/$defs/magneticDatasheetReactancePoint",
+    "magnetic/datasheet/coupledInductorElectrical": "https://psma.com/mas/magnetic.json#/$defs/magneticDatasheetCoupledInductorElectrical",
 }
 
 

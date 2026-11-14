@@ -19,7 +19,7 @@ MAJOR.
 
 ## [Unreleased]
 
-The next release is **2.8.0** (`VERSION`; 2.0.0 was never tagged, the additive `pcbDesignRules.layerToLayer` below raised it to 2.1.0, the additive bobbin family `ei` to 2.2.0, the additive material `density`/`provenance` to 2.3.0, the additive wire-material `specificHeat` to 2.4.0, the relaxed core/winding loss bounds to 2.5.0, the additive connection `leadConductor`/`exit` to 2.6.0,, the relaxed datasheet reactance sign to 2.7.0, and the additive core `effectiveParameters.fillFactor` to 2.8.0), a MAJOR one relative to 1.0.0: the *Breaking* block below removes the
+The next release is **2.9.0** (`VERSION`; 2.0.0 was never tagged, the additive `pcbDesignRules.layerToLayer` below raised it to 2.1.0, the additive bobbin family `ei` to 2.2.0, the additive material `density`/`provenance` to 2.3.0, the additive wire-material `specificHeat` to 2.4.0, the relaxed core/winding loss bounds to 2.5.0, the additive connection `leadConductor`/`exit` to 2.6.0,, the relaxed datasheet reactance sign to 2.7.0, the additive core `effectiveParameters.fillFactor` to 2.8.0, and the additive datasheet coupled-inductor curves to 2.9.0), a MAJOR one relative to 1.0.0: the *Breaking* block below removes the
 top-level `masVersion` and `masConformance` fields, renames/replaces material records
 (`TMFD`, `Metglas`, `Finemet`) and turns the core coating thickness from a number into a
 `dimensionWithTolerance`, so a document that uses any of them becomes invalid or stops
@@ -27,6 +27,15 @@ resolving. Everything else below is additive (new optional fields and new record
 requirement relaxed.
 
 ### Added
+
+- **Inductance and impedance curves on datasheet coupled inductors (MAS-RFC 0021).** Optional
+  `inductancePoints` and `impedancePoints` on
+  `magnetic.json#/$defs/magneticDatasheetCoupledInductorElectrical`, identical to the fields the
+  inductor variant already carries, measured on the winding whose `inductance` is stated. TLVR
+  (trans-inductor voltage regulator) parts are two-winding and vendors print both windings'
+  DC resistance, but they also publish measured L(I) and |Z|(f) curves, which the closed coupled
+  variant had nowhere to hold. Fixtures:
+  `samples/magnetic/datasheet/coupledInductorElectrical/`.
 
 - **Core `effectiveParameters.fillFactor` (MAS-RFC 0020).** `core.json#/$defs/effectiveParameters`
   gains an optional `fillFactor` (0 < k <= 1): the fraction of the gross cross-section that is

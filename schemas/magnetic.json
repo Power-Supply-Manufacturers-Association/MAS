@@ -713,6 +713,20 @@
                 "leakageInductance": {
                     "description": "Leakage inductance in Henries.",
                     "$ref": "./utils.json#/$defs/dimensionWithTolerance"
+                },
+                "inductancePoints": {
+                    "description": "Inductance vs. DC-bias current points (inductance roll-off / saturation curve), optionally per temperature, measured on the winding whose inductance is stated.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/magneticDatasheetInductancePoint"
+                    }
+                },
+                "impedancePoints": {
+                    "description": "Impedance vs. frequency points, measured on the winding whose inductance is stated.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/magneticDatasheetImpedancePoint"
+                    }
                 }
             },
             "required": [

@@ -1,0 +1,49 @@
+{
+    "subtype": "coupledInductor",
+    "inductance": {
+        "nominal": 7e-08,
+        "minimum": 6.3e-08,
+        "maximum": 7.7e-08
+    },
+    "dcResistances": [
+        {
+            "nominal": 0.00019,
+            "minimum": 0.000171,
+            "maximum": 0.000209
+        },
+        {
+            "nominal": 0.00033,
+            "minimum": 0.000297,
+            "maximum": 0.000363
+        }
+    ],
+    "saturationCurrents": [
+        {
+            "percentInductanceDrop": 20,
+            "current": 94.0,
+            "temperature": 25.0
+        }
+    ],
+    "inductancePoints": [
+        {
+            "current": 0.0,
+            "inductance": 7e-08,
+            "temperature": 25.0
+        },
+        {
+            "current": 1.0,
+            "inductance": 7.001868161195623e-08,
+            "temperature": 25.0
+        },
+        {
+            "current": 1.9,
+            "inductance": 7.007472644782493e-08,
+            "temperature": 25.0
+        },
+        {
+            "current": 2.9,
+            "inductance": 6.986922871630638e-08,
+            "temperature": 25.0
+        }
+    ]
+}
