@@ -50,6 +50,12 @@ WHAT IS NOT WRITTEN
   "/2ks/", a different former than "/2k/"); ETD 59 N0013-186 (its sheet's text layer is
   scrambled, so the "/2k/" line cannot be confirmed). Those records keep ``numberChambers``
   only, and MKF refuses to split their window.
+  UPDATE 2026-11-15: all of the records above (and the ten EFD "1-3ks" formers, which have
+  FOUR chambers) now carry their walls and chambers, written by hand from a re-read of each
+  sheet; see the commit "data(bobbins): chamber walls for the 30 chambered Norwe formers". The
+  RM sheets print the wall as a toleranced label ("0.5+0.2"); the "0.3" is the flange step. Two
+  walls (09931-024, N0115-106) and seven EFD walls are not printed and were scaled from the
+  vector drawings; the EFD variants now read "4-chamber".
 
 On the vertical EE/M and the PQ sheets the equality marks and W are drawn rotated beside the
 winding space; on ETD and vertical sheets W is the inner of the two flange-spanning dimensions,
