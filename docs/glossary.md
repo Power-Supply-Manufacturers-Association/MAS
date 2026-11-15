@@ -135,7 +135,7 @@ names that are not literal property keys are written in plain prose.
 
 | Term | Definition |
 |------|------------|
-| `material` | Magnetic material composition family (`ferrite`, `powder`, `nanocrystalline`, `amorphous`, `electricalSteel`). |
+| `material` | Magnetic material composition family (`ferrite`, `powder`, `nanocrystalline`, `amorphous`, `electricalSteel`, `magneticEpoxy`: the cast binder + magnetic-powder shell of a semi-shielded drum). |
 | `materialComposition` | Detailed make-up (`MnZn`, `NiZn`, `FeSiAl`, `FeSi`, `FeNi`, `FeNiMo`, `FeMo`, `carbonylIron`, `iron`). |
 | `resistivity` | Volume resistivity per IEC 60093, in Ω·m. |
 | `density` | Mass per unit volume, in kg/m³. |

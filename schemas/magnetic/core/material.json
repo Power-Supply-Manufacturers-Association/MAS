@@ -23,7 +23,8 @@
                 "powder",
                 "nanocrystalline",
                 "amorphous",
-                "electricalSteel"
+                "electricalSteel",
+                "magneticEpoxy"
             ]
         },
         "materialComposition": {

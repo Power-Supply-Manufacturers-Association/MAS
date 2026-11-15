@@ -7,7 +7,7 @@
     "type": "object",
     "properties": {
         "type": {
-            "description": "The type of coating material applied to the core",
+            "description": "The type of coating material applied to the core. magneticEpoxy is DEPRECATED: the magnetic-epoxy shell of a semi-shielded drum (drumSemishielded) is a magnetic material, carried as the second entry of functionalDescription.material (material[1], a core material whose material type is magneticEpoxy). The value is kept so existing data stays valid.",
             "title": "coatingType",
             "type": "string",
             "enum": [
