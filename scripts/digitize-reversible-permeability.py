@@ -20,6 +20,15 @@ FERROXCUBE ("Reversible permeability as a function of magnetic field strength")
     curve is flat within FLAT_TOL over its first drawn decade, the left-end value is also written at H = 0. The
     temperature is the one the figure or caption states; none is written when it states none.
 
+FAIR-RITE ("Incremental Permeability vs Field Strength", raster images on the material pages)
+    Measured on 18/10/6 mm toroids at 25 C and 10 kHz (the pages' stated conditions); Fair-Rite names the
+    quantity incremental permeability (mu_Delta), so it is written to permeability.incremental, not reversible.
+    The images have no text layer: the axis end values are the ones printed on each image (FAIRRITE_AXES),
+    and the gridlines found in the image must form exactly that many log decades with the log minor pattern
+    (within RASTER_GRID_TOL px), or the image is refused. The curve is the stroke at least 2 px thick, read
+    column by column between the gridlines (rows of horizontal gridlines are masked; a column that is a
+    vertical gridline is skipped). H is converted from oersted (1 Oe = 1000/(4 pi) A/m).
+
 TDK ("DC magnetic bias", gapped cores, mu_e = 50 ... 1000 (1500), 25 C and often 100 C)
     TDK draws the reversible permeability of GAPPED cores only; the gap is taken out by Ampere, with no assumed
     B-H curve. Curve i has the gap term g_i = 1/mu_e0,i - 1/mu_i, mu_e0,i its drawn zero-bias level at 25 C and
@@ -60,6 +69,12 @@ MU0 = 4e-7 * np.pi
 UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36'
 TDK_BASE = 'https://www.tdk-electronics.tdk.com/download/'
 FXC_BASE = 'https://www.ferroxcube.com/upload/media/product/file/MDS/'
+FR_BASE = 'https://fair-rite.com/wp-content/uploads/2020/06/'
+FR_PAGE = 'https://fair-rite.com/{grade}-material-data-sheet/'
+OERSTED = 1000 / (4 * np.pi)   # A/m
+# grade -> (H at left, H at right in Oe, mu at bottom, mu at top), as printed on the image
+FAIRRITE_AXES = {'77': (0.1, 10.0, 10.0, 10000.0), '78': (0.1, 10.0, 100.0, 10000.0)}
+RASTER_GRID_TOL = 2.0    # px
 # grade -> (manufacturer, data sheet path); TDK paths as listed on its ferrite-materials catalogue page
 SOURCES = {
     'N27': ('TDK', '528850/3a7f957d754f899aec42cd946598c5c4/pdf-n27.pdf'),
@@ -80,6 +95,7 @@ SOURCES = {
     '3E27': ('Ferroxcube', '3e27.pdf'), '3E6': ('Ferroxcube', '3e6.pdf'), '3E65': ('Ferroxcube', '3e65.pdf'),
     '3F3': ('Ferroxcube', '3f3.pdf'), '3F36': ('Ferroxcube', '3f36.pdf'), '3F37': ('Ferroxcube', '2025%20MDS%203F37.pdf'),
     '3F4': ('Ferroxcube', '3f4.pdf'), '4F1': ('Ferroxcube', '4f1.pdf'),
+    '77': ('Fair-Rite', '77uvsH.jpg'), '78': ('Fair-Rite', '78uvsH.jpg'),
 }
 GRID_TOL = 0.5           # pt (about 1 % of a decade), a gridline off the fitted log grid by more refuses the figure
 FLAT_TOL = 0.01          # Ferroxcube: flat first decade -> the left value is written at H = 0 too
@@ -101,14 +117,17 @@ class Refused(Exception):
 
 def fetch(grade, cache):
     maker, rel = SOURCES[grade]
-    url = (TDK_BASE if maker == 'TDK' else FXC_BASE) + rel
+    url = {'TDK': TDK_BASE, 'Ferroxcube': FXC_BASE, 'Fair-Rite': FR_BASE}[maker] + rel
     path = os.path.join(cache, os.path.basename(rel).replace('%20', '_'))
     if not os.path.exists(path) or os.path.getsize(path) < 10000:
         req = urllib.request.Request(url, headers={'User-Agent': UA})
         with urllib.request.urlopen(req, timeout=60) as r, open(path, 'wb') as f:
             f.write(r.read())
     data = open(path, 'rb').read()
-    if not data.startswith(b'%PDF'):
+    if maker == 'Fair-Rite':
+        if not data.startswith(b'\xff\xd8'):
+            raise Refused(f'{url} is not a JPEG')
+    elif not data.startswith(b'%PDF'):
         raise Refused(f'{url} is not a PDF')
     return url, path, hashlib.sha256(data).hexdigest()
 
@@ -345,6 +364,103 @@ def ferroxcube_provenance(grade, report, url, sha):
     }
 
 
+# ---------------------------------------------------------------- Fair-Rite: raster image of the material curve
+
+def raster_axis(pos, n_decades, axis):
+    """Gridline pixel positions -> (start pixel, pixels per decade), checked against the log pattern."""
+    pos = sorted(pos) if axis == 'x' else sorted(pos, reverse=True)
+    span = abs(pos[-1] - pos[0])
+    per = span / n_decades
+    for q in pos:
+        frac = abs(q - pos[0]) / per
+        m = 10 ** (frac - np.floor(frac + 1e-6))
+        if min(abs(per * (np.log10(k) - np.log10(m))) for k in range(1, 11)) > RASTER_GRID_TOL:
+            raise Refused(f'{axis} gridline at pixel {q:.0f} is off a {n_decades}-decade log grid')
+    full = [k for k in range(n_decades + 1) if any(abs(abs(q - pos[0]) - k * per) <= RASTER_GRID_TOL for q in pos)]
+    if len(full) != n_decades + 1:
+        raise Refused(f'{axis} axis: decade gridlines found at {full}, {n_decades + 1} expected')
+    return pos[0], per
+
+
+def fairrite(grade, path):
+    pm = fitz.Pixmap(path)
+    img = np.frombuffer(pm.samples, dtype=np.uint8).reshape(pm.height, pm.width, pm.n)[:, :, :3].mean(axis=2)
+    dark = img < 128
+    def runs(ix):
+        out, start, prev = [], ix[0], ix[0]
+        for i in list(ix[1:]) + [None]:
+            if i is None or i != prev + 1:
+                out.append((start, prev))
+                if i is not None:
+                    start = i
+            if i is not None:
+                prev = i
+        return out
+    hruns = runs(np.where(dark.mean(axis=1) > 0.6)[0])
+    vruns = runs(np.where(dark.mean(axis=0) > 0.6)[0])
+    h0, h1, m0, m1 = FAIRRITE_AXES[grade]
+    nx, ny = round(np.log10(h1 / h0)), round(np.log10(m1 / m0))
+    x0, px = raster_axis([(a + b) / 2 for a, b in vruns], nx, 'x')
+    y0, py = raster_axis([(a + b) / 2 for a, b in hruns], ny, 'y')
+    masked = dark.copy()
+    for a, b in hruns:
+        masked[a:b + 1, :] = False
+    vcols = set(c for a, b in vruns for c in range(a - 1, b + 2))
+    top, bottom = min(a for a, _ in hruns), max(b for _, b in hruns)
+    left, right = min(a for a, _ in vruns), max(b for _, b in vruns)
+    hs, ms = [], []
+    for c in range(left + 2, right - 1):
+        if c in vcols:
+            continue
+        rows = np.where(masked[top + 1:bottom, c])[0] + top + 1
+        if not len(rows):
+            continue
+        rr = runs(rows)
+        # the curve: runs >= 2 px (a gridline row is masked; text is outside the plot box)
+        rr = [(a, b) for a, b in rr if b - a >= 1]
+        if len(rr) != 1:
+            continue
+        y = (rr[0][0] + rr[0][1]) / 2
+        hs.append(h0 * 10 ** ((c - x0) / px) * OERSTED)
+        ms.append(m0 * 10 ** ((y0 - y) / py))
+    if len(hs) < 50:
+        raise Refused(f'only {len(hs)} curve columns read')
+    h, mu = np.array(hs), np.array(ms)
+    lh, lm = np.log(h), np.log(mu)
+    pts = []
+    first = mu[h <= 3 * h[0]]
+    if first.max() / first.min() - 1 <= 0.03:
+        pts.append((0.0, float(np.median(first))))
+    for x in H_GRID:
+        if h[0] <= x <= h[-1]:
+            # median of the columns within +-2 % in H: the stroke is a few pixels wide
+            sel = np.abs(lh - np.log(x)) < 0.02
+            pts.append((float(x), float(np.exp(np.median(lm[sel]))) if sel.any() else float(np.exp(np.interp(np.log(x), lh, lm)))))
+    points = [{'value': round(v, 1), 'magneticFieldDcBias': round(x, 1), 'temperature': 25.0, 'frequency': 10000.0} for x, v in pts]
+    mu0 = pts[0][1]
+    report = dict(T=25.0, page=1, hmin=float(h[0]), hmax=float(h[-1]), mu0=mu0,
+                  ratio={x: round(float(np.exp(np.interp(np.log(x), lh, lm)) / mu0), 3) for x in (15, 30, 45, 60) if h[0] <= x <= h[-1]})
+    return points, [report], []
+
+
+def fairrite_provenance(grade, report, url, sha):
+    r = report[0]
+    return {
+        'source': 'manufacturerDatasheet',
+        'sourceName': f'Fair-Rite, {grade} material data sheet',
+        'sourceUrl': url,
+        'retrievedDate': datetime.date.today().isoformat(),
+        'verification': 'digitizedFromGraph',
+        'verificationDate': datetime.date.today().isoformat(),
+        'verificationMethod': (
+            f'"{grade} Material Incremental Permeability vs Field Strength" image on {FR_PAGE.format(grade=grade)}; '
+            f'measured on 18/10/6 mm toroids at 25 C and 10 kHz (the page\'s stated conditions); read off the raster '
+            f'(sha256 {sha[:8]}...{sha[-4:]}) on log axes calibrated on its gridlines, {r["hmin"]:.3g}-{r["hmax"]:.3g} A/m; '
+            f'the H = 0 point is the curve\'s flat left end.'),
+        'fields': ['permeability.incremental'],
+    }
+
+
 # ---------------------------------------------------------------- TDK: gapped cores, un-gapped by Ampere
 
 def table_value(doc, pattern, what):
@@ -547,11 +663,12 @@ def main():
         maker = SOURCES[grade][0]
         try:
             url, path, sha = fetch(grade, args.cache)
-            doc = fitz.open(path)
-            if maker == 'TDK':
-                points, report, refused = tdk(grade, doc, lambda T, g=grade: mui_table(record(g), T))
+            if maker == 'Fair-Rite':
+                points, report, refused = fairrite(grade, path)
+            elif maker == 'TDK':
+                points, report, refused = tdk(grade, fitz.open(path), lambda T, g=grade: mui_table(record(g), T))
             else:
-                points, report, refused = ferroxcube(grade, doc)
+                points, report, refused = ferroxcube(grade, fitz.open(path))
         except Refused as e:
             print(f'{grade} ({maker}): REFUSED: {e}')
             continue
@@ -571,9 +688,11 @@ def main():
         grade = m.get('name')
         if grade in results and record(grade) is not None and record(grade)['name'] == grade and maker_of(record(grade)) == maker_of(m):
             points, report, url, sha = results[grade]
-            m['permeability']['reversible'] = points
-            prov = [p for p in m.get('provenance', []) if 'permeability.reversible' not in (p.get('fields') or [])]
-            prov.append((tdk_provenance if SOURCES[grade][0] == 'TDK' else ferroxcube_provenance)(grade, report, url, sha))
+            maker = SOURCES[grade][0]
+            field = 'incremental' if maker == 'Fair-Rite' else 'reversible'
+            m['permeability'][field] = points
+            prov = [p for p in m.get('provenance', []) if f'permeability.{field}' not in (p.get('fields') or [])]
+            prov.append({'TDK': tdk_provenance, 'Ferroxcube': ferroxcube_provenance, 'Fair-Rite': fairrite_provenance}[maker](grade, report, url, sha))
             m['provenance'] = prov
             done.add(grade)
             line = json.dumps(m, ensure_ascii=ascii_form)
