@@ -50,6 +50,15 @@ TDK ("DC magnetic bias", gapped cores, mu_e = 50 ... 1000 (1500), 25 C and often
     Accepted levels are smoothed with mu_rev(0) / (1 + (H/H0)^c)^k (even in H, zero slope at H = 0) and sampled from
     H = 0 to the largest solved field; mu_rev(0) is mu_i at 25 C and mu_i(T) otherwise.
 
+TDK single-curve figures (one curve on an RM core with a small residual gap: N30, T35, T37, T38, T65)
+    No second curve to solve against, so the material B(H) is taken from the same data sheet's 25 C "Dynamic
+    magnetization curves" loop: its midline (mean of the rising and falling branches) on axes whose end values are
+    the printed ones (TDK_LOOP_AXES; the evenly spaced gridlines must match). H_DC = H + g B(H)/mu0, g = 1/mu_e0 -
+    1/mu_i. Refused if the midline is off-centre at B -> 0 (> LOOP_CENTRE_TOL Hc), does not reach LOOP_MIN_B, the
+    un-gapped curve rises, or mu_rev(Hc/2) < REVERSIBLE_FLOOR. Less certain than the multi-curve solve: tried on each
+    curve of N87, N49, N48 and N51 alone, it reproduces their multi-curve result within 0.04-0.10 of mu/mu0 for the
+    smallest gap; the provenance says so.
+
 Usage:
     python3 scripts/digitize-reversible-permeability.py --cache DIR [--patch data/core_materials.ndjson] [GRADE ...]
 """
@@ -89,6 +98,13 @@ SOURCES = {
     'N95': ('TDK', '528866/0fe9e667e8e8afa649f776a2a5a7eb0a/pdf-n95.pdf'),
     'N97': ('TDK', '528886/81166f0de556e5b6a94db7793daed936/pdf-n97.pdf'),
     'M33': ('TDK', '528878/4f65b2fcd11b8b6b3e99fa2bc44bfd7e/pdf-m33.pdf'),
+    'N88': ('TDK', '528890/cee245ee621a6b10bd5897f906870869/pdf-n88.pdf'),
+    'N96': ('TDK', '528892/62108148dfc602168d141f831c2914e8/pdf-n96.pdf'),
+    'N30': ('TDK', '528848/fd7b13cb06de3e2edca6c617ac9de7da/pdf-n30.pdf'),
+    'T35': ('TDK', '528880/8351bfa4e86ee7129468f0e83b5db861/pdf-t35.pdf'),
+    'T37': ('TDK', '528874/8251c697a6f71dc2bbf4c1f5362137ed/pdf-t37.pdf'),
+    'T38': ('TDK', '528868/c2cb0f1f5413cd8e83b8ecf7e85152f9/pdf-t38.pdf'),
+    'T65': ('TDK', '528846/1598c89da613db594840e493e0ffb9fe/pdf-t65.pdf'),
     '3B46': ('Ferroxcube', '3b46.pdf'), '3C11': ('Ferroxcube', '3c11.pdf'), '3C90': ('Ferroxcube', '3c90.pdf'),
     '3C91': ('Ferroxcube', '3c91.pdf'), '3C93': ('Ferroxcube', '3c93.pdf'), '3C94': ('Ferroxcube', '3c94.pdf'),
     '3C96': ('Ferroxcube', '3c96.pdf'), '3C98': ('Ferroxcube', '3c98.pdf'), '3E10': ('Ferroxcube', '3e10.pdf'),
@@ -97,6 +113,15 @@ SOURCES = {
     '3F4': ('Ferroxcube', '3f4.pdf'), '4F1': ('Ferroxcube', '4f1.pdf'),
     '77': ('Fair-Rite', '77uvsH.jpg'), '78': ('Fair-Rite', '78uvsH.jpg'),
 }
+# TDK single-curve grades: (H at left, H at right in A/m, B at bottom, B at top in mT) of the 25 C "Dynamic
+# magnetization curves" panel, as printed on the page (several draw these labels as outlines, not text)
+TDK_LOOP_AXES = {'N30': (-100, 400, 0, 450), 'T35': (-100, 400, 0, 450), 'T37': (-100, 400, 0, 450),
+                 'T38': (-100, 500, 0, 450), 'T65': (-200, 1400, 0, 600)}
+LOOP_GRID_TOL = 0.5      # pt, linear gridlines must be evenly spaced within this
+LOOP_CENTRE_TOL = 0.25   # loop midline at B -> 0 within this fraction of Hc of H = 0
+LOOP_MIN_B = 0.03        # T, the loop midline must reach down to here (B(H) is needed from H = 0)
+MONOTONE_TOL = 0.01      # the un-gapped single curve may rise by at most this between samples
+SINGLE_CURVE_ERROR = 0.10  # validated on the multi-curve grades N87, N49, N48, N51: within 0.04-0.10 of mu/mu0
 GRID_TOL = 0.5           # pt (about 1 % of a decade), a gridline off the fitted log grid by more refuses the figure
 FLAT_TOL = 0.01          # Ferroxcube: flat first decade -> the left value is written at H = 0 too
 READ_SIGMA = 0.01        # TDK: relative reading accuracy of H_DC on a log axis
@@ -532,9 +557,115 @@ def fit_and_sample(rows, mu0):
     return pts, dict(chi2=float(np.sum(res ** 2) / max(1, len(H) - 3)), hmin=float(H.min()), hmax=hmax)
 
 
+def tdk_loop_midline(grade, doc):
+    """Midline H(B) of the 25 C 'Dynamic magnetization curves' loop (mean of its rising and falling branches)."""
+    if grade not in TDK_LOOP_AXES:
+        raise Refused('single-curve figure, and no loop axis values in TDK_LOOP_AXES for this grade')
+    h0, h1, b0, b1 = TDK_LOOP_AXES[grade]
+    for page in doc:
+        for hit in page.search_for('Dynamic magnetization curves'):
+            cap = page.get_text('text', clip=fitz.Rect(hit.x0, hit.y0, hit.x0 + 200, hit.y1 + 40)).replace('\xa0', ' ')
+            if not re.search(r'T\s*=\s*25\s*°C', cap):
+                continue
+            region = fitz.Rect(hit.x0 - 30, hit.y1 + 20, hit.x0 + 260, hit.y1 + 340)
+            drawings = page.get_drawings()
+            hl, vl, gw = set(), set(), []
+            for d in drawings:
+                w = d.get('width') or 0
+                if w > 0.8:
+                    continue
+                for it in d['items']:
+                    if it[0] == 'l' and region.contains(it[1]) and region.contains(it[2]):
+                        a, c = it[1], it[2]
+                        if abs(a.y - c.y) < 0.01 and abs(a.x - c.x) > 80:
+                            hl.add(round(a.y, 2)); gw.append(w)
+                        if abs(a.x - c.x) < 0.01 and abs(a.y - c.y) > 80:
+                            vl.add(round(a.x, 2)); gw.append(w)
+            for lines, what in ((sorted(vl), 'H'), (sorted(hl), 'B')):
+                step = np.diff(lines)
+                if len(lines) < 4 or np.ptp(step) > LOOP_GRID_TOL:
+                    raise Refused(f'loop panel: {what} gridlines not evenly spaced ({len(lines)} found)')
+            x0, x1, y0, y1 = min(vl), max(vl), max(hl), min(hl)
+            toH = lambda x: h0 + (x - x0) / (x1 - x0) * (h1 - h0)
+            toB = lambda y: (b0 + (y - y0) / (y1 - y0) * (b1 - b0)) * 1e-3
+            inner = fitz.Rect(x0 + 0.5, y1 + 0.5, x1 - 0.5, y0 - 0.5)
+            br = []     # the loop: every stroke inside the plot box that is not a gridline (one path or many short segments;
+            # some panels draw it thinner than the grid, so stroke width does not tell it apart)
+            on_grid = lambda pts: (all(abs(x - pts[0][0]) < 0.05 for x, _ in pts) and min(abs(pts[0][0] - v) for v in vl) < 0.05) or \
+                                  (all(abs(y - pts[0][1]) < 0.05 for _, y in pts) and min(abs(pts[0][1] - h) for h in hl) < 0.05)
+            for d in drawings:
+                if d.get('fill') is not None or not d.get('width') or not inner.intersects(d['rect']):
+                    continue
+                for it in d['items']:
+                    pts = [q for q in bezier_points(it) if inner.contains(fitz.Point(q))]
+                    if len(pts) >= 2 and on_grid(pts):
+                        continue
+                    if len(pts) >= 2:
+                        br.append(np.array([(toH(x), toB(y)) for x, y in pts]))
+            if not br:
+                raise Refused('loop panel: no loop curve')
+            Bs, Hm = [], []
+            for b in np.linspace(0.01, 0.97 * max(a[:, 1].max() for a in br), 300):
+                hs = []
+                for a in br:
+                    d0, d1 = a[:-1, 1] - b, a[1:, 1] - b
+                    for k in np.where((d0 * d1 <= 0) & (d0 != d1))[0]:
+                        hs.append(a[k, 0] + (b - a[k, 1]) * (a[k + 1, 0] - a[k, 0]) / (a[k + 1, 1] - a[k, 1]))
+                # a branch may be drawn as a bundle of parallel strokes: the crossings must form exactly two clusters
+                hs = np.sort(hs)
+                if len(hs) < 2:
+                    continue
+                cut = int(np.argmax(np.diff(hs)))
+                left, right = hs[:cut + 1], hs[cut + 1:]
+                if hs[cut + 1] - hs[cut] < 2 * max(np.ptp(left), np.ptp(right)):
+                    continue
+                Bs.append(b); Hm.append((np.median(left) + np.median(right)) / 2)
+            if len(Bs) < 50:
+                raise Refused('loop panel: the two branches were not both found')
+            if min(Bs) > LOOP_MIN_B:
+                raise Refused(f'loop panel: both branches resolved only above {1e3 * min(Bs):.0f} mT')
+            return np.array(Hm), np.array(Bs), page.number + 1
+    raise Refused('no 25 C "Dynamic magnetization curves" panel')
+
+
+def tdk_single(grade, doc, panel, mui, hc):
+    """One curve on a core with a small residual gap: the gap is taken out by Ampere with the material's B(H) taken
+    from the same data sheet's 25 C loop (its midline), H_DC = H + g B(H)/mu0, g = 1/mu_e0 - 1/mu_i."""
+    a = panel['curves'][0]
+    g = 1 / a[0, 1] - 1 / mui
+    if g <= 0:
+        raise Refused(f'the single curve starts at {a[0, 1]:.0f} >= mu_i = {mui:.0f}: no gap to take out')
+    Hm, Bs, loop_page = tdk_loop_midline(grade, doc)
+    centre = float(np.interp(0.02, Bs, Hm))
+    if abs(centre) > LOOP_CENTRE_TOL * hc:
+        raise Refused(f'loop midline sits at {centre:.1f} A/m at B -> 0 (Hc = {hc:.0f} A/m): axis or branches misread')
+    o = np.argsort(Hm)
+    hg = np.linspace(0, float(Hm.max()), 20001)
+    Bof = np.interp(hg, Hm[o], Bs[o])
+    Hdc = hg + g * Bof / MU0
+    Hmat = np.interp(a[:, 0], Hdc, hg, right=np.nan)
+    mu = 1 / (1 / a[:, 1] - g)
+    keep = ~np.isnan(Hmat) & (mu > 0)
+    Hmat, mu = Hmat[keep], mu[keep]
+    if np.any(np.diff(mu) > MONOTONE_TOL * mu[:-1]):
+        raise Refused('the un-gapped curve rises with the field')
+    hmax = float(Hmat.max())
+    grid = [h for h in H_GRID if h <= hmax]
+    vals = np.exp(np.interp(grid, Hmat, np.log(mu)))
+    vals[np.array(grid) == 0] = mui
+    half = float(np.interp(hc / 2, grid, vals)) / mui
+    if half < REVERSIBLE_FLOOR:
+        raise Refused(f'mu_rev falls to {half:.2f} of mu_rev(0) at Hc/2 = {hc / 2:.0f} A/m')
+    points = [{'value': round(float(v), 1), 'temperature': 25.0, 'frequency': 10000.0, 'magneticFluxDensityPeak': 0.00025,
+               'magneticFieldDcBias': round(float(h), 1)} for h, v in zip(grid, vals)]
+    report = [dict(T=25.0, page=panel['page'], loop_page=loop_page, single=True, mu_e0=float(a[0, 1]), mu0=mui, hmin=0.0, hmax=hmax,
+                   ratio={h: round(float(np.interp(h, grid, vals) / mui), 3) for h in (15, 30, 45, 60) if h <= hmax})]
+    return points, report, []
+
+
 def tdk(grade, doc, mui_of_T):
     mui = float(table_value(doc, r'Initial permeability\s*\(T = 25 °C\)\s*\S+\s*(\d{3,5})\s', 'initial permeability (T = 25 C)').group(1))
-    m = table_value(doc, r'Hc \(25 °C\)\s*Hc \(100 °C\)\s*(?:A/m\s*)+(\d+)\s+(\d+)', 'coercive field strengths (25 / 100 C)')
+    m = table_value(doc, r'Hc \(25 °C\)\s*Hc \(100 °C\)\s*(?:Hc \(\d+ °C\)\s*)?(?:A/m\s*)+(\d+)\s+(\d+)', 'coercive field strengths (25 / 100 C)')
     coercive = {25.0: float(m.group(1)), 100.0: float(m.group(2))}
     panels = tdk_panels(doc)
     if not panels:
@@ -547,6 +678,8 @@ def tdk(grade, doc, mui_of_T):
         raise Refused('no 25 C DC-bias figure to take the gaps from')
     if 'error' in p25[0]:
         raise Refused(f'25 C figure: {p25[0]["error"]}')
+    if len(p25[0]['curves']) == 1 and len(panels) == 1:
+        return tdk_single(grade, doc, p25[0], mui, coercive[25.0])
     if len(p25[0]['curves']) < MIN_CURVES:
         raise Refused(f'25 C figure has {len(p25[0]["curves"])} gapped curve(s), {MIN_CURVES} needed')
     g = [1 / a[0, 1] - 1 / mui for a in p25[0]['curves']]
@@ -606,6 +739,24 @@ def tdk(grade, doc, mui_of_T):
 
 
 def tdk_provenance(grade, report, url, sha):
+    if report[0].get('single'):
+        r = report[0]
+        return {
+            'source': 'manufacturerDatasheet',
+            'sourceName': f'TDK Electronics, SIFERRIT material {grade} data sheet',
+            'sourceUrl': url,
+            'retrievedDate': datetime.date.today().isoformat(),
+            'verification': 'digitizedFromGraph',
+            'verificationDate': datetime.date.today().isoformat(),
+            'verificationMethod': (
+                f'"DC magnetic bias" figure (one curve, RM core with a residual gap, mu_e0 = {r["mu_e0"]:.0f}; B <= 0.25 mT, '
+                f'f = 10 kHz, 25 C) on page {r["page"]}, read off its vector path; document sha256 {sha[:8]}...{sha[-4:]}. '
+                f'The gap is taken out by Ampere, H_DC = H + g B(H)/mu0 with g = 1/mu_e0 - 1/mu_i (table mu_i), B(H) being '
+                f'the midline of the same data sheet\'s 25 C dynamic magnetization loop (page {r["loop_page"]}). LESS CERTAIN '
+                f'than a multi-curve solve: on N87, N49, N48 and N51 this single-curve method reproduces the multi-curve '
+                f'result within 0.04-0.10 of mu_rev/mu_rev(0). Points on a fixed H grid up to {r["hmax"]:.0f} A/m, nothing fitted.'),
+            'fields': ['permeability.reversible'],
+        }
     figs = '; '.join(f'{r["T"]:.0f} C on page {r["page"]} ({r["n"]} gapped curves, field solved '
                      f'{r["hmin"]:.0f}-{r["hmax"]:.0f} A/m, curves agree within {100 * r["worst_rms"]:.1f} %)' for r in report)
     return {
