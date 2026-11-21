@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Reversible permeability mu_rev(H_DC, T) of ferrites from their manufacturers' data sheets, written as
-permeability.reversible points (TDK and Ferroxcube).
+permeability.reversible points (TDK and Ferroxcube), and incremental permeability mu_Delta(H_DC, T), written as
+permeability.incremental points (Fair-Rite, Magnetics, DMEGC).
 
 WHY
     A ferrite's loss and small-signal inductance under DC bias follow its reversible permeability: the slope of a
@@ -13,6 +14,14 @@ WHAT IT READS
     are calibrated on each figure's own gridlines: decade lines are found from the spacing pattern, every gridline
     must sit on a + b log10(m 10^k), m = 1..9, within GRID_TOL, and the decade exponents are read from the tick
     labels (superscripts told apart by font size) and must agree with one another; otherwise the figure is refused.
+
+    Figures drawn with a small rigid rotation (Ferroxcube 3E25) are turned back square first: the angle is the one
+    shared by most long thin lines of the figure, and counts only when horizontal and vertical gridlines both show
+    it; every check below then applies unchanged. One figure is one plot: the horizontal gridlines sharing the most
+    common x-extent, kept only inside the most common y-extent of the verticals there, so a neighbouring plot
+    stacked above or below with almost the same x-extent (the 2025 Ferroxcube sheets, 3F37) is not read into it.
+    The last gridline closes the axis but need not be a decade (DMEGC R10KC ends at 500 A/m): it counts as a decade
+    line only if it sits a whole number of decades (from the decade lines inside) from the first, within GRID_TOL.
 
 FERROXCUBE ("Reversible permeability as a function of magnetic field strength")
     Measured on ungapped ring cores: the material curve itself. Points are read off the curve on a fixed H grid
@@ -28,6 +37,21 @@ FAIR-RITE ("Incremental Permeability vs Field Strength", raster images on the ma
     (within RASTER_GRID_TOL px), or the image is refused. The curve is the stroke at least 2 px thick, read
     column by column between the gridlines (rows of horizontal gridlines are masked; a column that is a
     vertical gridline is skipped). H is converted from oersted (1 Oe = 1000/(4 pi) A/m).
+
+MAGNETICS ("PERMEABILITY vs. DC BIAS", vector figure on each material's page of the 2025 Ferrite Catalog)
+    The page of each grade is fixed (MAGNETICS_PAGES) and must carry "<grade> Material" and exactly one such title.
+    The plot is the framed grid under the title; one curve, starting at the initial permeability, so ungapped. The
+    figure states no temperature, frequency or core and names the quantity only "permeability": it is written to
+    permeability.incremental (a DC-biased small-signal permeability that is not stated to be reversible) without a
+    temperature, read off the vector path as for Ferroxcube (H = 0 written only where the first decade is flat).
+
+DMEGC ("Incremental Permeability mu_Delta" vs "Magnetic Field Strength H (A/m)", material characteristics sheets)
+    Measured on the sheets' standard toroid, ungapped; written to permeability.incremental. The plot is located by its
+    vertical y-axis title and the H-axis title under it. Each curve gets the temperature the plot states: one curve
+    and one "T = 25 C" label inside the plot, or a legend in which every "<T> C" entry has exactly one short
+    horizontal stroke just left of it; a curve is matched to an entry by its stroke colour, which must be unique and
+    must match exactly one drawn curve (one curve per legend entry). A plot stating no temperature must have one
+    curve, written without a temperature. A curve that rises with H is refused on its own; the others are kept.
 
 TDK ("DC magnetic bias", gapped cores, mu_e = 50 ... 1000 (1500), 25 C and often 100 C)
     TDK draws the reversible permeability of GAPPED cores only; the gap is taken out by Ampere, with no assumed
@@ -59,6 +83,20 @@ TDK single-curve figures (one curve on an RM core with a small residual gap: N30
     curve of N87, N49, N48 and N51 alone, it reproduces their multi-curve result within 0.04-0.10 of mu/mu0 for the
     smallest gap; the provenance says so.
 
+THE CURVE'S START AGAINST THE RECORD'S mu_i (every maker)
+    Before a grade is accepted, its curve at its lowest H (H = 0 where written), at the curve temperature nearest
+    25 C, must lie within MUI_START_TOL (+-25 %) of the record's zero-bias permeability.initial at the temperature
+    nearest 25 C (initial may be one object or a list; a record whose mu_i states no temperature gives its one nominal
+    value; more than one value at that temperature is refused). Otherwise the figure was misread or belongs to another
+    material, and the grade is refused (Fair-Rite 97: the image starts at 2558 against the record's mu_i 2016 at 20 C).
+
+PATCHING
+    Only the one record with the grade's name, its maker (EPCOS for TDK) and material == "ferrite" is patched; the
+    makers also sell non-ferrite materials (Magnetics: powder cores) that a ferrite curve must never touch, and more
+    than one matching record is an error. The provenance entry for the written field is replaced. The record's
+    manufacturerInfo.datasheetUrl is set to the digitised source (Fair-Rite: the material page) only when absent; an
+    existing one is never overwritten, and every difference between it and the digitised source is printed.
+
 Usage:
     python3 scripts/digitize-reversible-permeability.py --cache DIR [--patch data/core_materials.ndjson] [GRADE ...]
 """
@@ -80,9 +118,16 @@ TDK_BASE = 'https://www.tdk-electronics.tdk.com/download/'
 FXC_BASE = 'https://www.ferroxcube.com/upload/media/product/file/MDS/'
 FR_BASE = 'https://fair-rite.com/wp-content/uploads/2020/06/'
 FR_PAGE = 'https://fair-rite.com/{grade}-material-data-sheet/'
+MAG_URL = 'https://www.acalbfi.com/media/pdf/'
+MAGNETICS_PAGES = {'R': 7, 'P': 8, 'F': 9, 'J': 15, 'W': 16, 'M': 17}   # PDF pages of the 2025 Ferrite Catalog
 OERSTED = 1000 / (4 * np.pi)   # A/m
 # grade -> (H at left, H at right in Oe, mu at bottom, mu at top), as printed on the image
-FAIRRITE_AXES = {'77': (0.1, 10.0, 10.0, 10000.0), '78': (0.1, 10.0, 100.0, 10000.0)}
+FAIRRITE_AXES = {'77': (0.1, 10.0, 10.0, 10000.0), '78': (0.1, 10.0, 100.0, 10000.0),
+                 '43': (0.01, 10.0, 10.0, 1000.0), '51': (0.01, 10.0, 10.0, 1000.0), '52': (0.1, 10.0, 10.0, 1000.0),
+                 '61': (0.1, 100.0, 10.0, 1000.0), '67': (0.1, 100.0, 10.0, 100.0),
+                 '75': (0.0, 10.0, 10.0, 10000.0),   # the left end is printed "0.0" (sic)
+                 '79': (0.1, 10.0, 10.0, 10000.0), '80': (0.1, 10.0, 10.0, 10000.0), '96': (0.01, 10.0, 10.0, 10000.0),
+                 '97': (0.1, 10.0, 100.0, 10000.0), '98': (0.1, 10.0, 100.0, 10000.0)}
 RASTER_GRID_TOL = 2.0    # px
 # grade -> (manufacturer, data sheet path); TDK paths as listed on its ferrite-materials catalogue page
 SOURCES = {
@@ -111,7 +156,19 @@ SOURCES = {
     '3E27': ('Ferroxcube', '3e27.pdf'), '3E6': ('Ferroxcube', '3e6.pdf'), '3E65': ('Ferroxcube', '3e65.pdf'),
     '3F3': ('Ferroxcube', '3f3.pdf'), '3F36': ('Ferroxcube', '3f36.pdf'), '3F37': ('Ferroxcube', '2025%20MDS%203F37.pdf'),
     '3F4': ('Ferroxcube', '3f4.pdf'), '4F1': ('Ferroxcube', '4f1.pdf'),
+    '3E25': ('Ferroxcube', '3e25.pdf'), '3E26': ('Ferroxcube', '3e26.pdf'), '4C65': ('Ferroxcube', '4c65.pdf'),
     '77': ('Fair-Rite', '77uvsH.jpg'), '78': ('Fair-Rite', '78uvsH.jpg'),
+    '43': ('Fair-Rite', '43uvsh.jpg'), '51': ('Fair-Rite', '51_uvsH.jpg'), '52': ('Fair-Rite', '52ipvsfs.jpg'),
+    '61': ('Fair-Rite', '61uvsH.jpg'), '67': ('Fair-Rite', '67vsH.jpg'), '75': ('Fair-Rite', '75UvsH.jpg'),
+    '79': ('Fair-Rite', '79UvsH.jpg'), '80': ('Fair-Rite', '80uvsh.jpg'), '97': ('Fair-Rite', '97uvsH.jpg'),
+    '98': ('Fair-Rite', '98uvH.jpg'), '96': ('Fair-Rite', 'https://fair-rite.com/wp-content/uploads/2024/08/96-IncrementalPerm.png'),
+    **{g: ('Magnetics', 'Magnetics-2025-Ferrite-Catalog.pdf') for g in MAGNETICS_PAGES},
+    **{g: ('DMEGC', f'https://dmegc.de/uploads/20230401/{g}%20Material%20Characteristics.pdf')
+       for g in ('DMR44', 'DMR50', 'DMR52W', 'DMR91', 'DMR95', 'R10KC')},
+    **{g: ('DMEGC', 'https://irp.cdn-website.com/eb58f5fe/files/uploaded/' + f)
+       for g, f in (('DMR47', 'DMR47_Extremely_low_loss_power_material.pdf'), ('R5K', '46-r5k_high_ui_material_sl.pdf'),
+                    ('R7K', '47-r7k_high_ui_material_sl.pdf'), ('R10K', '48-r10k_high_ui_material_sl.pdf'),
+                    ('R12K', '49-r12k_high_ui_material_sl.pdf'), ('R15K', '50-r15k_extremely_high_ui_material_sl.pdf'))},
 }
 # TDK single-curve grades: (H at left, H at right in A/m, B at bottom, B at top in mT) of the 25 C "Dynamic
 # magnetization curves" panel, as printed on the page (several draw these labels as outlines, not text)
@@ -132,6 +189,7 @@ ONSET_LEVEL = 0.8
 MAX_CHI2 = 4.0
 REVERSIBLE_FLOOR = 0.9
 MAX_PLACEMENT = 0.10
+MUI_START_TOL = 0.25    # the curve's start (lowest H) must lie within this of the record's zero-bias mu_i near 25 C
 H_GRID = sorted(set([0.0] + list(np.arange(2, 10, 2)) + list(np.arange(10, 50, 5)) + list(np.arange(50, 100, 10)) +
                     list(np.arange(100, 200, 20)) + list(np.arange(200, 1000, 50)) + list(np.arange(1000, 10001, 500))))
 
@@ -142,7 +200,7 @@ class Refused(Exception):
 
 def fetch(grade, cache):
     maker, rel = SOURCES[grade]
-    url = {'TDK': TDK_BASE, 'Ferroxcube': FXC_BASE, 'Fair-Rite': FR_BASE}[maker] + rel
+    url = rel if rel.startswith('https://') else {'TDK': TDK_BASE, 'Ferroxcube': FXC_BASE, 'Fair-Rite': FR_BASE, 'Magnetics': MAG_URL}[maker] + rel
     path = os.path.join(cache, os.path.basename(rel).replace('%20', '_'))
     if not os.path.exists(path) or os.path.getsize(path) < 10000:
         req = urllib.request.Request(url, headers={'User-Agent': UA})
@@ -150,8 +208,8 @@ def fetch(grade, cache):
             f.write(r.read())
     data = open(path, 'rb').read()
     if maker == 'Fair-Rite':
-        if not data.startswith(b'\xff\xd8'):
-            raise Refused(f'{url} is not a JPEG')
+        if not (data.startswith(b'\xff\xd8') or data.startswith(b'\x89PNG\r\n\x1a\n')):
+            raise Refused(f'{url} is not a JPEG or PNG image')
     elif not data.startswith(b'%PDF'):
         raise Refused(f'{url} is not a PDF')
     return url, path, hashlib.sha256(data).hexdigest()
@@ -209,7 +267,16 @@ def calibrate_log(lines, spans, axis, box):
     if d.max() / d.min() < 1.1:
         decades = list(range(len(p)))          # only decade lines are drawn
     else:
-        decades = [0] + [i for i in range(1, len(p) - 1) if d[i] / d[i - 1] > 4] + [len(p) - 1]
+        decades = [0] + [i for i in range(1, len(p) - 1) if d[i] / d[i - 1] > 4]
+        if len(decades) >= 2:
+            # the decade length from the decade lines found inside; the last line closes the axis but need not be a
+            # decade (DMEGC R10KC ends at 500 A/m): it is one only if it sits a whole number of decades out
+            per = abs(p[decades[-1]] - p[0]) / (len(decades) - 1)
+            n = abs(p[-1] - p[0]) / per
+            if abs(n - round(n)) * per <= GRID_TOL:
+                decades.append(len(p) - 1)
+        else:
+            decades.append(len(p) - 1)
     b0 = abs(p[decades[-1]] - p[decades[0]]) / (len(decades) - 1)
     # assign every gridline its log value (decade index + log10 of the nearest mantissa 1..10), then fit
     # position = a + b * logvalue over all of them; every residual must be within GRID_TOL
@@ -261,9 +328,61 @@ def bezier_points(item, n=40):
     return out
 
 
-def read_figure(page, region):
-    """Gridlines and data curves of a log-log figure inside `region`."""
+def figure_rotation(drawings, region):
+    """Angle (degrees) by which a whole figure is drawn rotated, or 0. Some sheets (Ferroxcube 3E25) place the figure
+    with a small rigid rotation: every long gridline then deviates from its axis by the same angle. The angle is the
+    one shared by most long thin lines in `region`; it counts only if horizontal and vertical lines both show it."""
+    from collections import Counter
+    dev = Counter()
+    for d in drawings:
+        if (d.get('width') or 0) > 0.8:
+            continue
+        for it in d['items']:
+            if it[0] != 'l' or not (region.contains(it[1]) and region.contains(it[2])):
+                continue
+            dx, dy = it[2].x - it[1].x, it[2].y - it[1].y
+            if np.hypot(dx, dy) <= 80:
+                continue
+            ang = np.degrees(np.arctan2(dy, dx)) % 90
+            ang = ang - 90 if ang > 45 else ang
+            if abs(ang) < 1:
+                dev[(round(ang, 3), abs(dx) > abs(dy))] += 1
+    if not dev:
+        return 0.0
+    (ang, _), _ = dev.most_common(1)[0]
+    if ang == 0 or not (dev[(ang, True)] and dev[(ang, False)]):
+        return 0.0
+    return ang
+
+
+def rotate_drawings(drawings, m):
+    out = []
+    for d in drawings:
+        items = []
+        for it in d['items']:
+            if it[0] in ('l', 'c'):
+                items.append((it[0],) + tuple(p * m for p in it[1:]))
+            elif it[0] == 're':
+                items.append((it[0], it[1] * m) + tuple(it[2:]))
+            elif it[0] == 'qu':
+                items.append((it[0], it[1] * m) + tuple(it[2:]))
+            else:
+                items.append(it)
+        out.append(dict(d, items=items, rect=d['rect'] * m))
+    return out
+
+
+def read_figure(page, region, with_color=False):
+    """Gridlines and data curves of a log-log figure inside `region` (with `with_color`: also the plot box, and each
+    curve with its colour and page points, see figure_curves)."""
     drawings = page.get_drawings()
+    spans = spans_of(page)
+    rot = figure_rotation(drawings, region)
+    if rot:     # turn the figure back square about the region's centre; every check below then applies unchanged
+        c = (region.tl + region.br) / 2
+        m = fitz.Matrix(1, 0, 0, 1, -c.x, -c.y) * fitz.Matrix(-rot) * fitz.Matrix(1, 0, 0, 1, c.x, c.y)
+        drawings = rotate_drawings(drawings, m)
+        spans = [(r * m, size, text) for r, size, text in spans]
     hl, vl = [], []     # (y, x0, x1, width), (x, y0, y1, width)
     for d in drawings:
         w = d.get('width') or 0
@@ -285,17 +404,31 @@ def read_figure(page, region):
     from collections import Counter
     extent = Counter((round(x0), round(x1)) for _, x0, x1, _ in hl).most_common(1)[0][0]
     hl = [h for h in hl if h[1] >= extent[0] - 1 and h[2] <= extent[1] + 1]   # segments broken by label boxes too
+    # and inside the most common y-extent of the verticals in that x-extent: a neighbouring plot stacked above or
+    # below with (almost) the same x-extent (the 2025 Ferroxcube sheets) is not part of this one
+    yext = Counter((round(y0), round(y1)) for x, y0, y1, _ in vl if extent[0] - 1 <= x <= extent[1] + 1).most_common(1)
+    if not yext:
+        raise Refused('no vertical gridlines inside the plot')
+    yext = yext[0][0]
+    hl = [h for h in hl if yext[0] - 1 <= h[0] <= yext[1] + 1]
+    if not hl:
+        raise Refused('no horizontal gridlines inside the plot')
     ylo, yhi = min(h[0] for h in hl), max(h[0] for h in hl)
     vl = [v for v in vl if extent[0] - 1 <= v[0] <= extent[1] + 1 and v[1] < yhi and v[2] > ylo]
     H = [h[0] for h in hl]; V = [v[0] for v in vl]; widths = [h[3] for h in hl] + [v[3] for v in vl]
     if len(H) < 3 or len(V) < 3:
         raise Refused('gridlines of one plot not found')
     box = fitz.Rect(min(V), min(H), max(V), max(H))
-    spans = spans_of(page)
     tox = calibrate_log(V, spans, 'x', box)
     toy = calibrate_log(H, spans, 'y', box)
-    minw = 1.5 * max(widths)
-    paths = []
+    curves = figure_curves(drawings, box, tox, toy, 1.5 * max(widths), with_color)
+    return (curves, box) if with_color else curves
+
+
+def figure_curves(drawings, box, tox, toy, minw, with_color=False):
+    """Data curves (strokes at least `minw` wide, not dashed, not on the frame) inside `box`, in axis values. With
+    `with_color`, each curve comes as (values, stroke colour, page points), and only strokes of one colour are joined."""
+    paths, colors = [], []
     for d in drawings:
         if (d.get('width') or 0) < minw or not box.intersects(d['rect']):
             continue
@@ -308,21 +441,54 @@ def read_figure(page, region):
         on_frame = all(min(abs(x - box.x0), abs(x - box.x1)) < 0.6 or min(abs(y - box.y0), abs(y - box.y1)) < 0.6 for x, y in pts)
         if len(pts) > 1 and not on_frame:
             paths.append(pts)
-    curves = []
-    for pth in sorted(paths, key=lambda q: q[0][0]):
-        for c in curves:
-            if np.hypot(c[-1][0] - pth[0][0], c[-1][1] - pth[0][1]) < 1.0:
+            colors.append(d.get('color'))
+    curves, ccol = [], []
+    for k in sorted(range(len(paths)), key=lambda k: paths[k][0][0]):
+        pth = paths[k]
+        for c, cc in zip(curves, ccol):
+            if np.hypot(c[-1][0] - pth[0][0], c[-1][1] - pth[0][1]) < 1.0 and (not with_color or cc == colors[k]):
                 c += pth
                 break
         else:
             curves.append(list(pth))
+            ccol.append(colors[k])
     data = []
-    for c in curves:
+    for c, cc in zip(curves, ccol):
         a = np.array([(tox(x), toy(y)) for x, y in c])
-        a = a[np.argsort(a[:, 0], kind='stable')]
-        data.append(a)
-    data.sort(key=lambda a: -a[0, 1])
+        order = np.argsort(a[:, 0], kind='stable')
+        data.append((a[order], cc, np.array(c)[order]) if with_color else a[order])
+    data.sort(key=(lambda q: -q[0][0, 1]) if with_color else (lambda a: -a[0, 1]))
     return data
+
+
+def sample_curve(a, T, page_no):
+    """Points of one ungapped material curve (H, mu) read off a vector figure: on the fixed H grid inside the drawn
+    range (log-log interpolation between evaluated path points), plus H = 0 when the first drawn decade is flat
+    within FLAT_TOL. Nothing is fitted. Refused if the curve rises with H by more than 1 % between path points."""
+    h, mu = a[:, 0], a[:, 1]
+    keep = np.r_[True, np.diff(h) > 0]
+    h, mu = h[keep], mu[keep]
+    if np.any(np.diff(mu) > 0.01 * mu[:-1]):
+        raise Refused('the curve rises with H somewhere')
+    lh, lm = np.log(h), np.log(mu)
+    pts = []
+    first_decade = mu[h <= 10 * h[0]]
+    if first_decade.max() / first_decade.min() - 1 <= FLAT_TOL:
+        pts.append((0.0, float(mu[0])))
+    for x in H_GRID:
+        if h[0] <= x <= h[-1]:
+            pts.append((float(x), float(np.exp(np.interp(np.log(x), lh, lm)))))
+    if pts[-1][0] < h[-1] * 0.999:
+        pts.append((float(round(h[-1], 1)), float(mu[-1])))
+    report = dict(T=T, page=page_no, flat0=pts[0][0] == 0.0, hmin=float(h[0]), hmax=float(h[-1]), mu0=float(mu[0]),
+                  ratio={x: round(float(np.exp(np.interp(np.log(x), lh, lm)) / mu[0]), 3) for x in (15, 30, 45, 60) if h[0] <= x <= h[-1]})
+    points = []
+    for x, v in pts:
+        q = {'value': round(v, 1), 'magneticFieldDcBias': round(x, 1)}
+        if T is not None:
+            q['temperature'] = T
+        points.append(q)
+    return points, report
 
 
 # ---------------------------------------------------------------- Ferroxcube: ungapped material curve
@@ -344,29 +510,7 @@ def ferroxcube(grade, doc):
         mt = re.search(r'(?:T\s*=\s*|at\s*)(-?\d+)\s*[º°]\s*C', figtext)
         if mt:
             T = float(mt.group(1))
-        h, mu = a[:, 0], a[:, 1]
-        keep = np.r_[True, np.diff(h) > 0]
-        h, mu = h[keep], mu[keep]
-        if np.any(np.diff(mu) > 0.01 * mu[:-1]):
-            raise Refused('the curve rises with H somewhere')
-        lh, lm = np.log(h), np.log(mu)
-        pts = []
-        first_decade = mu[h <= 10 * h[0]]
-        if first_decade.max() / first_decade.min() - 1 <= FLAT_TOL:
-            pts.append((0.0, float(mu[0])))
-        for x in H_GRID:
-            if h[0] <= x <= h[-1]:
-                pts.append((float(x), float(np.exp(np.interp(np.log(x), lh, lm)))))
-        if pts[-1][0] < h[-1] * 0.999:
-            pts.append((float(round(h[-1], 1)), float(mu[-1])))
-        report = dict(T=T, page=page.number + 1, hmin=float(h[0]), hmax=float(h[-1]), mu0=float(mu[0]),
-                      ratio={x: round(float(np.exp(np.interp(np.log(x), lh, lm)) / mu[0]), 3) for x in (15, 30, 45, 60) if h[0] <= x <= h[-1]})
-        points = []
-        for x, v in pts:
-            q = {'value': round(v, 1), 'magneticFieldDcBias': round(x, 1)}
-            if T is not None:
-                q['temperature'] = T
-            points.append(q)
+        points, report = sample_curve(a, T, page.number + 1)
         return points, [report], []
     raise Refused('no "Reversible permeability" figure')
 
@@ -409,6 +553,8 @@ def raster_axis(pos, n_decades, axis):
 
 def fairrite(grade, path):
     pm = fitz.Pixmap(path)
+    if pm.alpha:
+        pm = fitz.Pixmap(pm, 0)     # drop the alpha channel (PNG)
     img = np.frombuffer(pm.samples, dtype=np.uint8).reshape(pm.height, pm.width, pm.n)[:, :, :3].mean(axis=2)
     dark = img < 128
     def runs(ix):
@@ -424,6 +570,8 @@ def fairrite(grade, path):
     hruns = runs(np.where(dark.mean(axis=1) > 0.6)[0])
     vruns = runs(np.where(dark.mean(axis=0) > 0.6)[0])
     h0, h1, m0, m1 = FAIRRITE_AXES[grade]
+    if min(h0, h1, m0, m1) <= 0:
+        raise Refused(f'an axis end is printed as {min(h0, h1, m0, m1)}: not a value on a log axis')
     nx, ny = round(np.log10(h1 / h0)), round(np.log10(m1 / m0))
     x0, px = raster_axis([(a + b) / 2 for a, b in vruns], nx, 'x')
     y0, py = raster_axis([(a + b) / 2 for a, b in hruns], ny, 'y')
@@ -463,7 +611,7 @@ def fairrite(grade, path):
             pts.append((float(x), float(np.exp(np.median(lm[sel]))) if sel.any() else float(np.exp(np.interp(np.log(x), lh, lm)))))
     points = [{'value': round(v, 1), 'magneticFieldDcBias': round(x, 1), 'temperature': 25.0, 'frequency': 10000.0} for x, v in pts]
     mu0 = pts[0][1]
-    report = dict(T=25.0, page=1, hmin=float(h[0]), hmax=float(h[-1]), mu0=mu0,
+    report = dict(T=25.0, page=1, hmin=float(h[0]), hmax=float(h[-1]), mu0=mu0, flat0=pts[0][0] == 0.0,
                   ratio={x: round(float(np.exp(np.interp(np.log(x), lh, lm)) / mu0), 3) for x in (15, 30, 45, 60) if h[0] <= x <= h[-1]})
     return points, [report], []
 
@@ -480,8 +628,207 @@ def fairrite_provenance(grade, report, url, sha):
         'verificationMethod': (
             f'"{grade} Material Incremental Permeability vs Field Strength" image on {FR_PAGE.format(grade=grade)}; '
             f'measured on 18/10/6 mm toroids at 25 C and 10 kHz (the page\'s stated conditions); read off the raster '
-            f'(sha256 {sha[:8]}...{sha[-4:]}) on log axes calibrated on its gridlines, {r["hmin"]:.3g}-{r["hmax"]:.3g} A/m; '
-            f'the H = 0 point is the curve\'s flat left end.'),
+            f'(sha256 {sha[:8]}...{sha[-4:]}) on log axes calibrated on its gridlines, {r["hmin"]:.3g}-{r["hmax"]:.3g} A/m'
+            + ('; the H = 0 point is the curve\'s flat left end.' if r['flat0'] else
+               '; no H = 0 point (the curve varies by more than 3 % over its first factor of 3 in H).')),
+        'fields': ['permeability.incremental'],
+    }
+
+
+# ---------------------------------------------------------------- Magnetics Inc: ungapped curve in a framed plot
+
+def framed_grid(page, cap, drawings):
+    """Frame and gridline positions of a framed log-log plot whose title `cap` sits just above it (Magnetics, DMEGC):
+    the frame is the stroked rectangle starting within 20 pt below the title; the gridlines are the thin lines that
+    cross the frame (>= 90 % of it) plus the tick marks outside its left and bottom edges (the decade labels sit at
+    the ticks; the frame edges themselves need not be decades). A gridline drawn twice is one line: copies within
+    GRID_TOL are averaged; copies further apart stay two lines, and the log-grid check then decides. The frame may be
+    stroked twice as well (copies within GRID_TOL are one frame)."""
+    centre = (cap.x0 + cap.x1) / 2
+    frames = set()
+    for d in drawings:
+        if not d.get('width') or d.get('color') is None:
+            continue
+        for it in d['items']:
+            if it[0] == 're' and cap.y1 - 1 <= it[1].y0 <= cap.y1 + 20 and it[1].x0 < centre < it[1].x1 and it[1].width > 80:
+                frames.add(tuple(it[1]))
+    frames = sorted(frames)
+    if not frames or any(max(abs(a - b) for a, b in zip(q, frames[0])) > GRID_TOL for q in frames):
+        raise Refused(f'{len(frames)} different plot frames under the title, one expected')
+    f = fitz.Rect(*np.mean(frames, axis=0))
+    V, Hs, widths = [], [], []
+    for d in drawings:
+        w = d.get('width') or 0
+        if not w or w > 0.8:
+            continue
+        for it in d['items']:
+            if it[0] != 'l':
+                continue
+            a, c = it[1], it[2]
+            if abs(a.x - c.x) < 0.01 and f.x0 - 1 <= a.x <= f.x1 + 1:
+                y0, y1 = min(a.y, c.y), max(a.y, c.y)
+                if min(y1, f.y1) - max(y0, f.y0) >= 0.9 * f.height or (f.y1 - 1 <= y0 and y1 <= f.y1 + 8 and y1 - y0 < 8):
+                    V.append(a.x); widths.append(w)
+            elif abs(a.y - c.y) < 0.01 and f.y0 - 1 <= a.y <= f.y1 + 1:
+                x0, x1 = min(a.x, c.x), max(a.x, c.x)
+                if min(x1, f.x1) - max(x0, f.x0) >= 0.9 * f.width or (f.x0 - 8 <= x0 and x1 <= f.x0 + 1 and x1 - x0 < 8):
+                    Hs.append(a.y); widths.append(w)
+    def merged(pos):
+        groups = []
+        for q in sorted(pos):
+            if groups and q - groups[-1][0] <= GRID_TOL:
+                groups[-1].append(q)
+            else:
+                groups.append([q])
+        return [float(np.mean(g)) for g in groups]
+    V, Hs = merged(V), merged(Hs)
+    if len(V) < 3 or len(Hs) < 3:
+        raise Refused(f'{len(V)} x and {len(Hs)} y gridlines/ticks found, 3 each needed')
+    return f, V, Hs, max(widths)
+
+
+def magnetics(grade, doc):
+    page = doc[MAGNETICS_PAGES[grade] - 1]
+    if not page.search_for(f'{grade} Material'):
+        raise Refused(f'page {page.number + 1} is not the {grade} Material page')
+    caps = page.search_for('PERMEABILITY vs. DC BIAS')
+    if len(caps) != 1:
+        raise Refused(f'{len(caps)} "PERMEABILITY vs. DC BIAS" titles on page {page.number + 1}, one expected')
+    drawings = page.get_drawings()
+    frame, V, Hs, gw = framed_grid(page, caps[0], drawings)
+    box = fitz.Rect(min(V), min(Hs), max(V), max(Hs))
+    spans = [(r, size, text.replace(',', '')) for r, size, text in spans_of(page)]   # "10,000"
+    tox = calibrate_log(V, spans, 'x', box)
+    toy = calibrate_log(Hs, spans, 'y', box)
+    curves = figure_curves(drawings, frame, tox, toy, 1.5 * gw)
+    if len(curves) != 1:
+        raise Refused(f'figure on page {page.number + 1} has {len(curves)} data curves, one expected')
+    points, report = sample_curve(curves[0], None, page.number + 1)
+    report.update(frame=(float(toy(frame.y0)), float(tox(frame.x1))))
+    return points, [report], []
+
+
+def magnetics_provenance(grade, report, url, sha):
+    r = report[0]
+    return {
+        'source': 'manufacturerDatasheet',
+        'sourceName': 'Magnetics, 2025 Ferrite Catalog',
+        'sourceUrl': url,
+        'retrievedDate': datetime.date.today().isoformat(),
+        'verification': 'digitizedFromGraph',
+        'verificationDate': datetime.date.today().isoformat(),
+        'verificationMethod': (
+            f'"PERMEABILITY vs. DC BIAS" figure of {grade} Material, catalogue page {r["page"]} (PDF page), one curve '
+            f'starting at the initial permeability (ungapped); the figure states no temperature, frequency or core, '
+            f'and names the quantity only "permeability", stored as incremental. Read off the vector path of the curve, '
+            f'{r["hmin"]:.3g}-{r["hmax"]:.3g} A/m, on log axes calibrated on the figure\'s gridlines and tick marks; '
+            f'document sha256 {sha[:8]}...{sha[-4:]}. Points on a fixed H grid, nothing fitted'
+            + ('; the H = 0 point is the curve\'s flat left end.' if r['flat0'] else '.')),
+        'fields': ['permeability.incremental'],
+    }
+
+
+# ---------------------------------------------------------------- DMEGC: ungapped toroid, one curve per temperature
+
+def text_lines(page):
+    """(bbox, direction, text) of every non-empty text line of the page that has a size (some sheets carry
+    zero-size duplicate text)."""
+    out = []
+    for b in page.get_text('dict')['blocks']:
+        for line in b.get('lines', []):
+            r = fitz.Rect(line['bbox'])
+            t = ''.join(sp['text'] for sp in line['spans']).strip()
+            if t and r.width > 1 and r.height > 1:
+                out.append((r, line['dir'], t))
+    return out
+
+
+def dmegc(grade, doc):
+    for page in doc:
+        lines = text_lines(page)
+        labels = [r for r, d, t in lines if 'Incremental Permeability' in t and abs(d[1]) > 0.99]
+        if not labels:
+            continue
+        if len(labels) != 1:
+            raise Refused(f'{len(labels)} "Incremental Permeability" axis titles on page {page.number + 1}, one expected')
+        lab = labels[0]
+        cy = (lab.y0 + lab.y1) / 2
+        # the H axis title under the same plot; the y-axis title is centred on the plot, so the plot spans about as far
+        # above the title's centre as the H axis title sits below it
+        xt = [r for r, d, t in lines if 'Magnetic Field Strength' in t and r.y0 > cy and lab.x1 < (r.x0 + r.x1) / 2 < lab.x1 + 270]
+        if not xt:
+            raise Refused(f'no "Magnetic Field Strength" axis title under the plot on page {page.number + 1}')
+        xt = min(xt, key=lambda r: r.y0)
+        region = fitz.Rect(lab.x1, 2 * cy - xt.y0 - 8, lab.x1 + 270, xt.y0)
+        curves, box = read_figure(page, region, with_color=True)
+        # temperatures stated inside the plot: a legend (a short stroke left of "25 C") or one "T=25 C" box
+        temps = []
+        for r, d, t in lines:
+            m = re.fullmatch(r'(T\s*=\s*)?(-?\d+)\s*℃', t)
+            if m and box.contains(r):
+                temps.append((r, float(m.group(2)), bool(m.group(1))))
+        data = []
+        if not temps:       # no temperature stated: one curve, written without a temperature
+            if len(curves) != 1:
+                raise Refused(f'plot on page {page.number + 1} states no temperature and has {len(curves)} curves')
+            data.append((None, curves[0][0]))
+        elif len(temps) == 1 and temps[0][2]:
+            T = temps[0][1]
+            if len(curves) != 1:
+                raise Refused(f'"T = {T:.0f} C" plot on page {page.number + 1} has {len(curves)} curves, one expected')
+            data.append((T, curves[0][0]))
+        else:
+            # legend strokes: one straight horizontal segment ending just left of the entry's text
+            segs = [(d.get('color'), it[1], it[2]) for d in page.get_drawings() if d.get('color') is not None
+                    for it in d['items'] if it[0] == 'l' and abs(it[1].y - it[2].y) < 0.01 and box.contains(it[1])]
+            for r, T, boxed in temps:
+                cy_t = (r.y0 + r.y1) / 2
+                strokes = [col for col, a, b in segs if abs(a.y - cy_t) < 3 and 0 <= r.x0 - max(a.x, b.x) < 12 and abs(a.x - b.x) < 30]
+                if len(strokes) != 1:
+                    raise Refused(f'legend entry {T:.0f} C: {len(strokes)} legend strokes beside it, one expected')
+                data.append((T, strokes[0]))
+            colours = [c for _, c in data]
+            if len(set(colours)) != len(colours):
+                raise Refused('two legend entries share one stroke colour')
+            if len(curves) != len(data):
+                raise Refused(f'{len(curves)} curves for {len(data)} legend entries')
+            out = []
+            for T, col in data:
+                match = [c for c in curves if c[1] == col]
+                if len(match) != 1:
+                    raise Refused(f'{len(match)} curves drawn in the colour of the {T:.0f} C legend entry')
+                out.append((T, match[0][0]))
+            data = out
+        points, report, refused = [], [], []
+        for T, a in data:
+            try:
+                pts, rep = sample_curve(a, T, page.number + 1)
+            except Refused as e:
+                refused.append((f'{T:.0f} C: ' if T is not None else '') + str(e))
+                continue
+            points += pts
+            report.append(rep)
+        if not report:
+            raise Refused(' | '.join(refused))
+        return points, report, refused
+    raise Refused('no "Incremental Permeability" figure')
+
+
+def dmegc_provenance(grade, report, url, sha):
+    figs = '; '.join((f'{r["T"]:.0f} C' if r['T'] is not None else 'temperature not stated') + f', {r["hmin"]:.3g}-{r["hmax"]:.3g} A/m' + (' (H = 0 point: the curve\'s flat left end)' if r['flat0'] else '')
+                     for r in report)
+    return {
+        'source': 'manufacturerDatasheet',
+        'sourceName': f'DMEGC, {grade} material characteristics',
+        'sourceUrl': url,
+        'retrievedDate': datetime.date.today().isoformat(),
+        'verification': 'digitizedFromGraph',
+        'verificationDate': datetime.date.today().isoformat(),
+        'verificationMethod': (
+            f'"Incremental Permeability mu_Delta" vs "Magnetic Field Strength H (A/m)" figure on page {report[0]["page"]}, '
+            f'measured on the sheet\'s standard toroid (25 x 15 x 8 mm), ungapped; read off the vector paths of the curves, '
+            f'each assigned the temperature its legend or label states: {figs}; on log axes calibrated on the figure\'s gridlines; '
+            f'document sha256 {sha[:8]}...{sha[-4:]}. Points on a fixed H grid, nothing fitted.'),
         'fields': ['permeability.incremental'],
     }
 
@@ -789,6 +1136,37 @@ def mui_table(record, T):
     return float(np.interp(T, [t for t, _ in tab], [v for _, v in tab]))
 
 
+def mui_start_check(points, record):
+    """Refuse a curve whose start disagrees with the record's initial permeability: the curve's value at its lowest H
+    (H = 0 where written), at the curve temperature nearest 25 C, against the record's zero-bias
+    permeability.initial at the temperature nearest 25 C (a record whose mu_i points state no temperature gives its
+    one nominal value); more than MUI_START_TOL apart means a misread axis or a different material."""
+    if record is None:
+        raise Refused('no ferrite record in the database to check the curve start against')
+    pts = record['permeability']['initial']
+    pts = pts if isinstance(pts, list) else [pts]
+    zero = [q for q in pts if not q.get('magneticFieldDcBias')]
+    with_t = [q for q in zero if q.get('temperature') is not None]
+    if with_t:
+        t_rec = min((q['temperature'] for q in with_t), key=lambda t: abs(t - 25))
+        values = sorted(set(q['value'] for q in with_t if q['temperature'] == t_rec))
+        where = f'{t_rec:g} C'
+    else:
+        values = sorted(set(q['value'] for q in zero))
+        where = 'no temperature stated'
+    if len(values) != 1:
+        raise Refused(f'record has {len(values)} zero-bias mu_i values at {where}: {values}, one expected')
+    temps = [q.get('temperature') for q in points]
+    known = [t for t in temps if t is not None]
+    t_cur = min(known, key=lambda t: abs(t - 25)) if known else None
+    start = min((q for q in points if q.get('temperature') == t_cur), key=lambda q: q['magneticFieldDcBias'])
+    mui = values[0]
+    if abs(start['value'] / mui - 1) > MUI_START_TOL:
+        raise Refused(f'curve starts at {start["value"]:g} (H = {start["magneticFieldDcBias"]:g} A/m'
+                      + (f', {t_cur:g} C' if t_cur is not None else '') + f'), record mu_i is {mui:g} ({where}): '
+                      f'{100 * (start["value"] / mui - 1):+.0f} %, beyond +-{100 * MUI_START_TOL:.0f} %')
+
+
 def maker_of(record):
     return record.get('manufacturerInfo', {}).get('name', '')
 
@@ -801,14 +1179,20 @@ def main():
     args = ap.parse_args()
     os.makedirs(args.cache, exist_ok=True)
     db = args.patch or os.path.join(os.path.dirname(__file__), '..', 'data', 'core_materials.ndjson')
-    records = {}
-    for line in open(db):
-        m = json.loads(line)
-        records[(m['name'], maker_of(m).split()[0].upper() if maker_of(m) else '')] = m
-    def record(grade):
+    records = [json.loads(line) for line in open(db)]
+    def record_index(grade):
+        """Line index of the one ferrite record of this grade and maker, or None. Every maker read here also sells
+        non-ferrite materials (Magnetics: powder cores) that a ferrite curve must never patch, so only records with
+        material == "ferrite" match; more than one match is an error, never a choice."""
         maker = SOURCES[grade][0].upper()
-        keys = [k for k in records if k[0] == grade and (k[1].startswith(maker) or (maker == 'TDK' and k[1].startswith('EPCOS')))]
-        return records[keys[0]] if keys else None
+        hits = [i for i, m in enumerate(records) if m['name'] == grade and m.get('material') == 'ferrite' and maker_of(m)
+                and (maker_of(m).split()[0].upper().startswith(maker) or (maker == 'TDK' and maker_of(m).split()[0].upper().startswith('EPCOS')))]
+        if len(hits) > 1:
+            raise RuntimeError(f'{grade} ({SOURCES[grade][0]}): {len(hits)} ferrite records match (lines {[i + 1 for i in hits]}), one expected')
+        return hits[0] if hits else None
+    def record(grade):
+        i = record_index(grade)
+        return None if i is None else records[i]
     results = {}
     for grade in args.grades or sorted(SOURCES):
         maker = SOURCES[grade][0]
@@ -816,14 +1200,19 @@ def main():
             url, path, sha = fetch(grade, args.cache)
             if maker == 'Fair-Rite':
                 points, report, refused = fairrite(grade, path)
+            elif maker == 'DMEGC':
+                points, report, refused = dmegc(grade, fitz.open(path))
+            elif maker == 'Magnetics':
+                points, report, refused = magnetics(grade, fitz.open(path))
             elif maker == 'TDK':
                 points, report, refused = tdk(grade, fitz.open(path), lambda T, g=grade: mui_table(record(g), T))
             else:
                 points, report, refused = ferroxcube(grade, fitz.open(path))
+            mui_start_check(points, record(grade))
         except Refused as e:
             print(f'{grade} ({maker}): REFUSED: {e}')
             continue
-        results[grade] = (points, report, url, sha)
+        results[grade] = (points, report, url, sha, record_index(grade))
         for r in refused:
             print(f'{grade} ({maker}): figure refused: {r}')
         for r in report:
@@ -832,24 +1221,34 @@ def main():
                   f'mu_rev(H)/mu_rev(0) {r["ratio"]}' + (f', curves agree {100 * r["worst_rms"]:.1f} %, fit chi2/dof {r["chi2"]:.1f}' if 'chi2' in r else ''))
     if not args.patch:
         return
-    out, done = [], set()
-    for line in open(args.patch).read().splitlines():
+    out, done, url_differs = [], set(), []
+    for index, line in enumerate(open(args.patch).read().splitlines()):
         m = json.loads(line)
         ascii_form = json.dumps(m) == line          # keep each line in the encoding it was written in
         grade = m.get('name')
-        if grade in results and record(grade) is not None and record(grade)['name'] == grade and maker_of(record(grade)) == maker_of(m):
-            points, report, url, sha = results[grade]
+        if grade in results and results[grade][4] == index:
+            points, report, url, sha, _ = results[grade]
             maker = SOURCES[grade][0]
-            field = 'incremental' if maker == 'Fair-Rite' else 'reversible'
+            field = 'reversible' if maker in ('TDK', 'Ferroxcube') else 'incremental'
             m['permeability'][field] = points
             prov = [p for p in m.get('provenance', []) if f'permeability.{field}' not in (p.get('fields') or [])]
-            prov.append({'TDK': tdk_provenance, 'Ferroxcube': ferroxcube_provenance, 'Fair-Rite': fairrite_provenance}[maker](grade, report, url, sha))
+            prov.append({'TDK': tdk_provenance, 'Ferroxcube': ferroxcube_provenance, 'Fair-Rite': fairrite_provenance,
+                         'Magnetics': magnetics_provenance, 'DMEGC': dmegc_provenance}[maker](grade, report, url, sha))
             m['provenance'] = prov
+            # the record names its source: set manufacturerInfo.datasheetUrl when absent, never overwrite it
+            info = m.setdefault('manufacturerInfo', {})
+            source = FR_PAGE.format(grade=grade) if maker == 'Fair-Rite' else url
+            if not info.get('datasheetUrl'):
+                info['datasheetUrl'] = source
+            elif info['datasheetUrl'] != source:
+                url_differs.append((grade, info['datasheetUrl'], source))
             done.add(grade)
             line = json.dumps(m, ensure_ascii=ascii_form)
         out.append(line)
     open(args.patch, 'w').write('\n'.join(out) + '\n')
     print(f'patched {sorted(done)}; accepted but not in the database: {sorted(set(results) - done)}')
+    for grade, have, source in url_differs:
+        print(f'{grade}: datasheetUrl kept as {have}; digitised from {source}')
 
 
 if __name__ == '__main__':
