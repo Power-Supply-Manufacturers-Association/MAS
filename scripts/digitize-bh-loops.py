@@ -86,7 +86,9 @@ TDK_LOOP_AXES = {('N30', 25): ('frame', -100, 400, 0, 450), ('T35', 25): ('frame
                  ('N27', 25): ('grid', -200, 200, 0, 50), ('N27', 100): ('grid', -200, 200, 0, 50)}
 FERROXCUBE_GRADES = ['3C90', '3C91', '3C94', '3C95', '3C96', '3C97', '3C98', '3E10', '3E25', '3E26', '3E27', '3E6',
                      '3E65', '3F3', '3F36', '3F37', '3F4', '3F46', '3C92', '3C93', '3C11', '3B46', '4F1', '4C65']
-MAGNETICS_GRADES = ['R', 'P', 'F', 'J', 'W']
+MAGNETICS_GRADES = ['R', 'P', 'F', 'J']
+# Magnetics W is refused (Alf, 2026-11-22): its figure reaches 425 mT at 250 A/m while the table on the same page gives
+# 390 mT at 15 Oe, and the figure is almost point for point Ferroxcube 3E6's.
 FAIRRITE_GRADES = ['77', '78', '79', '98', '75', '80']
 # (H left, H right in Oe, B top in G) printed on each Fair-Rite loop image (B bottom 0)
 FAIRRITE_LOOP_AXES = {'77': (-1, 5, 6000), '78': (-1, 5, 5000), '79': (-1, 5, 5000), '80': (-1, 5, 6000),
@@ -675,7 +677,7 @@ def provenance(grade, maker, results, url, sha):
             + f', sha256 {sha[:8]}...{sha[-4:]}). Per temperature one ordered traversal: rising branch up to the tip '
             '(largest H drawn), then falling branch back down; only where both branches are drawn (B >= the lowest B '
             'both reach). Points are crossings of the drawn curve with fine B rows and H columns, thinned to 0.2 % of '
-            'the axis spans; nothing fitted. ' + '; '.join(parts)
+            'the axis spans; nothing fitted; falling-branch samples at or above the tip B dropped. ' + '; '.join(parts)
             + ('. H above 50 A/m on a broken axis whose gridlines are not evenly spaced: a few A/m of uncertainty there'
                if maker in ('Ferroxcube', 'Magnetics') else '') + '.'),
         'fields': ['bhCycle'],
@@ -759,8 +761,11 @@ def main():
             cycle = []
             for T, r in sorted(accepted.items()):
                 down = list(reversed(r['falling']))
-                if r['rising'][-1] == down[0]:
-                    down = down[1:]      # the shared tip once
+                # The branches meet at the tip: a falling sample at lower H with at least the tip's B is the stroke's
+                # width (up to 1.5 mT), and the traversal would not be monotone. The shared tip is written once.
+                tip = r['rising'][-1][1]
+                while down and round(down[0][1], 5) >= round(tip, 5):
+                    down = down[1:]
                 for h, b in list(r['rising']) + down:
                     cycle.append({'magneticFluxDensity': round(b, 5), 'magneticField': round(h, 3), 'temperature': T})
             m['bhCycle'] = cycle
