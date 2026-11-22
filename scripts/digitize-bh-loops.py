@@ -49,6 +49,7 @@ PATCHING
 Usage:
     python3 scripts/digitize-bh-loops.py --cache DIR [--patch data/core_materials.ndjson] [GRADE ...]
 """
+import bisect
 import argparse
 import collections
 import datetime
@@ -159,15 +160,22 @@ def rdp(points, eps):
 
 
 def monotone(branch):
-    """Branch points sorted by B; drop every point that would make H go back (keeps the longest consistent run
-    greedily from the bottom)."""
-    branch = sorted(set(branch), key=lambda p: (p[1], p[0]))
-    out = []
-    for h, b in branch:
-        if out and (h <= out[-1][0] or b <= out[-1][1]):
-            continue
-        out.append((h, b))
-    return out
+    """Branch points sorted by B; the largest subset that rises in both B and H. (Taking points greedily from the
+    bottom let one stray reading, the "100 C" label on Fair-Rite 77's figure, at 335 A/m and 0.36 T, delete the
+    whole real branch from 71 to 335 A/m.)"""
+    branch = sorted(set(branch), key=lambda p: (p[1], -p[0]))    # at equal B, H falling: one point per B can be kept
+    tails, last, parent = [], [], []
+    for i, (h, b) in enumerate(branch):
+        k = bisect.bisect_left(tails, h)
+        parent.append(last[k - 1] if k else -1)
+        if k == len(tails):
+            tails.append(h); last.append(i)
+        else:
+            tails[k] = h; last[k] = i
+    out, i = [], last[-1] if last else -1
+    while i >= 0:
+        out.append(branch[i]); i = parent[i]
+    return out[::-1]
 
 
 def branches_from_samples(rows, cols, hspan, bspan):
