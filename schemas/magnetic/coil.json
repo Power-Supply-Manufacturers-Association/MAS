@@ -673,6 +673,7 @@
         },
         "connection": {
             "description": "Connection of a wire to a terminal.",
+            "title": "connectionElement",
             "type": "object",
             "properties": {
                 "type": {
